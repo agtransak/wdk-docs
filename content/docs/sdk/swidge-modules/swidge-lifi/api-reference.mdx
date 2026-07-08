@@ -1,6 +1,6 @@
 ---
 title: LI.FI Swidge API Reference
-description: API reference for @kenny_io/wdk-protocol-swidge-lifi.
+description: API reference for @lifi/wdk-protocol-swidge-lifi.
 docType: reference
 schemaType: APIReference
 icon: Code
@@ -13,7 +13,7 @@ icon: Code
 ```javascript
 import {
   LifiSwidgeProtocol
-} from '@kenny_io/wdk-protocol-swidge-lifi'
+} from '@lifi/wdk-protocol-swidge-lifi'
 
 const swidge = new LifiSwidgeProtocol(account, config)
 ```
@@ -29,7 +29,9 @@ new LifiSwidgeProtocol(account?, config?)
 | `WalletAccountEvm` | Discovery, quote, status, and execution. |
 | `WalletAccountEvmErc4337` | Discovery, quote, status, and execution through a smart account. |
 | `WalletAccountReadOnlyEvm` | Discovery, quote, and status. |
-| `undefined` | Discovery and account-independent quote setup. |
+| `undefined` | Chain and token discovery only. |
+
+Use `WalletAccountReadOnlyEvm` for quote-only flows that should not sign transactions. No-account mode cannot provide the source address required by LI.FI quotes.
 
 ## Methods
 
@@ -92,6 +94,7 @@ type LifiSwidgeProtocolConfig = {
   order?: LifiRouteOrder
   allowBridges?: string[]
   denyBridges?: string[]
+  allowDestinationCall?: boolean
   timeout?: number
   retries?: number
   retryDelay?: number

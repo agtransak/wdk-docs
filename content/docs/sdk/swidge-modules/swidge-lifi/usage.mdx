@@ -1,6 +1,6 @@
 ---
 title: LI.FI Swidge Usage
-description: Install and use @kenny_io/wdk-protocol-swidge-lifi for LI.FI swap and bridge routes.
+description: Install and use @lifi/wdk-protocol-swidge-lifi for LI.FI swap and bridge routes.
 docType: how-to
 schemaType: TechArticle
 icon: BookOpen
@@ -9,7 +9,7 @@ icon: BookOpen
 ## Install
 
 ```bash
-npm install @kenny_io/wdk-protocol-swidge-lifi
+npm install @lifi/wdk-protocol-swidge-lifi
 ```
 
 Install the wallet module for the account type you plan to use:
@@ -23,7 +23,7 @@ npm install @tetherto/wdk-wallet-evm-erc-4337
 
 ```javascript
 import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm'
-import { LifiSwidgeProtocol } from '@kenny_io/wdk-protocol-swidge-lifi'
+import { LifiSwidgeProtocol } from '@lifi/wdk-protocol-swidge-lifi'
 
 const account = new WalletAccountEvm(seedPhrase, "0'/0/0", {
   provider: 'https://mainnet.infura.io/v3/YOUR_KEY'
@@ -62,7 +62,6 @@ const quote = await swidge.quoteSwidge({
   toToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
   toChain: 'arbitrum',
   recipient: '0xRecipient...',
-  refundAddress: '0xRefund...',
   fromTokenAmount: 10_000_000n,
   slippage: 0.01
 })
@@ -92,7 +91,6 @@ const result = await swidge.swidge({
   toToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
   toChain: 'arbitrum',
   recipient: '0xRecipient...',
-  refundAddress: '0xRefund...',
   fromTokenAmount: 10_000_000n
 }, {
   maxNetworkFeeBps: 100,
@@ -126,7 +124,7 @@ import {
   LifiRateLimitError,
   LifiSlippageError,
   LifiTimeoutError
-} from '@kenny_io/wdk-protocol-swidge-lifi'
+} from '@lifi/wdk-protocol-swidge-lifi'
 
 try {
   await swidge.swidge(options)

@@ -1,6 +1,6 @@
 ---
 title: LI.FI Swidge Configuration
-description: Configuration options for @kenny_io/wdk-protocol-swidge-lifi.
+description: Configuration options for @lifi/wdk-protocol-swidge-lifi.
 docType: reference
 schemaType: TechArticle
 icon: Settings
@@ -10,7 +10,7 @@ Configure `LifiSwidgeProtocol` with a WDK EVM account when you need execution, o
 
 ```javascript
 import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm'
-import { LifiSwidgeProtocol } from '@kenny_io/wdk-protocol-swidge-lifi'
+import { LifiSwidgeProtocol } from '@lifi/wdk-protocol-swidge-lifi'
 
 const account = new WalletAccountEvm(seedPhrase, "0'/0/0", {
   provider: 'https://mainnet.infura.io/v3/YOUR_KEY'
@@ -44,7 +44,8 @@ new LifiSwidgeProtocol(account?, config?)
 | `apiKey` | `string` | LI.FI API key for higher rate limits. Keep it server-side. |
 | `order` | `'RECOMMENDED' \| 'FASTEST' \| 'CHEAPEST'` | Route selection strategy. Defaults to `RECOMMENDED`. |
 | `allowBridges` | `string[]` | Bridge protocol allowlist, for example `['stargate']`. |
-| `denyBridges` | `string[]` | Bridge protocol denylist, for example `['across']`. |
+| `denyBridges` | `string[]` | Bridge protocol denylist, for example `['across']`. When omitted, native-value bridges are denied by default. Passing any array overrides that default. |
+| `allowDestinationCall` | `boolean` | Allows LI.FI routes that execute a destination-chain call, such as a destination-chain swap. Defaults to `false`. |
 | `maxNetworkFeeBps` | `number \| bigint` | Rejects execution when network fees exceed this many basis points of the input amount. |
 | `maxProtocolFeeBps` | `number \| bigint` | Rejects execution when protocol fees exceed this many basis points of the input amount. |
 | `timeout` | `number` | Per-request timeout in milliseconds. Defaults to `30000`. |
@@ -62,6 +63,14 @@ await swidge.swidge(options, {
   maxNetworkFeeBps: 75
 })
 ```
+
+## Route Filtering
+
+The module is gasless-oriented by default for ERC-4337 sponsored execution. In that flow, the paymaster or sponsor can cover source-chain gas, but the LI.FI route transaction itself must not require separate native token value. When `denyBridges` is omitted, the module sends a built-in native-value bridge denylist to LI.FI. Passing `denyBridges` replaces that default list, so `denyBridges: ['across']` denies only `across`, and `denyBridges: []` clears the default list.
+
+The module also passes `allowDestinationCall=false` by default. This excludes routes that require a destination-chain call, such as a swap after bridging. Set `allowDestinationCall: true` only when broader route coverage is more important than filtering out routes that can finish partially.
+
+Execution still rejects any quote whose transaction request requires native token value before sending approvals or the route transaction.
 
 ## Contract Validation
 

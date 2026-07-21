@@ -62,7 +62,9 @@ swidge(
 
 Executes through the bound writable account. The module sends required approval transactions before the route transaction where needed.
 
-Throws before execution when validation fails, a configured fee cap is exceeded, or `trustedContracts` rejects the quote target or approval address.
+For quote-first flows, pass the `minAmountOut` field in `options`: set it to the `toTokenAmountMin` from a previously displayed `quoteSwidge()` result, and `swidge()` throws before any approval or transaction is sent if the fresh execution quote's minimum output falls below it. `minAmountOut` is not forwarded to LI.FI, and `quoteSwidge()` ignores it.
+
+Throws before execution when validation fails, a fee cap is exceeded, the quote falls below `minAmountOut`, `allowNativeValue: false` and the quote requires native value, or `trustedContracts` rejects the quote target or approval address.
 
 ### `getSwidgeStatus(id, options?)`
 
@@ -95,6 +97,7 @@ type LifiSwidgeProtocolConfig = {
   allowBridges?: string[]
   denyBridges?: string[]
   allowDestinationCall?: boolean
+  allowNativeValue?: boolean
   timeout?: number
   retries?: number
   retryDelay?: number

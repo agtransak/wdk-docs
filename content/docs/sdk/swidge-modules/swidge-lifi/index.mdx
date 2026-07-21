@@ -16,7 +16,7 @@ Use this module when an app needs live LI.FI route discovery, exact-input or exa
 - **EVM account support**: Works with `@tetherto/wdk-wallet-evm` and `@tetherto/wdk-wallet-evm-erc-4337`.
 - **Discovery without signing**: Supports chain and token discovery without a bound wallet account.
 - **Fee controls**: Applies optional `maxNetworkFeeBps` and `maxProtocolFeeBps` limits before execution.
-- **Gasless route defaults**: Filters native-value bridge routes by default so ERC-4337 sponsored execution can cover gas without the LI.FI route requiring separate native token value.
+- **Gasless-friendly**: Opt-in `denyBridges: NATIVE_VALUE_BRIDGE_DENY_LIST` and `allowNativeValue: false` filter native-value bridge routes and reject native-value quotes, so ERC-4337 sponsored execution can cover gas without the LI.FI route requiring separate native token value.
 - **Reliability controls**: Provides request timeouts, retry handling, rate-limit classification, and typed LI.FI errors.
 - **Transaction validation**: Validates quote transaction data before forwarding it to the wallet account.
 - **Optional contract allowlist**: `trustedContracts` can require quote targets and approval addresses to match known LI.FI contracts.

@@ -101,6 +101,20 @@ console.log('Swidge ID:', result.id)
 console.log('Transaction hash:', result.hash)
 ```
 
+### Guard a quote-first flow with `minAmountOut`
+
+`swidge()` fetches a fresh quote at execution time, which can differ from the quote the user reviewed. Pass `minAmountOut` — the `toTokenAmountMin` from the displayed quote — to reject execution if the fresh quote's minimum output has dropped below what the user accepted. The guard runs before any approval or transaction is sent, and the value is never forwarded to LI.FI.
+
+```javascript
+const quote = await swidge.quoteSwidge(options)
+// ...user reviews and confirms the quote...
+
+const result = await swidge.swidge({
+  ...options,
+  minAmountOut: quote.toTokenAmountMin
+})
+```
+
 ## Track Status
 
 Use `getSwidgeStatus()` with the returned operation ID. Chain hints can speed up indexing.

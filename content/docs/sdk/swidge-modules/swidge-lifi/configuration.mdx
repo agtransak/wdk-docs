@@ -44,8 +44,9 @@ new LifiSwidgeProtocol(account?, config?)
 | `apiKey` | `string` | LI.FI API key for higher rate limits. Keep it server-side. |
 | `order` | `'RECOMMENDED' \| 'FASTEST' \| 'CHEAPEST'` | Route selection strategy. Defaults to `RECOMMENDED`. |
 | `allowBridges` | `string[]` | Bridge protocol allowlist, for example `['stargate']`. |
-| `denyBridges` | `string[]` | Bridge protocol denylist, for example `['across']`. When omitted, native-value bridges are denied by default. Passing any array overrides that default. |
-| `allowDestinationCall` | `boolean` | Allows LI.FI routes that execute a destination-chain call, such as a destination-chain swap. Defaults to `false`. |
+| `denyBridges` | `string[]` | Bridge protocol denylist, for example `['across']`. When omitted, no bridge filter is sent and LI.FI considers all bridges. For gasless integrations, pass the exported `NATIVE_VALUE_BRIDGE_DENY_LIST` to exclude bridges that require native token value. |
+| `allowDestinationCall` | `boolean` | Allows LI.FI routes that execute a destination-chain call, such as a destination-chain swap. Forwarded only when set explicitly; when omitted, LI.FI's own default (`true`) applies. Set `false` to filter out routes that may leave the user with an intermediary token if the destination call fails. |
+| `allowNativeValue` | `boolean` | Whether `swidge()` may execute quotes whose transaction requires native token value (`transactionRequest.value > 0`). Defaults to `true`. Set `false` for gasless setups (for example ERC-4337 with a paymaster): such quotes are rejected before any approval is sent. |
 | `maxNetworkFeeBps` | `number \| bigint` | Rejects execution when network fees exceed this many basis points of the input amount. |
 | `maxProtocolFeeBps` | `number \| bigint` | Rejects execution when protocol fees exceed this many basis points of the input amount. |
 | `timeout` | `number` | Per-request timeout in milliseconds. Defaults to `30000`. |
@@ -66,11 +67,27 @@ await swidge.swidge(options, {
 
 ## Route Filtering
 
-The module is gasless-oriented by default for ERC-4337 sponsored execution. In that flow, the paymaster or sponsor can cover source-chain gas, but the LI.FI route transaction itself must not require separate native token value. When `denyBridges` is omitted, the module sends a built-in native-value bridge denylist to LI.FI. Passing `denyBridges` replaces that default list, so `denyBridges: ['across']` denies only `across`, and `denyBridges: []` clears the default list.
+By default the module applies no extra route filtering: `denyBridges` is not set, `allowDestinationCall` is not forwarded (LI.FI's server-side default of `true` applies), and quotes that require native token value execute as-is. This gives the widest route coverage and matches LI.FI SDK behavior.
 
-The module also passes `allowDestinationCall=false` by default. This excludes routes that require a destination-chain call, such as a swap after bridging. Set `allowDestinationCall: true` only when broader route coverage is more important than filtering out routes that can finish partially.
+For gasless integrations — for example ERC-4337 where a paymaster covers source-chain gas but the LI.FI route transaction itself must not require separate native token value — opt in explicitly:
 
-Execution still rejects any quote whose transaction request requires native token value before sending approvals or the route transaction.
+```javascript
+import {
+  LifiSwidgeProtocol,
+  NATIVE_VALUE_BRIDGE_DENY_LIST
+} from '@lifi/wdk-protocol-swidge-lifi'
+
+const swidge = new LifiSwidgeProtocol(account, {
+  denyBridges: NATIVE_VALUE_BRIDGE_DENY_LIST, // filter native-value bridges at quote time
+  allowNativeValue: false                     // reject any quote whose tx still needs native value
+})
+```
+
+`NATIVE_VALUE_BRIDGE_DENY_LIST` is the maintained list of bridges known to require native token value in the source transaction. `denyBridges` replaces (does not append to) any default, so `denyBridges: ['across']` denies only `across`.
+
+Set `allowDestinationCall: false` to exclude routes that require a destination-chain call, such as a swap after bridging, which can leave the user holding an intermediary token if the destination call fails.
+
+With `allowNativeValue: false`, execution rejects any quote whose transaction request requires native token value before sending approvals or the route transaction, even if a native-value bridge was not filtered out at quote time.
 
 ## Contract Validation
 

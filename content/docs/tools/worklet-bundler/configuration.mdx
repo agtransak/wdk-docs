@@ -10,11 +10,11 @@ This page shows how to install `@tetherto/wdk-worklet-bundler` and its Pear runt
 Install the bundler as a development dependency and Pear Worklet as a runtime dependency in the host project:
 
 ```bash title="Install The Bundler And Runtime"
-npm install @tetherto/pear-wrk-wdk@1.0.0-beta.9
-npm install --save-dev @tetherto/wdk-worklet-bundler@1.0.0-beta.5
+npm install @tetherto/pear-wrk-wdk@1.0.0-beta.10
+npm install --save-dev @tetherto/wdk-worklet-bundler@1.0.0-beta.6
 ```
 
-Worklet Bundler beta.5 generates entrypoints that import Pear Worklet, but `generate --install` does not add that package. Beta.9 is also required for the generated JSON-RPC entrypoint and HRPC generic-module methods documented here.
+Worklet Bundler beta.6 generates entrypoints that import Pear Worklet, but `generate --install` does not add that package. Pear Worklet beta.10 provides the JSON-RPC, HRPC generic-module, and Swidge protocol behavior documented here.
 
 ## Create `wdk.config.js`
 
@@ -102,7 +102,7 @@ Use `modules` for named generic packages that expose a module factory. Each entr
 The factory receives `{ seed, config, capabilities, emit }` and can return the module instance or a promise for it. A module that needs the seed must consume it synchronously rather than retain it. The build-time name, such as `preferences`, must match the key in the host's runtime module config.
 
 <Callout type="warn">
-Beta.5 generic modules are included only in generated HRPC entrypoints. Do not configure `modules` with `transport: 'jsonrpc'`; the current schema accepts the field, but JSON-RPC generation ignores it.
+Beta.6 generic modules are included only in generated HRPC entrypoints. Do not configure `modules` with `transport: 'jsonrpc'`; the current schema accepts the field, but JSON-RPC generation ignores it.
 </Callout>
 
 ### `transport` (optional)
@@ -118,7 +118,7 @@ Use `preloadModules` for native addons or other modules that must be required be
 Supported output fields are:
 
 - `bundle`: Bundle path. Defaults to `./.wdk-bundle/wdk-worklet.bundle.js` for HRPC and `./.wdk-bundle/wdk-worklet.bundle` for JSON-RPC.
-- `types`: Declared in the beta.5 config type, but the generator does not honor a custom value and always writes declarations to `./.wdk/index.d.ts`.
+- `types`: Declared in the beta.6 config type, but the generator does not honor a custom value and always writes declarations to `./.wdk/index.d.ts`.
 - `addons.ios`, `addons.macos`, `addons.android`: Platform addon directories. Defaults are `./ios-addons`, `./mac-addons`, and `./android-addons`.
 - `addonsYml`: BareKit Swift dependency file. Defaults to `./ios-addons/addons.yml` and is generated when iOS addons are linked.
 
@@ -126,8 +126,8 @@ Supported output fields are:
 
 The published config type supports these build options:
 
-- `minify` (`boolean`): Declared in the beta.5 config type but not read by the bundle path. JSON-RPC ESM-to-CJS conversion minifies independently of this field.
-- `sourceMaps` (`boolean`): Declared in the beta.5 config type but not read by the bundle path, so it does not produce source maps.
+- `minify` (`boolean`): Declared in the beta.6 config type but not read by the bundle path. JSON-RPC ESM-to-CJS conversion minifies independently of this field.
+- `sourceMaps` (`boolean`): Declared in the beta.6 config type but not read by the bundle path, so it does not produce source maps.
 - `targets` (`string[]`): Override the default Bare build hosts. The shipped defaults cover iOS arm64 and simulator targets plus Android arm, arm64, ia32, and x64 hosts.
 - `linkAddons` (`boolean`): Link native addons with `bare-link`. Defaults to `true` for JSON-RPC and `false` for HRPC.
 - `platforms` (`('ios' | 'macos' | 'android')[]`): Addon platforms. Defaults to all three when addon linking is active.
@@ -163,7 +163,7 @@ module.exports = {
 
 JSON-RPC generation defaults to a bundle without a `.js` suffix, ESM-to-CJS conversion, and addon linking. It links `bare-posix` with the other required Bare modules automatically. See the [Pear Worklet API reference](/tools/pear-wrk-wdk/api-reference#json-rpc-transport) for framing and supported methods.
 
-## Validate and generate the bundle
+## Validate dependencies
 
 Use `validate` to check the config and dependency resolution before you generate the bundle:
 
@@ -171,15 +171,37 @@ Use `validate` to check the config and dependency resolution before you generate
 npx wdk-worklet-bundler validate
 ```
 
+## Handle peer dependencies
+
+Worklet Bundler beta.6 separates required peers from peers explicitly marked optional through `peerDependenciesMeta`:
+
+- During bundle generation, missing required peers are offered for installation. In a non-interactive environment without `--install`, the CLI prints the exact manual install command and continues; `bare-pack` can still fail if the bundle needs that peer. The peer scan is skipped by `--source-only`.
+- Missing optional peers are not prompted for or installed. By default, the bundler passes each one to `bare-pack --defer`, so an unused optional feature does not block the build.
+- Installed optional peers are bundled normally. A peer that is required anywhere else in the scanned dependency tree is treated as required and is not deferred.
+
+Use `--no-defer-optional-peers` when the app uses an optional feature and you want a missing peer to fail during the build:
+
+```bash title="Require Optional Peers At Build Time"
+npx wdk-worklet-bundler generate --no-defer-optional-peers
+```
+
+For example, a bundle can build while a missing `@ledgerhq/ledger-bitcoin` peer is deferred, then fail at runtime if the app uses the corresponding Ledger feature. Install the peer explicitly, or use `--no-defer-optional-peers` to surface the missing import during bundling.
+
+This behavior is a per-run setting. `wdk.config.js` has no `deferOptionalPeers` field. Programmatic callers can set `GenerateBundleOptions.deferOptionalPeers` to `false`; omitting it or setting it to `true` keeps the default deferral behavior.
+
+If a core configured dependency is missing, a non-interactive `generate` run that will invoke `bare-pack` exits with status `1` and tells you to install it manually or rerun with `--install`. A `--source-only` run can still emit the generated source files.
+
+## Generate the bundle
+
 Use `generate` to build the worklet artifact:
 
 ```bash title="Generate The Worklet Bundle"
 npx wdk-worklet-bundler generate --install
 ```
 
-`generate --install` can auto-install missing configured wallet, protocol, generic, and preload modules after the package manager is detected from the project root. In beta.5 it does not install the Pear Worklet runtime imported by generated entrypoints; install Pear explicitly as shown above. Use `--source-only` when you want the generated `.wdk/wdk-worklet.generated.js` entrypoint and related artifacts without running `bare-pack`.
+`generate --install` can auto-install missing configured wallet, protocol, generic, and preload modules after the package manager is detected from the project root. In beta.6 it does not install the Pear Worklet runtime imported by generated entrypoints; install Pear explicitly as shown above. Use `--source-only` when you want the generated `.wdk/wdk-worklet.generated.js` entrypoint and related artifacts without running `bare-pack`.
 
-The `generate` command also accepts `--transport hrpc|jsonrpc`, `--link-addons`, `--skip-link-addons`, `--platforms ios,macos,android`, and `--no-esm-to-cjs`. Set `transport` in `wdk.config.js` when you rely on its transport-specific default bundle path. In beta.5, `--transport` changes the generated transport after output paths have already been resolved, so it does not switch `.js` HRPC output to the extensionless JSON-RPC default, or vice versa. If you use the flag, set `output.bundle` explicitly to the intended path.
+The `generate` command also accepts `--transport hrpc|jsonrpc`, `--link-addons`, `--skip-link-addons`, `--platforms ios,macos,android`, `--no-esm-to-cjs`, and `--no-defer-optional-peers`. Set `transport` in `wdk.config.js` when you rely on its transport-specific default bundle path. In beta.6, `--transport` changes the generated transport after output paths have already been resolved, so it does not switch `.js` HRPC output to the extensionless JSON-RPC default, or vice versa. If you use the flag, set `output.bundle` explicitly to the intended path.
 
 ## Suspend and resume behavior
 

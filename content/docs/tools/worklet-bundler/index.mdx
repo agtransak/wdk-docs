@@ -12,11 +12,12 @@ Worklet Bundler packages selected WDK wallet, protocol, and optional generic mod
 - **Generated worklet artifacts**: Produce a Bare bundle, a stable `./.wdk` host import, and generated TypeScript types.
 - **Native addon outputs**: Link iOS, macOS, and Android addons and generate `addons.yml` for JSON-RPC/native integrations.
 - **Dependency validation helpers**: Validate configured modules, detect the active package manager, and generate install or uninstall commands when dependencies are missing.
+- **Optional peer deferral**: Defer missing peers marked optional by their package metadata, or require them at build time with `--no-defer-optional-peers`.
 - **CLI workflow**: Use `init`, `validate`, `generate`, `list-modules`, and `clean` without building your own wrapper.
 - **Bare suspend and resume handling**: Generated HRPC entrypoints suspend and resume both the `bare-http1` and `bare-https` global agents when the Bare thread lifecycle changes.
 
 <Callout type="info">
-`v1.0.0-beta.5` is the first published artifact that contains the built CLI and API files for the JSON-RPC, generic-module, and addon-linking surface introduced in beta.4. It also links `bare-posix` automatically for supported native platforms.
+`v1.0.0-beta.6` includes the built CLI and API files for the JSON-RPC, generic-module, and addon-linking surface published in beta.5. It also defers missing optional peers during bundling by default and links `bare-posix` automatically for supported native platforms.
 </Callout>
 
 ## Why this matters
@@ -26,7 +27,7 @@ Worklet Bundler packages selected WDK wallet, protocol, and optional generic mod
 - Transport-specific defaults produce a JavaScript HRPC bundle for React Native Core or native addon artifacts for JSON-RPC hosts.
 
 <Callout type="warn">
-Generic `modules` are generated only for HRPC in beta.5. A JSON-RPC config can currently accept a `modules` field but silently omits those modules from the generated entrypoint.
+Generic `modules` are generated only for HRPC in beta.6. A JSON-RPC config can currently accept a `modules` field but silently omits those modules from the generated entrypoint.
 </Callout>
 
 <Cards>

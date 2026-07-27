@@ -7,7 +7,7 @@ schemaType: APIReference
 
 ## Package: `@tetherto/pear-wrk-wdk`
 
-### Export: `HRPC`
+### Top-level export: `HRPC`
 
 #### Command Methods
 
@@ -71,7 +71,7 @@ Returns:
 
 The handler requires `encryptionKey` and `encryptedSeed` to be passed together or omitted together. When a seeded WDK instance already exists, the runtime disposes it and closes its generic modules before re-registering the wallets and optional protocols in `config`.
 
-In beta.9, HRPC generic modules are constructed from `context.moduleManagers` and `config.modules` only when that request includes the encrypted seed pair. A seedless reinitialization closes existing module instances without reconstructing them. Supply both seed fields on every initialization that must construct or reconstruct modules.
+In beta.10, HRPC generic modules are constructed from `context.moduleManagers` and `config.modules` only when that request includes the encrypted seed pair. A seedless reinitialization closes existing module instances without reconstructing them. Supply both seed fields on every initialization that must construct or reconstruct modules.
 
 #### `resetWdkWallets`
 
@@ -122,7 +122,7 @@ A full disposal closes all generic modules and clears the WDK instance. A non-em
 - `args?` (`string`): JSON string of the method arguments.
 - `options?` (`string`): JSON string of `CallMethodOptions`.
 
-`options.protocolType` may be `swap`, `bridge`, `lending`, or `fiat`. When present, the runtime resolves the protocol-specific account wrapper before invoking `methodName`.
+`options.protocolType` may be `swap`, `swidge`, `bridge`, `lending`, or `fiat`. When present, the runtime requires a non-empty `options.protocolName` and resolves the protocol-specific account wrapper before invoking `methodName`. Swidge calls resolve the wrapper with `account.getSwidgeProtocol(protocolName)`.
 
 #### `registerWallet`
 
@@ -211,9 +211,9 @@ Registers the worklet-side handler used to service `callModule()` requests.
 
 Registers the host-side handler used to receive `moduleEvent()` messages.
 
-### Export: `registerRpcHandlers(rpc, context)`
+### Worklet export: `registerRpcHandlers(rpc, context)`
 
-Registers the package's server-side handlers on the provided RPC instance.
+Import this helper from `@tetherto/pear-wrk-wdk/worklet`. It registers the package's server-side handlers on the provided RPC instance.
 
 - `rpc` (`any`): RPC server instance that supports the generated handler registration methods.
 - `context` (`RpcContext`): Runtime context containing `wdk`, `WDK`, `walletManagers`, `protocolManagers`, and `wdkLoadError`. HRPC generic modules can additionally supply `moduleManagers` and `capabilities`; the runtime manages `moduleRuntime` and `moduleInstances`.
@@ -292,13 +292,25 @@ interface WdkResetWalletParams {
 #### `CallMethodOptions`
 
 ```ts
+enum ProtocolType {
+  SWAP = 'swap',
+  SWIDGE = 'swidge',
+  BRIDGE = 'bridge',
+  LENDING = 'lending',
+  FIAT = 'fiat'
+}
+
 interface CallMethodOptions {
   transformResult: Function
   defaultValue: any
-  protocolType: 'swap' | 'bridge' | 'lending' | 'fiat'
+  protocolType: ProtocolType
   protocolName: string
 }
 ```
+
+The published declarations include `ProtocolType`, but the top-level JavaScript entry does not export that enum value at runtime. Pass the corresponding string literal, such as `'swidge'`, in serialized request options.
+
+The published `CallMethodOptions` declaration marks every field as required. The request's `options` string remains optional at runtime, and the handler reads fields only when their behavior is used.
 
 ## JSON-RPC Transport
 
@@ -312,7 +324,7 @@ registerJsonRpcHandlers(ipc, context)
 
 The server reads UTF-8 JSON-RPC 2.0 messages framed with a four-byte unsigned big-endian payload length. Every request requires an ID, and an ID cannot be reused while its earlier request is still in flight. Malformed frames are dropped without a response. The package does not export a JSON-RPC client or native-host helper.
 
-Beta.9 supports these JSON-RPC method names:
+Beta.10 supports these JSON-RPC method names:
 
 - `workletStart`
 - `generateEntropyAndEncrypt`
@@ -325,6 +337,8 @@ Beta.9 supports these JSON-RPC method names:
 - `dispose`
 
 JSON-RPC does not support `resetWdkWallets`, generic-module calls, or module events in this release. Use HRPC for those operations.
+
+The HRPC and JSON-RPC transports share the `callMethod` handler, so both support the `swidge` protocol type in beta.10.
 
 <Callout type="warn">
 INFO-level logging can include wallet-call arguments and JSON-RPC parameters or results. Production defaults to ERROR logging; do not enable more verbose logging for requests that may contain seeds, mnemonics, keys, or other sensitive values.

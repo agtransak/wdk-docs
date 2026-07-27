@@ -43,6 +43,10 @@ import WalletManagerTonGasless from '@tetherto/wdk-wallet-ton-gasless'
 - **Token standard**: Jettons via `transfer()`
 - **USDT Jetton master**: `EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs`
 - `sendTransaction` accepts a `body` field for arbitrary contract calls — treat with caution.
+- `signTransaction()` returns a signed transfer-body `Cell` from `@ton/core`, not a complete external-message BOC.
+- `quoteSendTransaction()` and `sendTransaction()` accept that `Cell`; send passes the exact body to the matching `WalletContractV5R1.send()` call and rechecks `transactionMaxFee`.
+- ⚠️ The signed body contains the current wallet sequence number. Submit it through the same account before the sequence number changes; WDK does not rebuild or re-sign it.
+- The returned send hash is the signed transfer-body hash, not a network transaction hash.
 
 > **Derivation path change in v1.0.0-beta.6+**: Previous default was `m/44'/607'/0'/0/{index}`, updated to match ecosystem conventions. Existing wallets created with old path will generate different addresses. Use `getAccountByPath` for legacy wallet recovery.
 

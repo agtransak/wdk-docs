@@ -241,12 +241,20 @@ export const customTree: Node[] = [
       apiReference('/sdk/wallet-modules/wallet-solana-gasless/api-reference'),
     ]),
   ]),
+  folder('Aptos', '/sdk/wallet-modules/wallet-aptos', 'Wallet', [
+    usage('/sdk/wallet-modules/wallet-aptos/usage'),
+    configuration('/sdk/wallet-modules/wallet-aptos/configuration'),
+    apiReference('/sdk/wallet-modules/wallet-aptos/api-reference'),
+  ]),
   folder('RGB', '/sdk/community-modules/wdk-wallet-rgb', 'Palette', [
     apiReference('/sdk/community-modules/wdk-wallet-rgb/api-reference'),
   ]),
   folder('Cosmos', '/sdk/community-modules/wdk-wallet-cosmos', 'Orbit', [
     apiReference('/sdk/community-modules/wdk-wallet-cosmos/api-reference'),
   ]),
+
+  separator('Deposit Routing'),
+  page('Smart Deposit Address interface', '/sdk/sda-modules', 'Route'),
 
   separator('Swap and Bridge'),
   page('Swidge protocol interface', '/sdk/swidge-modules', 'Route'),
@@ -363,7 +371,12 @@ export const customTree: Node[] = [
     configuration('/tools/secret-manager/configuration'),
     apiReference('/tools/secret-manager/api-reference'),
   ]),
-  page('Sync wallet contacts across devices', '/tools/p2p-address-book', 'BookUser'),
+  folder('P2P Address Book', '/tools/p2p-address-book', 'BookUser', [
+    page('Get Started', '/tools/p2p-address-book/get-started', 'Rocket'),
+    page('Sync and Recovery', '/tools/p2p-address-book/sync-and-recovery', 'RefreshCw'),
+    apiReference('/tools/p2p-address-book/api-reference'),
+    page('Production and Privacy', '/tools/p2p-address-book/production-and-privacy', 'ShieldCheck'),
+  ]),
   folder('Fetch token prices', '/tools/price-rates', 'TrendingUp', [
     configuration('/tools/price-rates/configuration'),
     apiReference('/tools/price-rates/api-reference'),

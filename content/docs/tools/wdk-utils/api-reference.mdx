@@ -1,6 +1,6 @@
 ---
 title: WDK Utils API Reference
-description: Validation, encryption, BIP-21, BOLT11, and EIP-681 APIs for @tetherto/wdk-utils
+description: Validation, encryption, mnemonic sharing, BIP-21, BOLT11, and EIP-681 APIs for @tetherto/wdk-utils
 docType: reference
 schemaType: APIReference
 ---
@@ -16,6 +16,7 @@ schemaType: APIReference
 | `validateBech32m(address)` | Validate a SegWit v1+ Bitcoin address. | `BtcAddressValidationResult` |
 | `validateBitcoinAddress(address)` | Validate a Bitcoin address across Base58Check, Bech32, and Bech32m formats. | `BtcAddressValidationResult` |
 | `validateEVMAddress(address)` | Validate an EVM address, including EIP-55 checksum rules for mixed-case inputs. | `EvmAddressValidationResult` |
+| `validateSolanaAddress(address)` | Validate a base58-encoded 32-byte Solana public key, including off-curve program-derived addresses. | `SolanaAddressValidationResult` |
 | `stripLightningPrefix(input)` | Remove a leading `lightning:` prefix before other Lightning validation steps. | `string` |
 | `validateLightningInvoice(address)` | Validate a Lightning invoice string. | `LightningInvoiceValidationResult` |
 | `decode(invoice)` | Decode a BOLT11 Lightning invoice into structured invoice data. | `LightningInvoiceDecodingResult` |
@@ -91,6 +92,25 @@ const result = validateEVMAddress('0x742d35Cc6634C0532925a3b844Bc454e4438f44e')
 
 - `{ success: true, type: 'evm' }`
 - `{ success: false, reason: string }`
+
+#### `validateSolanaAddress(address)`
+
+Validate a Solana address as a base58-encoded 32-byte public key. The validator trims surrounding whitespace and accepts off-curve program-derived addresses because they can be valid recipients.
+
+```javascript title="Validate A Solana Address"
+import { validateSolanaAddress } from '@tetherto/wdk-utils'
+
+const result = validateSolanaAddress(
+  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+)
+```
+
+`SolanaAddressValidationResult` is one of these shapes:
+
+- `{ success: true, type: 'solana' }`
+- `{ success: false, reason: 'EMPTY_ADDRESS' | 'INVALID_FORMAT' | 'INVALID_LENGTH' }`
+
+Solana addresses do not include a checksum. This helper verifies structure and decoded length, not whether an account exists, is on curve, or belongs to the intended recipient.
 
 #### `stripLightningPrefix(input)`
 
@@ -414,6 +434,52 @@ const keyPair = deriveSeedKeyPair(seedBytes, {
 
 <Callout type="warn">
 Treat the returned `secretKey` as sensitive and clear it after its final use. The implementation clears its intermediate derived seed, but the returned secret key remains in caller-managed memory.
+</Callout>
+
+### BIP-39 Mnemonic Sharing Helpers
+
+| Function | Description | Returns |
+| --- | --- | --- |
+| `splitMnemonic(mnemonic, options)` | Split valid BIP-39 mnemonic entropy into hex-encoded Shamir shares. | `Promise<string[]>` |
+| `combineMnemonic(shares)` | Reconstruct and validate a BIP-39 mnemonic from a threshold-sized share set. | `Promise<string>` |
+
+#### `splitMnemonic(mnemonic, options)`
+
+Decode a valid 12-, 15-, 18-, 21-, or 24-word English BIP-39 mnemonic to entropy and split it into Shamir shares.
+
+```javascript title="Split A Mnemonic"
+import { splitMnemonic } from '@tetherto/wdk-utils'
+
+const shares = await splitMnemonic(seedPhrase, {
+  shares: 5,
+  threshold: 3
+})
+```
+
+- `shares` must be an integer from `2` through `255`.
+- `threshold` must be an integer from `2` through `shares`.
+- The returned shares are unencrypted lowercase hex strings.
+- Invalid BIP-39 words, word counts, and checksums are rejected.
+- The runtime must provide secure `crypto.getRandomValues`; React Native apps may need to load `react-native-get-random-values` before importing WDK Utils.
+
+#### `combineMnemonic(shares)`
+
+Reconstruct a mnemonic from enough shares produced by `splitMnemonic()`.
+
+```javascript title="Reconstruct A Mnemonic"
+import { combineMnemonic } from '@tetherto/wdk-utils'
+
+const restored = await combineMnemonic([
+  shares[0],
+  shares[2],
+  shares[4]
+])
+```
+
+The helper verifies the embedded four-byte integrity checksum and rejects malformed, corrupted, duplicate, mixed-length, or insufficient share sets.
+
+<Callout type="warn">
+Each share is sensitive recovery material. Store shares in separate trusted locations and never log or transmit them through analytics. The embedded checksum detects accidental corruption; it does not authenticate shares or protect against maliciously crafted input.
 </Callout>
 
 ### BIP-21 Bitcoin Payment URI Helpers

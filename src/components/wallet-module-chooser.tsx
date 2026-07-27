@@ -12,6 +12,7 @@ type ChainFilter =
   | "ton"
   | "tron"
   | "solana"
+  | "aptos"
   | "rgb"
   | "cosmos";
 
@@ -45,6 +46,7 @@ const chainOptions: Array<{ value: ChainFilter; label: string }> = [
   { value: "ton", label: "TON" },
   { value: "tron", label: "TRON" },
   { value: "solana", label: "Solana" },
+  { value: "aptos", label: "Aptos" },
   { value: "rgb", label: "RGB" },
   { value: "cosmos", label: "Cosmos" },
 ];
@@ -225,6 +227,21 @@ const walletModules: WalletModule[] = [
       "You need paymaster-funded SOL or SPL token transfers.",
       "Your app can provide the required Solana RPC and paymaster configuration.",
       "You want Solana support without requiring users to fund fees directly.",
+    ],
+  },
+  {
+    id: "aptos",
+    label: "Aptos",
+    chain: "aptos",
+    goals: ["standard"],
+    packageName: "@tetherto/wdk-wallet-aptos",
+    docsHref: "/sdk/wallet-modules/wallet-aptos",
+    apiHref: "/sdk/wallet-modules/wallet-aptos/api-reference",
+    bestFor: "Aptos wallets with native APT and fungible asset support.",
+    chooseWhen: [
+      "You need Aptos accounts derived with SLIP-0010 Ed25519 paths.",
+      "You need APT balances, transfers, transaction signing, or receipts.",
+      "You need Aptos fungible asset balances and transfers.",
     ],
   },
   {

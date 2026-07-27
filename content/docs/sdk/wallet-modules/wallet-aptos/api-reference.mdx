@@ -52,8 +52,8 @@ new WalletAccountAptos(
 | Property | Description |
 |----------|-------------|
 | `index` | Index parsed from the derivation path. |
-| `path` | Relative derivation path. |
-| `keyPair` | Public/private key pair view. The private key is unavailable after `dispose()`. |
+| `path` | Full derivation path, including the `m/44'/637'` prefix. |
+| `keyPair` | Public/private key byte-array views. Treat them as read-only. The private key is unavailable after `dispose()`. |
 
 ### Methods
 
@@ -64,10 +64,10 @@ new WalletAccountAptos(
 | `getTokenBalance(tokenAddress)` | Returns a fungible asset balance by metadata address. | `Promise<bigint>` |
 | `quoteSendTransaction(tx)` | Estimates fee for a native APT transfer. | `Promise<{ fee: bigint }>` |
 | `sendTransaction(tx)` | Signs and submits a native APT transfer. | `Promise<TransactionResult>` |
-| `signTransaction(tx)` | Signs a native APT transfer without broadcasting. | `Promise<SignedTransaction>` |
+| `signTransaction(tx)` | Simulates and signs a native APT transfer without broadcasting. Requires a provider. | `Promise<SignedTransaction>` |
 | `quoteTransfer(options)` | Estimates fee for a fungible asset transfer. | `Promise<{ fee: bigint }>` |
 | `transfer(options)` | Signs and submits a fungible asset transfer. | `Promise<TransferResult>` |
-| `getTransactionReceipt(hash)` | Looks up a transaction receipt. | `Promise<TransactionReceipt \| null>` |
+| `getTransactionReceipt(hash)` | Looks up a pending or committed Aptos transaction. | `Promise<{ type: string; hash: string; success?: boolean; vm_status?: string } \| null>` |
 | `sign(message)` | Signs a message with the account key. | `Promise<string>` |
 | `verify(message, signature)` | Verifies a message signature. | `Promise<boolean>` |
 | `toReadOnlyAccount()` | Returns a read-only account for the same address. | `Promise<WalletAccountReadOnlyAptos>` |
@@ -80,9 +80,12 @@ Read-only account for address-based reads and verification.
 ```typescript
 new WalletAccountReadOnlyAptos(
   address: string,
-  config?: AptosWalletConfig
+  config?: AptosWalletConfig,
+  publicKey?: Uint8Array
 )
 ```
+
+An address-only instance supports balance reads and receipt lookup. `quoteSendTransaction()`, `quoteTransfer()`, and `verify()` require the matching public key because an Aptos address cannot be reversed into an Ed25519 public key. `toReadOnlyAccount()` supplies that key automatically.
 
 | Method | Description | Returns |
 |--------|-------------|---------|
@@ -91,17 +94,28 @@ new WalletAccountReadOnlyAptos(
 | `getTokenBalance(tokenAddress)` | Returns a fungible asset balance by metadata address. | `Promise<bigint>` |
 | `quoteSendTransaction(tx)` | Estimates fee for a native APT transfer. | `Promise<{ fee: bigint }>` |
 | `quoteTransfer(options)` | Estimates fee for a fungible asset transfer. | `Promise<{ fee: bigint }>` |
-| `getTransactionReceipt(hash)` | Looks up a transaction receipt. | `Promise<TransactionReceipt \| null>` |
-| `verify(message, signature)` | Verifies a message signature. | `Promise<boolean>` |
+| `getTransactionReceipt(hash)` | Looks up a pending or committed Aptos transaction. | `Promise<{ type: string; hash: string; success?: boolean; vm_status?: string } \| null>` |
+| `verify(message, signature)` | Verifies a message signature. Requires the matching public key. | `Promise<boolean>` |
 
 ## Config Type
 
 ```typescript
 type AptosWalletConfig = {
-  provider?: string
+  provider?: string | string[]
+  chainId?: number
+  retries?: number
+  txnExpirationSecs?: number
   transferMaxFee?: number | bigint
 }
 ```
+
+| Field | Default and behavior |
+|---|---|
+| `provider` | No default. An array enables endpoint failover. |
+| `chainId` | Fetched from ledger info on first use when omitted. A supplied value must match the provider network. |
+| `retries` | `3` for a provider array. |
+| `txnExpirationSecs` | `60`. |
+| `transferMaxFee` | No default. Applies only to fungible asset `transfer()` and rejects fees at or above the cap. |
 
 ## Transaction Types
 
@@ -134,12 +148,31 @@ type TransferResult = {
 }
 ```
 
+`getTransactionReceipt()` has three observable states. The package root does not export an `AptosTransactionReceipt` type; the released declaration uses `type: string`. The following is the portable declared shape:
+
+```typescript
+type AptosReceiptShape = {
+  type: string
+  hash: string
+  success?: boolean
+  vm_status?: string
+}
+```
+
+- `null`: the fullnode does not know the hash.
+- An observed `type` of `pending_transaction`: accepted into the mempool; `success` and `vm_status` are absent.
+- An observed `type` of `user_transaction`: committed; inspect `success` and `vm_status` to determine execution outcome.
+
 ## Signed Transaction
 
-`signTransaction(tx)` returns a JSON-form signed transaction accepted by the Aptos REST API. It includes sender, sequence number, gas fields, payload, and Ed25519 signature.
+`signTransaction(tx)` returns a JSON-form signed transaction accepted by the Aptos REST API. It includes sender, sequence number, gas fields, payload, and Ed25519 signature. Before signing, the module uses the configured provider to simulate the transaction and obtain sequence, gas, and chain data. A failed simulation prevents signing.
 
 <Callout type="warn">
-`signTransaction()` signs native APT transfers only. Use `transfer()` for fungible asset transfers.
+`signTransaction()` does not broadcast, but it is not an offline operation. It signs native APT transfers only. Use `transfer()` for fungible asset transfers.
+</Callout>
+
+<Callout type="warn">
+`transferMaxFee` does not protect native `sendTransaction()` or `signTransaction()` calls. Quote native transfers and enforce an application-level limit when required.
 </Callout>
 
 <Cards>

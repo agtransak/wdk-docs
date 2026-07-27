@@ -125,12 +125,14 @@ Integrate WDK into your existing React Native or Expo project using `@tetherto/w
 ### Step 1: Install
 
 ```bash
-npm install @tetherto/wdk-react-native-core
+npm install @tetherto/wdk-react-native-core react-native-bare-kit
 ```
 
 <Callout type="warn">
-`@tetherto/wdk-react-native-core` `v1.0.0-beta.13` includes the React Native source entry used by Metro, but its npm artifact omits the declared `dist/index.js` and `dist/index.d.ts` files. Default Node resolution and package declaration lookup fail for this tag. Use it only in a Metro flow you have verified; if your build requires the missing outputs, wait for a corrected artifact.
+The `v1.0.0-beta.15` npm artifact includes the React Native source entry at `src/index.ts`, but it does not include the declared default JavaScript or type declaration files under `dist/`. Use a React Native resolver that selects the package's `react-native` condition. Resolvers that select `default` or `types` target files that are not present in this artifact.
 </Callout>
+
+Starting in beta.14, `react-native-bare-kit` is a peer dependency of React Native Core and must be installed explicitly.
 
 ### Step 2: Configure Android minSdkVersion
 
@@ -486,7 +488,7 @@ Some native dependencies may lack type definitions. Add to your `tsconfig.json`:
 
 **For Expo projects:**
 
-- Install `@tetherto/wdk-react-native-core`
+- Install `@tetherto/wdk-react-native-core` and its `react-native-bare-kit` peer dependency
 - Configure Android minSdkVersion to 29 in `app.json`
 - Set up bundle (custom or pre-built)
 - Create `WdkConfigs` configuration
@@ -496,7 +498,7 @@ Some native dependencies may lack type definitions. Add to your `tsconfig.json`:
 
 **For bare React Native:**
 
-- Install package
+- Install `@tetherto/wdk-react-native-core` and its `react-native-bare-kit` peer dependency
 - Set minSdkVersion to 29 in `android/build.gradle`
 - Set up bundle (custom or pre-built)
 - Create `WdkConfigs` configuration

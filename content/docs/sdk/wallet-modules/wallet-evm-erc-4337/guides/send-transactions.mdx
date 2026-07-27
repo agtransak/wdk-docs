@@ -3,7 +3,7 @@ title: Send Transactions
 description: Send gasless transactions and estimate fees.
 ---
 
-This guide explains how to [send a gasless transaction](#send-a-gasless-transaction), [estimate fees](#estimate-fees), [cap transaction fees](#cap-transaction-fees), [reuse a recent quote](#reuse-a-recent-quote), and [use a custom paymaster token](#send-with-custom-paymaster-token).
+This guide explains how to [send a gasless transaction](#send-a-gasless-transaction), [estimate fees](#estimate-fees), [sign, quote, and submit a UserOperation](#sign-quote-and-submit-a-useroperation), [cap transaction fees](#cap-transaction-fees), [reuse a recent quote](#reuse-a-recent-quote), and [use a custom paymaster token](#send-with-custom-paymaster-token).
 
 ## Send a Gasless Transaction
 
@@ -34,9 +34,33 @@ const quote = await account.quoteSendTransaction({
 console.log('Estimated fee:', quote.fee)
 ```
 
+## Sign, Quote, and Submit a UserOperation
+
+Use `signTransaction()` when a separate review or relay step needs a signed ERC-4337 v0.7 UserOperation. The method accepts one transaction, not a batch.
+
+```javascript title="Sign, Quote, and Submit"
+const tx = {
+  to: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+  value: 1000000000000000n
+}
+
+const signedUserOperation = await account.signTransaction(tx)
+const quote = await account.quoteSendTransaction(signedUserOperation)
+console.log('Signed operation fee ceiling:', quote.fee)
+
+const result = await account.sendTransaction(signedUserOperation)
+console.log('UserOperation hash:', result.hash)
+```
+
+<Callout type="warning">
+Only submit an operation produced by the same account with the intended fee-mode configuration. WDK preserves the signed nonce and configuration, does not rebuild or re-sign the operation, and does not reapply `transactionMaxFee` during signed submission. Do not mutate the operation, and submit it before its nonce becomes stale.
+</Callout>
+
+For signed UserOperations, sponsored mode quotes `0n`. Other modes quote a 20% buffered native-gas ceiling in wei. In paymaster-token mode, that signed-operation quote is not a token-denominated paymaster charge.
+
 ## Cap Transaction Fees
 
-Set `transactionMaxFee` to reject non-sponsored `sendTransaction()` and `signTransaction()` operations when the estimated UserOperation fee is above your cap. Use `transferMaxFee` separately for token transfers.
+Set `transactionMaxFee` to reject non-sponsored operations newly built by `sendTransaction()` or `signTransaction()` when the estimated UserOperation fee is above your cap. A signed UserOperation passed to `sendTransaction()` is not checked against the cap again. Use `transferMaxFee` separately for token transfers.
 
 ```javascript title="Cap sendTransaction fees"
 const result = await account.sendTransaction({
@@ -54,6 +78,10 @@ const result = await account.sendTransaction({
 ## Reuse a Recent Quote
 
 Quotes are cached for up to 2 minutes. If you call `sendTransaction()` with the same transaction during that window, the account checks the current on-chain nonce before reusing the cached UserOperation. If the nonce has moved, it builds a fresh quote before sending.
+
+<Callout type="warning">
+Cache identity does not include per-call fee-mode configuration. Use the same fee-mode and paymaster settings for `quoteSendTransaction()` and the matching `sendTransaction()` or `signTransaction()`. Do not quote with one mode, paymaster token, or sponsorship policy and execute the same transaction with another while the quote is cached.
+</Callout>
 
 ```javascript title="Quote Then Send"
 const tx = {
@@ -78,7 +106,7 @@ The wallet reads the on-chain nonce before reserving locally. If that read does 
 
 ## Send with Custom Paymaster Token
 
-You can override the default paymaster token for a specific transaction by passing a config object to [`account.sendTransaction()`](/sdk/wallet-modules/wallet-evm-erc-4337/api-reference):
+You can override the default paymaster token for a specific transaction by passing a config object to [`account.sendTransaction()`](/sdk/wallet-modules/wallet-evm-erc-4337/api-reference). This example assumes the account is already in paymaster-token mode:
 
 ```javascript title="Custom Paymaster Token"
 const result = await account.sendTransaction({
@@ -90,6 +118,8 @@ const result = await account.sendTransaction({
   }
 })
 ```
+
+When switching from sponsored or native-coin mode, also set `isSponsored: false` and `useNativeCoins: false`, and provide any paymaster fields absent from the account configuration.
 
 ## Next Steps
 

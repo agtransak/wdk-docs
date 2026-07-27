@@ -1,6 +1,6 @@
 ---
 title: All Modules
-description: Complete list of all available WDK modules including wallet, pricing, swidge, swap, bridge, lending, and fiat modules.
+description: Complete list of available WDK wallet, Smart Deposit Address, pricing, swidge, swap, bridge, lending, and fiat interfaces and modules.
 docType: reference
 schemaType: TechArticle
 ---
@@ -33,6 +33,14 @@ Wallet modules provide blockchain-specific wallet functionality for managing add
 | [`@tetherto/wdk-wallet-solana-gasless`](https://github.com/tetherto/wdk-wallet-solana-gasless) | Solana | Gasless Solana transactions through a Kora-compatible paymaster | [Docs](/sdk/wallet-modules/wallet-solana-gasless/) |
 | [`@tetherto/wdk-wallet-aptos`](https://github.com/tetherto/wdk-wallet-aptos) | Aptos | Aptos blockchain wallet with native APT and fungible asset support | [Docs](/sdk/wallet-modules/wallet-aptos/) |
 | [`@tetherto/wdk-wallet-spark`](https://github.com/tetherto/wdk-wallet-spark) | Spark | Spark/Lightning Bitcoin L2 wallet | [Docs](/sdk/wallet-modules/wallet-spark/) |
+
+## Smart Deposit Address Interface
+
+The released `@tetherto/wdk-wallet` package includes the provider contract for Smart Deposit Address routes. It defines discovery, deposit-address creation, and optional quote, monitoring, renewal, recovery, and disable operations; it does not include a concrete SDA provider.
+
+| Interface | Package | Description | Documentation |
+|-----------|---------|-------------|---------------|
+| `SdaProtocol` | [`@tetherto/wdk-wallet`](https://www.npmjs.com/package/@tetherto/wdk-wallet) | Abstract provider interface for route-bound deposit addresses | [Docs](/sdk/sda-modules/) |
 
 ## Swidge Interface
 

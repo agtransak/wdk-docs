@@ -161,8 +161,8 @@ const account = new WalletAccountTon(seedPhrase, "0'/0/0", {
 | `sign(message)` | Signs a message using the account's private key | `Promise\<string\>` |
 | `verify(message, signature)` | Verifies a message signature | `Promise\<boolean\>` |
 | `signTransaction(tx)` | Builds a signed external-message body using current chain state, without broadcasting it | `Promise\<Cell\>` |
-| `sendTransaction(tx)` | Sends a TON transaction | `Promise\<{hash: string, fee: bigint}\>` |
-| `quoteSendTransaction(tx)` | Estimates the fee for a TON transaction | `Promise\<{fee: bigint}\>` |
+| `sendTransaction(tx)` | Builds and sends a transaction, or sends a signed transfer-body `Cell` | `Promise\<{hash: string, fee: bigint}\>` |
+| `quoteSendTransaction(tx)` | Estimates the fee for a transaction or signed transfer-body `Cell` | `Promise\<{fee: bigint}\>` |
 | `transfer(options)` | Transfers Jetton tokens to another address | `Promise\<{hash: string, fee: bigint}\>` |
 | `quoteTransfer(options)` | Estimates the fee for a Jetton transfer | `Promise\<{fee: bigint}\>` |
 | `getBalance()` | Returns the native TON balance (in nanotons) | `Promise\<bigint\>` |
@@ -239,11 +239,12 @@ const cell = await account.signTransaction({
 Sends a TON transaction and returns its signed transfer body hash and fee.
 
 **Parameters:**
-- `tx` (object): The transaction object
+- `tx` (TonTransaction | Cell): A transaction object or signed transfer-body `Cell`
   - `to` (string): Recipient TON address (e.g., 'EQ...')
   - `value` (number | bigint): Amount in nanotons (1 TON = 1,000,000,000 nanotons)
   - `bounceable` (boolean, optional): Whether the address is bounceable (TON-specific, optional)
 
+When `tx` is a `Cell`, WDK estimates its fee, enforces `transactionMaxFee`, and passes that exact body to the matching opened `WalletContractV5R1.send()` call. It does not rebuild the body, refresh its sequence number, or re-sign it.
 
 **Returns:** `Promise\<{hash: string, fee: bigint}\>` - Object containing the signed transfer body hash as lowercase hex and the fee in nanotons
 
@@ -263,7 +264,7 @@ console.log('Transaction fee:', result.fee, 'nanotons');
 Estimates the fee for a transaction.
 
 **Parameters:**
-- `tx` (object): The transaction object (same as sendTransaction)
+- `tx` (TonTransaction | Cell): A transaction object or signed transfer-body `Cell`
   - `to` (string): Recipient TON address (e.g., 'EQ...')
   - `value` (number | bigint): Amount in nanotons (1 TON = 1,000,000,000 nanotons)
   - `bounceable` (boolean, optional): Whether the address is bounceable (TON-specific, optional)
@@ -517,6 +518,16 @@ interface TonTransaction {
   body?: string | Cell;
 }
 ```
+
+### Cell
+
+The signed transaction body returned by `signTransaction()` is a `Cell` from `@ton/core`. It is not re-exported by `@tetherto/wdk-wallet-ton`.
+
+```typescript
+import type { Cell } from '@ton/core'
+```
+
+This value is the signed transfer body accepted by the matching opened `WalletContractV5R1.send()` call. It is not a complete external-message BOC.
 
 ### TransferOptions
 

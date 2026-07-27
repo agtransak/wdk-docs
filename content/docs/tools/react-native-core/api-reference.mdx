@@ -339,7 +339,7 @@ Hook to call configured protocol modules through the active WDK worklet account.
 |-----------|------|-------------|
 | `params.network` | `string` | Network identifier configured in `wdkConfigs` |
 | `params.accountIndex` | `number` | Account index to use for the protocol call |
-| `params.protocolType` | `'bridge' \| 'swap' \| 'lending' \| 'fiat'` | Protocol category |
+| `params.protocolType` | `'bridge' \| 'swap' \| 'swidge' \| 'lending' \| 'fiat'` | Protocol category |
 | `params.protocolName` | `string` | Registered protocol name |
 
 ### Returns
@@ -347,6 +347,8 @@ Hook to call configured protocol modules through the active WDK worklet account.
 Returns `T`, a proxy for the protocol methods you type with the hook generic. Each method returns a promise from the worklet call.
 
 If no active account is available, protocol method calls log an error and return `undefined`.
+
+The `swidge` protocol type is available in `v1.0.0-beta.15`. It requires a non-empty `protocolName` and forwards calls through the matching Swidge protocol wrapper on the selected account.
 
 ### Example
 
@@ -389,8 +391,8 @@ function SwapQuoteScreen() {
 
 Hook that creates a typed proxy for one named generic module in the active HRPC worklet. Every method access is forwarded through `ModuleService.callModule()`. The proxy also exposes `on(event, listener)` for module events.
 
-<Callout type="warn">
-React Native Core `v1.0.0-beta.13` exposes this API but pins Pear Worklet `v1.0.0-beta.8`, which does not contain the required module HRPC methods. The default dependency graph therefore cannot run these calls. Installing Pear Worklet beta.9 separately does not replace the nested beta.8 dependency; wait for a dependency-aligned React Native Core release before adopting this API.
+<Callout type="info">
+React Native Core `v1.0.0-beta.14` and later pin a Pear Worklet version with the HRPC methods required by this API.
 </Callout>
 
 ### Parameters

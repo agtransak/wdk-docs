@@ -117,7 +117,7 @@ const workletConfig = {
 - `resetWdkWallets()` reads only the `networks` portion of the decoded config.
 
 <Callout type="warn">
-Generic modules are HRPC-only in beta.9. The JSON-RPC handler does not construct modules or expose module calls and events.
+Generic modules are HRPC-only in beta.10. The JSON-RPC handler does not construct modules or expose module calls and events.
 </Callout>
 
 ## Initialize WDK
@@ -141,7 +141,7 @@ await hrpc.initializeWDK({
 - Pass both `encryptionKey` and `encryptedSeed`, or omit both together.
 - On first initialization, the worklet must receive an encrypted seed pair so it can create `context.wdk`.
 - If `context.wdk` already exists, a later `initializeWDK()` call disposes the existing instance and closes its generic modules before re-registering wallets and protocols from the new config.
-- In beta.9, generic modules are constructed only when that `initializeWDK()` request includes both `encryptionKey` and `encryptedSeed`. A seedless reinitialization closes existing module instances but does not rebuild them, even when `config.modules` is present. Supply the seed pair on every initialization that must construct or reconstruct modules.
+- In beta.10, generic modules are constructed only when that `initializeWDK()` request includes both `encryptionKey` and `encryptedSeed`. A seedless reinitialization closes existing module instances but does not rebuild them, even when `config.modules` is present. Supply the seed pair on every initialization that must construct or reconstruct modules.
 - Module `close()` is called during full disposal or reinitialization. Targeted blockchain disposal leaves generic modules running. Optional `suspend()` and `resume()` methods run only when the host forwards Bare lifecycle events; the manual context above and Worklet Bundler-generated HRPC entrypoints do so.
 
 ## Reset Selected Wallets
@@ -171,7 +171,7 @@ await hrpc.resetWdkWallets({
 - The reset flow does not re-register protocols.
 - The reset flow does not close or reconstruct generic modules; existing module instances keep running.
 
-## Call Wallet Methods
+## Call Wallet and Protocol Methods
 
 You can execute wallet account methods through [`callMethod()`](/tools/pear-wrk-wdk/api-reference):
 
@@ -189,6 +189,7 @@ const result = await hrpc.callMethod({
 - `options` is optional and must be a JSON string when provided.
 - When `args` decodes to an array, the handler spreads the values as positional method arguments.
 - When `args` decodes to an object or primitive, the handler passes it as a single argument.
+- Set `options.protocolType` to `swap`, `swidge`, `bridge`, `lending`, or `fiat` to call a protocol wrapper. Every protocol call requires a non-empty `options.protocolName`.
 
 ## Call Generic Module Methods
 
@@ -231,7 +232,7 @@ module.exports = (ipc) => {
 
 Messages are UTF-8 JSON-RPC 2.0 objects prefixed by a four-byte unsigned big-endian payload length. Requests require an ID, and IDs must be unique while a request is in flight. The package exports no JSON-RPC host/client helper; the native host must implement framing and correlation.
 
-JSON-RPC beta.9 supports WDK initialization and disposal, secret/mnemonic operations, wallet-account calls, and dynamic wallet/protocol registration. It does not support `resetWdkWallets`, `callModule`, or module events. See the [API reference](/tools/pear-wrk-wdk/api-reference#json-rpc-transport) for the exact method list.
+JSON-RPC beta.10 supports WDK initialization and disposal, secret/mnemonic operations, wallet and protocol calls, and dynamic wallet/protocol registration. Its shared `callMethod` handler supports the `swidge` protocol type. It does not support `resetWdkWallets`, `callModule`, or module events. See the [API reference](/tools/pear-wrk-wdk/api-reference#json-rpc-transport) for the exact method list.
 
 <Callout type="warn">
 INFO-level logs can contain wallet-call arguments and JSON-RPC parameters or results. Keep production logging at its default ERROR level when requests may contain sensitive values.

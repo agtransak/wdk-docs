@@ -1,6 +1,6 @@
 ---
 title: WDK Utils Configuration
-description: Install and import validation, encryption, key-derivation, and payment-request helpers from @tetherto/wdk-utils
+description: Install and import validation, encryption, mnemonic-sharing, key-derivation, and payment-request helpers from @tetherto/wdk-utils
 ---
 
 This package does not have constructor options or runtime configuration. This page shows how to install `@tetherto/wdk-utils`, import the helpers you need, and understand the published runtime surface.
@@ -12,6 +12,14 @@ You can install `@tetherto/wdk-utils` from npm:
 ```bash title="Install @tetherto/wdk-utils"
 npm install @tetherto/wdk-utils
 ```
+
+React Native runtimes without `globalThis.crypto.getRandomValues` also need a secure random-values polyfill:
+
+```bash title="Install React Native Random Values"
+npm install react-native-get-random-values
+```
+
+Load the polyfill before importing WDK Utils in the application entrypoint.
 
 ## Import address validation helpers
 
@@ -25,10 +33,22 @@ import {
   validateLnurl,
   decodeLnurl,
   validateLightningAddress,
+  validateSolanaAddress,
   validateSparkAddress,
   validateTronAddress,
   validateUmaAddress,
   resolveUmaUsername
+} from '@tetherto/wdk-utils'
+```
+
+## Import mnemonic sharing helpers
+
+Split a valid English BIP-39 mnemonic into threshold shares and reconstruct it from enough shares:
+
+```javascript title="Import Mnemonic Sharing Helpers"
+import {
+  combineMnemonic,
+  splitMnemonic
 } from '@tetherto/wdk-utils'
 ```
 
@@ -97,6 +117,10 @@ import {
 
 - `@tetherto/wdk-utils` exports plain functions. There is no client object to initialize.
 - The package publishes a default module entrypoint through `index.js` and a bare runtime entrypoint through `bare.js`.
+- `validateSolanaAddress()` accepts base58-encoded 32-byte public keys, including off-curve program-derived addresses. Solana has no address checksum, so the helper cannot detect every mistyped address.
+- `splitMnemonic()` accepts valid 12-, 15-, 18-, 21-, or 24-word English BIP-39 phrases. It returns hex-encoded Shamir shares and supports threshold schemes from 2-of-2 through 255-of-255.
+- `combineMnemonic()` verifies an embedded integrity checksum before returning the reconstructed phrase. The checksum detects corruption but does not authenticate shares.
+- `encrypt()` and `splitMnemonic()` require `globalThis.crypto.getRandomValues`. In React Native, load `react-native-get-random-values` before importing `@tetherto/wdk-utils` when the runtime does not provide secure random bytes.
 - `parseBip21Request()` accepts `bitcoin:` URIs with a validated Bitcoin address and optional `amount`, `label`, and `message` parameters.
 - `encodeBip21Request()` validates the Bitcoin address and amount before returning a `bitcoin:` URI.
 - `encrypt()` returns a versioned payload with hex-encoded `salt`, `iv`, `tag`, and `ciphertext` fields plus the scrypt cost parameters used for key derivation.
@@ -120,12 +144,14 @@ You can validate common wallet inputs before handing them to a module:
 import {
   validateBitcoinAddress,
   validateLightningAddress,
+  validateSolanaAddress,
   validateTronAddress,
   validateUmaAddress
 } from '@tetherto/wdk-utils'
 
 const btc = validateBitcoinAddress('bc1qu9yqnhc6wjj6s62s9x0shnl5l2r7gq5cudm94r7mvwv0uw4s7acq0hn9g6')
 const lightning = validateLightningAddress('sprycomfort92@waletofsatoshi.com')
+const solana = validateSolanaAddress('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
 const tron = validateTronAddress('TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH')
 const uma = validateUmaAddress('$you@uma.money')
 ```
@@ -174,6 +200,26 @@ import { decrypt, encrypt } from '@tetherto/wdk-utils'
 const encrypted = encrypt(seedPhrase, passphrase)
 const restoredSeedPhrase = decrypt(encrypted, passphrase)
 ```
+
+You can split a BIP-39 mnemonic into shares that require a threshold to recover:
+
+```javascript title="Split And Recover A Mnemonic"
+import 'react-native-get-random-values' // React Native only; load before WDK Utils
+import { combineMnemonic, splitMnemonic } from '@tetherto/wdk-utils'
+
+const shares = await splitMnemonic(seedPhrase, {
+  shares: 5,
+  threshold: 3
+})
+
+const restored = await combineMnemonic([
+  shares[0],
+  shares[2],
+  shares[4]
+])
+```
+
+Treat every unencrypted share as sensitive recovery material. Store shares separately and do not send them to logs, analytics, or untrusted services.
 
 You can derive independent keys for application-specific purposes by using distinct domain labels:
 

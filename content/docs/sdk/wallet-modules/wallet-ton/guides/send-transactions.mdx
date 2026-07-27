@@ -5,7 +5,7 @@ docType: how-to
 schemaType: TechArticle
 ---
 
-This guide explains how to [send native TON](#send-native-ton), [estimate transaction fees](#estimate-transaction-fees), [cap transaction fees](#cap-transaction-fees), [read mainnet fee rates](#read-mainnet-fee-rates), and [prepare a signed transaction body](#prepare-a-signed-transaction-body).
+This guide explains how to [send native TON](#send-native-ton), [estimate transaction fees](#estimate-transaction-fees), [cap transaction fees](#cap-transaction-fees), [read mainnet fee rates](#read-mainnet-fee-rates), [prepare a signed transaction body](#prepare-a-signed-transaction-body), and [quote and send a signed transaction body](#quote-and-send-a-signed-transaction-body).
 
 <Callout type="info">
 On TON, values are expressed in nanotons (1 TON = 10^9 nanotons). Transactions support an optional `bounceable` parameter specific to the TON network.
@@ -71,6 +71,27 @@ const cell = await account.signTransaction({
 
 // `cell` is not broadcast by signTransaction().
 ```
+
+## Quote and Send a Signed Transaction Body
+
+Pass the `Cell` returned by `signTransaction()` to the quote and send methods when review and submission are separate steps.
+
+```javascript title="Quote and Send a Signed Body"
+const cell = await account.signTransaction({
+  to: 'EQ...',
+  value: 1000000000n
+})
+
+const quote = await account.quoteSendTransaction(cell)
+console.log('Estimated fee:', quote.fee, 'nanotons')
+
+const result = await account.sendTransaction(cell)
+console.log('Signed transfer body hash:', result.hash)
+```
+
+<Callout type="warning">
+The signed body contains the wallet sequence number read during signing. Submit it through the same matching account before that sequence number changes. WDK sends the `Cell` unchanged and does not rebuild or re-sign it; `sendTransaction()` estimates its fee again and enforces `transactionMaxFee`. The returned hash identifies the signed transfer body, not a network transaction hash.
+</Callout>
 
 ## Next Steps
 

@@ -16,12 +16,12 @@ description: Hooks-based React Native library for building multi-chain wallet ap
 - **Multi-wallet support** - create, restore, switch, lock, unlock, and delete wallets
 - **Typed React Native source API** - exported hook and service types are available through the package's React Native source condition
 
-<Callout type="warn">
-In `v1.0.0-beta.13`, the generic module API is not runnable through the default dependency graph: React Native Core pins Pear Worklet `v1.0.0-beta.8`, while module calls and events require the HRPC methods added in Pear Worklet `v1.0.0-beta.9`. Installing beta.9 separately does not replace the nested beta.8 dependency. Wait for a dependency-aligned React Native Core release before using `useModule()` or `ModuleService` in an end-to-end integration.
+<Callout type="info">
+Starting in `v1.0.0-beta.14`, React Native Core pins a Pear Worklet version with the HRPC methods required by `useModule()` and `ModuleService`. Beta.15 pins Pear Worklet beta.10.
 </Callout>
 
-<Callout type="info">
-The beta.13 npm artifact ships its `react-native` source entry but omits the declared default JavaScript and declaration outputs under `dist/`. Consume this release through React Native/Metro; the tag does not provide a working default Node entrypoint.
+<Callout type="warn">
+The `v1.0.0-beta.15` npm artifact includes the React Native source entry at `src/index.ts`, but it does not include the declared default JavaScript or type declaration files under `dist/`. Use a React Native resolver that selects the package's `react-native` condition. Resolvers that select `default` or `types` target files that are not present in this artifact.
 </Callout>
 
 ## Quick Start
@@ -29,8 +29,10 @@ The beta.13 npm artifact ships its `react-native` source entry but omits the dec
 ### 1. Install
 
 ```bash
-npm install @tetherto/wdk-react-native-core
+npm install @tetherto/wdk-react-native-core react-native-bare-kit
 ```
+
+Starting in beta.14, `react-native-bare-kit` is a peer dependency with a supported range of `>=0.14.5`, so the app must install it explicitly.
 
 ### 2. Wrap Your App
 
@@ -140,8 +142,8 @@ WdkAppProvider
     +-- useWdkApp()         - app state (INITIALIZING, NO_WALLET, LOCKED, READY, ERROR)
     +-- useWalletManager()  - create, restore, lock, unlock, delete wallets
     +-- useAccount()        - address, send, sign, verify, estimateFee
-    +-- useProtocol()       - call bridge, swap, lending, and fiat protocol methods
-    +-- useModule()         - call named generic modules and subscribe to events (dependency-aligned HRPC builds only)
+    +-- useProtocol()       - call bridge, swap, Swidge, lending, and fiat protocol methods
+    +-- useModule()         - call named generic modules and subscribe to events
     +-- useAddresses()      - load and query addresses
     +-- useBalance()            - single balance with TanStack Query
     +-- useBalancesForWallet()  - bulk balance fetch for one account index

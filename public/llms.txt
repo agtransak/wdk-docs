@@ -5,15 +5,22 @@ Raw markdown is available by appending `.md` to any documentation page URL.
 
 - Welcome to WDK: https://docs.wdk.tether.io/
 - Build with AI: https://docs.wdk.tether.io/start-building/build-with-ai
-- WDK CLI: https://docs.wdk.tether.io/ai/wdk-cli
-- Get Started: https://docs.wdk.tether.io/ai/wdk-cli/get-started
-- Configuration: https://docs.wdk.tether.io/ai/wdk-cli/configuration
-- Commands: https://docs.wdk.tether.io/ai/wdk-cli/commands
-- MCP: https://docs.wdk.tether.io/ai/wdk-cli/mcp
+- WDK CLI: https://docs.wdk.tether.io/cli
+- WDK CLI Configuration: https://docs.wdk.tether.io/cli/configuration
+- WDK CLI API Reference: https://docs.wdk.tether.io/cli/api-reference
+- WDK CLI Get Started: https://docs.wdk.tether.io/cli/guides/get-started
+- WDK CLI Manage Wallets: https://docs.wdk.tether.io/cli/guides/manage-wallets
+- WDK CLI Manage Tokens: https://docs.wdk.tether.io/cli/guides/manage-tokens
+- WDK CLI Custom Networks: https://docs.wdk.tether.io/cli/guides/custom-networks
+- WDK CLI MCP Server: https://docs.wdk.tether.io/cli/guides/use-mcp-server
+- WDK CLI Error Handling: https://docs.wdk.tether.io/cli/guides/handle-errors
+- WDK CLI Architecture: https://docs.wdk.tether.io/cli/reference/architecture
+- WDK CLI Storage Format: https://docs.wdk.tether.io/cli/reference/storage-format
+- WDK CLI Security Model: https://docs.wdk.tether.io/cli/reference/security-model
 - MCP Toolkit: https://docs.wdk.tether.io/ai/mcp-toolkit
-- Get Started: https://docs.wdk.tether.io/ai/mcp-toolkit/get-started
-- Configuration: https://docs.wdk.tether.io/ai/mcp-toolkit/configuration
 - API Reference: https://docs.wdk.tether.io/ai/mcp-toolkit/api-reference
+- Configuration: https://docs.wdk.tether.io/ai/mcp-toolkit/configuration
+- Get Started: https://docs.wdk.tether.io/ai/mcp-toolkit/get-started
 - LangChain Integration: https://docs.wdk.tether.io/ai/mcp-toolkit/langchain
 - Agent Skills: https://docs.wdk.tether.io/ai/agent-skills
 - OpenClaw (Community Skill): https://docs.wdk.tether.io/ai/openclaw

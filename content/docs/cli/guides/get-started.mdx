@@ -1,0 +1,134 @@
+---
+title: Get Started
+description: Install WDK CLI and complete a testnet wallet flow
+docType: getting-started
+schemaType: TechArticle
+icon: Rocket
+---
+
+Install WDK CLI globally:
+
+```bash title="Terminal"
+npm install -g @tetherto/wdk-cli@1.0.0-beta.1
+```
+
+The current release is `1.0.0-beta.1`. Beta releases can change before the stable release.
+
+<Callout type="warn">
+Use a dedicated development wallet with testnet funds for this guide. Do not import a production seed phrase or fund this wallet with mainnet assets.
+</Callout>
+
+## Prerequisites
+
+- Node.js `22.18.0` or later
+- npm
+- A trusted source of Sepolia test ETH
+
+Verify the installation:
+
+```bash title="Terminal"
+wdk --version
+wdk --help
+```
+
+The package installs the `wdk`, `wdk-mcp`, and `wdk-daemon` binaries. Use `wdk` for the steps below.
+
+## 1. Create A Development Wallet
+
+Create a named 24-word wallet:
+
+```bash title="Terminal"
+wdk wallet create --name quickstart-dev --words 24
+```
+
+Enter a non-empty, unique passphrase when prompted. The command displays the generated seed phrase. Record it offline before continuing and do not put it in a terminal command, source file, or screenshot.
+
+The first wallet you create or import becomes the default wallet automatically. You do not need to run `wdk wallet default` for this flow.
+
+Unlock the wallet for five minutes:
+
+```bash title="Terminal"
+wdk wallet unlock --name quickstart-dev --ttl 5
+```
+
+The TTL starts at unlock and does not restart when you use the wallet. Unlock it again if the session expires while you complete this guide. See [Manage Wallets](/cli/guides/manage-wallets/) for session details.
+
+## 2. Get A Receiving Address
+
+Derive the wallet's Sepolia address:
+
+```bash title="Terminal"
+wdk get address --network sepolia --wallet quickstart-dev
+```
+
+Copy the returned address into a trusted Sepolia faucet. Fund it with only enough test ETH to complete the example.
+
+<Callout type="info">
+Receiving funds is an on-chain operation outside WDK CLI. Wait for the faucet transaction to confirm before checking the balance.
+</Callout>
+
+## 3. Check The Balance
+
+Read the wallet's native Sepolia balance:
+
+```bash title="Terminal"
+wdk get balance --network sepolia --wallet quickstart-dev
+```
+
+If the command reports that the wallet is locked, unlock it again and repeat the balance check.
+
+## 4. Preview A Send
+
+Use an address you control as the recipient. A dry run estimates the fee and returns a transaction summary without broadcasting:
+
+```bash title="Terminal"
+wdk send \
+  --network sepolia \
+  --to YOUR_SEPOLIA_ADDRESS \
+  --amount 0.0001 \
+  --wallet quickstart-dev \
+  --dry-run
+```
+
+Check the network, recipient, amount, and estimated fee in the preview.
+
+<Callout type="warn">
+Removing `--dry-run` broadcasts the transaction. WDK CLI does not ask for another confirmation after the wallet is unlocked. Replace the placeholder with an address you control and review every value first.
+</Callout>
+
+When you intend to send the testnet transaction, run the same command without `--dry-run`:
+
+```bash title="Terminal"
+wdk send \
+  --network sepolia \
+  --to YOUR_SEPOLIA_ADDRESS \
+  --amount 0.0001 \
+  --wallet quickstart-dev
+```
+
+## 5. Lock The Wallet
+
+End the wallet session when you finish:
+
+```bash title="Terminal"
+wdk wallet lock --name quickstart-dev
+```
+
+Lock every unlocked wallet with:
+
+```bash title="Terminal"
+wdk wallet lock --all
+```
+
+## Next Steps
+
+- [Manage Wallets](/cli/guides/manage-wallets/) - Import, export, rename, unlock, and delete wallets
+- [Manage Tokens](/cli/guides/manage-tokens/) - Inspect and extend the token registry
+- [Use the MCP Server](/cli/guides/use-mcp-server/) - Connect a supported AI client
+- [Security Model](/cli/reference/security-model/) - Understand the daemon trust boundary and session trade-offs
+
+***
+
+## Need Help?
+
+<SupportCards />

@@ -136,6 +136,10 @@ Raw markdown is available by appending `.md` to any documentation page URL.
 - Handle Errors: https://docs.wdk.tether.io/sdk/swap-modules/swap-velora-evm/guides/handle-errors
 - Swap velora EVM Guides: https://docs.wdk.tether.io/sdk/swap-modules/swap-velora-evm/usage
 - Swap and Bridge Modules Overview: https://docs.wdk.tether.io/sdk/swidge-modules
+- 0x Swidge Overview: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-0x
+- 0x Swidge API Reference: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-0x/api-reference
+- 0x Swidge Configuration: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-0x/configuration
+- 0x Swidge Usage: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-0x/usage
 - LI.FI Swidge Overview: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-lifi
 - LI.FI Swidge API Reference: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-lifi/api-reference
 - LI.FI Swidge Configuration: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-lifi/configuration

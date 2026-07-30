@@ -1,6 +1,6 @@
 ---
 name: wdk
-description: Tether Wallet Development Kit (WDK) for building non-custodial multi-chain wallets. Use when working with @tetherto/wdk, wallet modules (wdk-wallet-aptos, wdk-wallet-btc, wdk-wallet-evm, wdk-wallet-evm-erc-4337, wdk-wallet-solana, wdk-wallet-spark, wdk-wallet-ton, wdk-wallet-tron, ton-gasless, tron-gasfree), Smart Deposit Address provider interfaces, and protocol modules including swidge, swap (wdk-protocol-swap-velora-evm), bridge (wdk-protocol-bridge-usdt0-evm), lending (wdk-protocol-lending-aave-evm), and fiat (wdk-protocol-fiat-moonpay). Covers wallet creation, transactions, token transfers, deposit routing, swidge asset routes, DEX swaps, cross-chain bridges, DeFi lending/borrowing, and fiat on/off ramps.
+description: Tether Wallet Development Kit (WDK) for building non-custodial multi-chain wallets. Use when working with @tetherto/wdk, wallet modules (wdk-wallet-aptos, wdk-wallet-btc, wdk-wallet-evm, wdk-wallet-evm-erc-4337, wdk-wallet-solana, wdk-wallet-spark, wdk-wallet-ton, wdk-wallet-tron, ton-gasless, tron-gasfree), and protocol modules including swidge, swap (wdk-protocol-swap-velora-evm), bridge (wdk-protocol-bridge-usdt0-evm), lending (wdk-protocol-lending-aave-evm), and fiat (wdk-protocol-fiat-moonpay). Covers wallet creation, transactions, token transfers, swidge asset routes, DEX swaps, cross-chain bridges, DeFi lending/borrowing, and fiat on/off ramps.
 ---
 
 # Tether WDK
@@ -35,7 +35,6 @@ This skill is organized into reference files for chain-specific and protocol-spe
 | `references/wallet-spark.md` | Spark: Lightning, key tree, deposits, withdrawals |
 | `references/wallet-ton.md` | TON + TON Gasless: Jettons, nanotons, paymaster |
 | `references/wallet-tron.md` | TRON + TRON Gasfree: TRC20, energy/bandwidth, gasFreeProvider |
-| `references/protocol-sda.md` | Smart Deposit Address: provider interface, route discovery, address lifecycle, transfer status |
 | `references/protocol-swidge.md` | Swidge: preferred route interface for new swap, bridge, and combined providers |
 | `references/protocol-swap.md` | Velora EVM swap protocol |
 | `references/protocol-bridge.md` | USDT0 cross-chain bridge via LayerZero |
@@ -59,7 +58,6 @@ When a task targets a specific chain or protocol, read the relevant reference fi
     │   ├── wdk-wallet-ton-gasless   # TON gasless
     │   ├── wdk-wallet-tron     # TRON
     │   ├── wdk-wallet-tron-gasfree  # TRON gas-free
-    │   └── protocols/SdaProtocol    # Smart Deposit Address provider interface; no concrete provider
     └── Protocol Modules
         ├── swidge protocol interface             # Preferred route interface for new swap, bridge, or combined providers
         ├── wdk-protocol-swap-velora-evm   # DEX swaps on EVM
@@ -197,8 +195,6 @@ All require human confirmation: `claimDeposit`, `claimStaticDeposit`, `refundSta
 - **Bridge**: `bridge` (usdt0-evm) — quote first and require human confirmation. Standard EVM accounts require prior token approval for the source-chain spender; supported ERC-4337 helper routes bundle approval and bridging into one UserOperation.
 - **Lending (Aave)**: `supply`, `withdraw`, `borrow`, `repay`, `setUseReserveAsCollateral`, `setUserEMode`
 - **Fiat (MoonPay)**: `buy`, `sell` (generate widget URLs; signed only when `signUrl` is configured)
-- **Smart Deposit Address**: `getSupportedRoutes`, `quoteDeposit`, lookups, and transfer-history methods are reads. `createDepositAddress`, `renewDepositAddress`, `recoverDepositAddress`, and `disableDepositAddress` can change provider-side lifecycle state and require human confirmation. Address creation does not itself move funds; any later deposit is a separate wallet transaction.
-
 ### Pre-Transaction Validation
 
 **Before EVERY write method, verify:**

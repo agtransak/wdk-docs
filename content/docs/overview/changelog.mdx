@@ -10,6 +10,30 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 ---
 
+### July 29, 2026
+
+**What's New**
+- **rgb-lightning** ([v0.1.0-beta.15](https://github.com/UTEXO-Protocol/wdk-rgb-lightning/releases/tag/v0.1.0-beta.15)): Add the community-maintained RGB Lightning wallet and node module for BTC and RGB balances, peers and channels, Lightning and RGB invoices and payments, LSP and Lightning Address flows, APay, and VSS backup. The beta requires one platform-specific native peer, persistent node state, and an explicit unlock step before account operations.
+
+**Changes**
+- **lending-aave-evm** ([v1.0.0-beta.5](https://github.com/tetherto/wdk-protocol-lending-aave-evm/releases/tag/v1.0.0-beta.5)): Refresh the wallet and ethers dependencies without changing the Aave adapter's public runtime or type surface. ERC-4337 integrations must now provide the dependency's required `safeModulesVersion`; token-paymaster mode also requires a paymaster address, URL, and token configuration.
+
+---
+
+### July 28, 2026
+
+**What's New**
+- **swidge-symbiosis** ([v1.1.1](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/tree/v1.1.1)): Add the community-maintained Symbiosis Swidge provider for dynamic chain and token discovery, indicative cross-chain quotes, source-chain approval and execution, and status polling. Execution obtains a fresh route rather than consuming the earlier quote, so applications must reconfirm the current response and enforce their own output policy before broadcast.
+
+---
+
+### July 27, 2026
+
+**What's New**
+- **wallet-solana-gasless** ([v1.0.0-beta.2](https://github.com/tetherto/wdk-wallet-solana-gasless/releases/tag/v1.0.0-beta.2)): Let owned accounts quote and submit the fully signed transaction returned by `signTransaction()`. Quoting decodes the embedded paymaster-token fee without broadcasting; sending applies `transactionMaxFee` and submits the exact base64 wire transaction through Solana RPC without contacting the paymaster again. The signed payload keeps its existing blockhash or durable-nonce lifetime and is not refreshed or re-signed.
+
+---
+
 ### July 24, 2026
 
 **What's New**
@@ -26,6 +50,7 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 **Changes**
 - **wallet-evm-erc-4337** ([v1.0.0-beta.13](https://github.com/tetherto/wdk-wallet-evm-erc-4337/releases/tag/v1.0.0-beta.13)): Add Hardhat and regression-test coverage without changing the beta.12 production API or runtime behavior.
+- **lending-morpho-evm** ([v1.0.5](https://github.com/morpho-org/sdks/releases/tag/%40morpho-org/wdk-protocol-lending-morpho-evm-v1.0.5)): Raise `@morpho-org/morpho-sdk` from `^5.3.2` to `^5.4.0` without changing the WDK adapter's compiled JavaScript, declarations, exports, configuration, or README.
 
 ---
 
@@ -47,7 +72,7 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 ### July 21, 2026
 
 **What's New**
-- **wdk-wallet** ([v1.0.0-beta.15](https://github.com/tetherto/wdk-wallet/releases/tag/v1.0.0-beta.15)): Add the provider-facing `SdaProtocol` and `ISdaProtocol` interface for supported-route discovery and deposit-address creation, with optional quoting, address derivation and lifecycle, transfer history and status, and recovery methods. No concrete SDA provider or WDK Core registration/accessor ships in the current releases, so this is an implementation contract rather than a runnable end-user flow. The package also exports `UnsupportedOperationError`, `ValueError`, and `NoSuchElementError`.
+- **wdk-wallet** ([v1.0.0-beta.15](https://github.com/tetherto/wdk-wallet/releases/tag/v1.0.0-beta.15)): Export `UnsupportedOperationError`, `ValueError`, and `NoSuchElementError` from the base wallet package.
 
 ---
 
@@ -301,7 +326,7 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 ### May 19, 2026
 
 **What's New**
-- **[Swidge Protocol Interface](/sdk/swidge-modules)**: New page covering WDK's preferred route interface for new swap, bridge, and combined route providers, including discovery, quote, execution, status, fee, and migration guidance for the existing standalone swap and bridge interfaces.
+- **[Swidge modules](/sdk/swidge-modules)**: Add a catalog for released swap, bridge, and combined-route provider modules.
 
 ---
 

@@ -28,8 +28,10 @@ type WalletModule = {
   id: string;
   label: string;
   chain: ChainFilter;
+  additionalChains?: ChainFilter[];
   goals: GoalFilter[];
   packageName: string;
+  ownership: "Tether" | "Community";
   docsHref: string;
   apiHref?: string;
   bestFor: string;
@@ -70,6 +72,7 @@ const walletModules: WalletModule[] = [
     chain: "evm",
     goals: ["standard"],
     packageName: "@tetherto/wdk-wallet-evm",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-evm",
     apiHref: "/sdk/wallet-modules/wallet-evm/api-reference",
     bestFor: "Externally owned accounts on Ethereum and EVM-compatible chains.",
@@ -85,6 +88,7 @@ const walletModules: WalletModule[] = [
     chain: "evm",
     goals: ["gasless"],
     packageName: "@tetherto/wdk-wallet-evm-erc-4337",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-evm-erc-4337",
     apiHref: "/sdk/wallet-modules/wallet-evm-erc-4337/api-reference",
     bestFor: "Account abstraction flows that submit UserOperations through a bundler.",
@@ -100,6 +104,7 @@ const walletModules: WalletModule[] = [
     chain: "evm",
     goals: ["gasless"],
     packageName: "@tetherto/wdk-wallet-evm-7702-gasless",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-evm-7702-gasless",
     apiHref: "/sdk/wallet-modules/wallet-evm-7702-gasless/api-reference",
     bestFor: "EOA-based EIP-7702 delegation with ERC-4337 UserOperation submission.",
@@ -115,6 +120,7 @@ const walletModules: WalletModule[] = [
     chain: "bitcoin",
     goals: ["standard"],
     packageName: "@tetherto/wdk-wallet-btc",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-btc",
     apiHref: "/sdk/wallet-modules/wallet-btc/api-reference",
     bestFor: "Bitcoin SegWit wallet flows.",
@@ -130,6 +136,7 @@ const walletModules: WalletModule[] = [
     chain: "lightning",
     goals: ["lightning"],
     packageName: "@tetherto/wdk-wallet-spark",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-spark",
     apiHref: "/sdk/wallet-modules/wallet-spark/api-reference",
     bestFor: "Spark wallets with Lightning payment support.",
@@ -145,6 +152,7 @@ const walletModules: WalletModule[] = [
     chain: "ton",
     goals: ["standard"],
     packageName: "@tetherto/wdk-wallet-ton",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-ton",
     apiHref: "/sdk/wallet-modules/wallet-ton/api-reference",
     bestFor: "TON wallets where users pay regular TON fees.",
@@ -160,6 +168,7 @@ const walletModules: WalletModule[] = [
     chain: "ton",
     goals: ["gasless"],
     packageName: "@tetherto/wdk-wallet-ton-gasless",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-ton-gasless",
     apiHref: "/sdk/wallet-modules/wallet-ton-gasless/api-reference",
     bestFor: "TON Jetton transfer flows that avoid requiring users to hold TON for gas.",
@@ -175,6 +184,7 @@ const walletModules: WalletModule[] = [
     chain: "tron",
     goals: ["standard"],
     packageName: "@tetherto/wdk-wallet-tron",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-tron",
     apiHref: "/sdk/wallet-modules/wallet-tron/api-reference",
     bestFor: "TRON wallets where users pay standard network costs.",
@@ -190,6 +200,7 @@ const walletModules: WalletModule[] = [
     chain: "tron",
     goals: ["gasless"],
     packageName: "@tetherto/wdk-wallet-tron-gasfree",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-tron-gasfree",
     apiHref: "/sdk/wallet-modules/wallet-tron-gasfree/api-reference",
     bestFor: "TRON applications that need gasfree TRC20 transfers.",
@@ -205,6 +216,7 @@ const walletModules: WalletModule[] = [
     chain: "solana",
     goals: ["standard"],
     packageName: "@tetherto/wdk-wallet-solana",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-solana",
     apiHref: "/sdk/wallet-modules/wallet-solana/api-reference",
     bestFor: "Solana wallets with SOL and SPL token support.",
@@ -220,6 +232,7 @@ const walletModules: WalletModule[] = [
     chain: "solana",
     goals: ["gasless"],
     packageName: "@tetherto/wdk-wallet-solana-gasless",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-solana-gasless",
     apiHref: "/sdk/wallet-modules/wallet-solana-gasless/api-reference",
     bestFor: "Solana transaction flows funded through a Kora-compatible paymaster.",
@@ -235,6 +248,7 @@ const walletModules: WalletModule[] = [
     chain: "aptos",
     goals: ["standard"],
     packageName: "@tetherto/wdk-wallet-aptos",
+    ownership: "Tether",
     docsHref: "/sdk/wallet-modules/wallet-aptos",
     apiHref: "/sdk/wallet-modules/wallet-aptos/api-reference",
     bestFor: "Aptos wallets with native APT and fungible asset support.",
@@ -246,10 +260,11 @@ const walletModules: WalletModule[] = [
   },
   {
     id: "rgb",
-    label: "RGB",
+    label: "On-chain RGB",
     chain: "rgb",
     goals: ["assets"],
     packageName: "@utexo/wdk-wallet-rgb",
+    ownership: "Community",
     docsHref: "/sdk/community-modules/wdk-wallet-rgb",
     apiHref: "/sdk/community-modules/wdk-wallet-rgb/api-reference",
     bestFor: "RGB assets on Bitcoin with local RGB wallet state.",
@@ -261,11 +276,30 @@ const walletModules: WalletModule[] = [
     maintainer: "UTEXO",
   },
   {
+    id: "rgb-lightning",
+    label: "RGB Lightning",
+    chain: "rgb",
+    additionalChains: ["lightning"],
+    goals: ["assets", "lightning"],
+    packageName: "@utexo/wdk-rgb-lightning",
+    ownership: "Community",
+    docsHref: "/sdk/community-modules/wdk-rgb-lightning",
+    apiHref: "/sdk/community-modules/wdk-rgb-lightning/api-reference",
+    bestFor: "RGB assets and Bitcoin payments over Lightning channels.",
+    chooseWhen: [
+      "You need Lightning channels, invoices, or payments alongside RGB assets.",
+      "Your app can operate and persist an RGB Lightning node.",
+      "You are comfortable using a beta, independently maintained module.",
+    ],
+    maintainer: "UTEXO",
+  },
+  {
     id: "cosmos",
     label: "Cosmos",
     chain: "cosmos",
     goals: ["cosmos"],
     packageName: "@base58-io/wdk-wallet-cosmos",
+    ownership: "Community",
     docsHref: "/sdk/community-modules/wdk-wallet-cosmos",
     apiHref: "/sdk/community-modules/wdk-wallet-cosmos/api-reference",
     bestFor: "Cosmos-compatible chains with Bech32 accounts and RPC-backed transfers.",
@@ -309,10 +343,16 @@ export function WalletModuleChooser() {
   const [goal, setGoal] = React.useState<GoalFilter>(defaultGoalFilter);
 
   const results = walletModules.filter((module) => {
-    const chainMatch = chain === "all" || module.chain === chain;
+    const chainMatch =
+      chain === "all" ||
+      module.chain === chain ||
+      module.additionalChains?.includes(chain) === true;
     const goalMatch = goal === "all" || module.goals.includes(goal);
     return chainMatch && goalMatch;
   });
+  const hasCommunityResults = results.some(
+    (module) => module.ownership === "Community",
+  );
 
   return (
     <div className="not-prose my-6 rounded-lg border border-fd-border bg-fd-card">
@@ -403,11 +443,11 @@ export function WalletModuleChooser() {
                       {module.bestFor}
                     </p>
                   </div>
-                  {module.maintainer ? (
-                    <span className="w-fit rounded-md border border-fd-border px-2 py-1 text-xs text-fd-muted-foreground">
-                      Maintainer: {module.maintainer}
-                    </span>
-                  ) : null}
+                  <span className="w-fit rounded-md border border-fd-border px-2 py-1 text-xs text-fd-muted-foreground">
+                    {module.ownership === "Community"
+                      ? `Community${module.maintainer ? ` · Maintainer: ${module.maintainer}` : ""}`
+                      : "Tether"}
+                  </span>
                 </div>
 
                 <p className="mt-3 rounded-md bg-fd-muted px-3 py-2 font-mono text-xs text-fd-muted-foreground">
@@ -445,6 +485,14 @@ export function WalletModuleChooser() {
           </div>
         </section>
       </div>
+      {hasCommunityResults ? (
+        <div className="border-t border-fd-border px-4 py-3 text-xs leading-5 text-fd-muted-foreground sm:px-5">
+          Community modules are developed and maintained independently by
+          third-party contributors. Tether and the WDK Team do not endorse or
+          assume responsibility for their code, security, or maintenance. Use
+          your own judgment and proceed at your own risk.
+        </div>
+      ) : null}
     </div>
   );
 }

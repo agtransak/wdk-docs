@@ -1,6 +1,6 @@
 ---
 title: All Modules
-description: Complete list of available WDK wallet, Smart Deposit Address, pricing, swidge, swap, bridge, lending, and fiat interfaces and modules.
+description: Complete list of available WDK wallet, pricing, swidge, swap, bridge, lending, and fiat interfaces and modules.
 docType: reference
 schemaType: TechArticle
 ---
@@ -34,22 +34,25 @@ Wallet modules provide blockchain-specific wallet functionality for managing add
 | [`@tetherto/wdk-wallet-aptos`](https://github.com/tetherto/wdk-wallet-aptos) | Aptos | Aptos blockchain wallet with native APT and fungible asset support | [Docs](/sdk/wallet-modules/wallet-aptos/) |
 | [`@tetherto/wdk-wallet-spark`](https://github.com/tetherto/wdk-wallet-spark) | Spark | Spark/Lightning Bitcoin L2 wallet | [Docs](/sdk/wallet-modules/wallet-spark/) |
 
-## Smart Deposit Address Interface
+## Swidge Modules
 
-The released `@tetherto/wdk-wallet` package includes the provider contract for Smart Deposit Address routes. It defines discovery, deposit-address creation, and optional quote, monitoring, renewal, recovery, and disable operations; it does not include a concrete SDA provider.
+Swidge providers can quote and execute asset routes. A route can be swap-only, bridge-only, or a combined swap and bridge route.
 
-| Interface | Package | Description | Documentation |
-|-----------|---------|-------------|---------------|
-| `SdaProtocol` | [`@tetherto/wdk-wallet`](https://www.npmjs.com/package/@tetherto/wdk-wallet) | Abstract provider interface for route-bound deposit addresses | [Docs](/sdk/sda-modules/) |
+<Callout type="warn">
+Rows marked Community are developed and maintained independently by third-party contributors.
 
-## Swidge Interface
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
 
-Swidge is the preferred interface for new protocol providers that can quote and execute asset routes. A route can be swap-only, bridge-only, or a combined swap and bridge route.
-
-| Module | Provider | Description | Documentation |
-|--------|----------|-------------|---------------|
-| [`wdk-protocol-swidge-orchestra`](https://www.npmjs.com/package/wdk-protocol-swidge-orchestra) | Flashnet Orchestra | Swidge provider for BTC and stablecoin routes returned by Orchestra. Treat the live [Orchestra route matrix](https://orchestration.flashnet.xyz/v1/orchestration/routes) as provider-level data and filter through package discovery before exposing routes. | [Docs](/sdk/swidge-modules/swidge-orchestra/) |
-| [`@rhino.fi/wdk-protocol-swidge-rhinofi`](https://www.npmjs.com/package/@rhino.fi/wdk-protocol-swidge-rhinofi) | Rhino.fi | Swidge routes for Rhino.fi cross-chain swap and bridge operations | [Docs](/sdk/swidge-modules/swidge-rhinofi/) |
+| Module | Provider | Ownership | Description | Documentation |
+|--------|----------|-----------|-------------|---------------|
+| [`wdk-protocol-swidge-orchestra`](https://www.npmjs.com/package/wdk-protocol-swidge-orchestra) | Flashnet Orchestra | Community | Swidge provider for BTC and stablecoin routes returned by Orchestra. Treat the live [Orchestra route matrix](https://orchestration.flashnet.xyz/v1/orchestration/routes) as provider-level data and filter through package discovery before exposing routes. | [Docs](/sdk/swidge-modules/swidge-orchestra/) |
+| [`@rhino.fi/wdk-protocol-swidge-rhinofi`](https://www.npmjs.com/package/@rhino.fi/wdk-protocol-swidge-rhinofi) | Rhino.fi | Community | Swidge routes for Rhino.fi cross-chain swap and bridge operations | [Docs](/sdk/swidge-modules/swidge-rhinofi/) |
+| [`@symbiosis-finance/wdk-protocol-swidge-symbiosis`](https://www.npmjs.com/package/@symbiosis-finance/wdk-protocol-swidge-symbiosis) | Symbiosis | Community | Cross-chain routes discovered and executed through the Symbiosis API | [Docs](/sdk/swidge-modules/swidge-symbiosis/) |
+| [`@lifi/wdk-protocol-swidge-lifi`](https://www.npmjs.com/package/@lifi/wdk-protocol-swidge-lifi) | LI.FI | Community | Swidge routes through LI.FI | [README](https://github.com/lifinance/wdk-lifi-swidge-protocol#readme) |
+| [`@moonpay/wdk-protocol-swidge-moonpay-trade`](https://www.npmjs.com/package/@moonpay/wdk-protocol-swidge-moonpay-trade) | MoonPay Trade | Community | Swidge routes through MoonPay Trade | [README](https://www.npmjs.com/package/@moonpay/wdk-protocol-swidge-moonpay-trade#readme) |
+| [`@swapdk/wdk-protocol-swidge-swapdk`](https://www.npmjs.com/package/@swapdk/wdk-protocol-swidge-swapdk) | SwapDK | Community | Swidge routes through SwapDK | [README](https://github.com/Swap-DK/wdk-protocol-bridges-swapdk#readme) |
+| [`@gobob/wdk-protocol-swidge-gateway`](https://www.npmjs.com/package/@gobob/wdk-protocol-swidge-gateway) | BOB Gateway | Community | Swidge routes through the BOB Gateway | [README](https://github.com/bob-collective/wdk-protocol-swidge-gateway#readme) |
 
 ## Pricing Modules
 
@@ -80,9 +83,15 @@ Cross-chain bridge functionality for token transfers between blockchains.
 
 DeFi lending and borrowing functionality.
 
-| Module | Blockchain | Status | Description | Documentation |
-|--------|------------|--------|-------------|---------------|
-| [`@tetherto/wdk-protocol-lending-aave-evm`](https://github.com/tetherto/wdk-protocol-lending-aave-evm) | EVM | Ready | Aave protocol integration for EVM | [Docs](/sdk/lending-modules/lending-aave-evm/) |
+<Callout type="warn">
+Rows marked Community are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+| Module | Blockchain | Ownership | Description | Documentation |
+|--------|------------|-----------|-------------|---------------|
+| [`@tetherto/wdk-protocol-lending-aave-evm`](https://github.com/tetherto/wdk-protocol-lending-aave-evm) | EVM | Tether | Aave protocol integration for EVM | [Docs](/sdk/lending-modules/lending-aave-evm/) |
 | [`@morpho-org/wdk-protocol-lending-morpho-evm`](https://www.npmjs.com/package/@morpho-org/wdk-protocol-lending-morpho-evm) | EVM | Community | Morpho Vault V2 and Morpho Blue lending integration for EVM | [Docs](/sdk/lending-modules/lending-morpho-evm/) |
 
 ## Fiat Modules
@@ -97,11 +106,23 @@ On-ramp and off-ramp functionality for fiat currency integration.
 
 Modules built by the WDK community. See the [Community Modules](/sdk/community-modules/) page for more details.
 
-| Module | Blockchain | Description | Documentation |
-|--------|------------|-------------|---------------|
-| [`@utexo/wdk-wallet-rgb`](https://github.com/UTEXO-Protocol/wdk-wallet-rgb) | Bitcoin (RGB) | RGB protocol wallet integration | [Docs](/sdk/community-modules/wdk-wallet-rgb/) |
-| [`@arkade-os/wdk`](https://github.com/arkade-os/arkade-wdk) | Arkade | Bitcoin wallet module built on the Arkade SDK | [README](https://github.com/arkade-os/arkade-wdk#readme) |
-| [`@base58-io/wdk-wallet-cosmos`](https://github.com/base58-io/wdk-wallet-cosmos) | Cosmos | Cosmos-compatible wallet integration | [Docs](/sdk/community-modules/wdk-wallet-cosmos/) |
-| [`@morpho-org/wdk-protocol-lending-morpho-evm`](https://www.npmjs.com/package/@morpho-org/wdk-protocol-lending-morpho-evm) | EVM | Morpho Vault V2 and Morpho Blue lending integration | [Docs](/sdk/lending-modules/lending-morpho-evm/) |
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+| Module | Category | Description | Documentation |
+|--------|----------|-------------|---------------|
+| [`@utexo/wdk-wallet-rgb`](https://github.com/UTEXO-Protocol/wdk-wallet-rgb) | Wallet | RGB protocol wallet integration | [Docs](/sdk/community-modules/wdk-wallet-rgb/) |
+| [`@utexo/wdk-rgb-lightning`](https://www.npmjs.com/package/@utexo/wdk-rgb-lightning) | Wallet | RGB Lightning node and wallet integration | [Docs](/sdk/community-modules/wdk-rgb-lightning/) |
+| [`@arkade-os/wdk`](https://github.com/arkade-os/arkade-wdk) | Wallet | Bitcoin wallet module built on the Arkade SDK | [README](https://github.com/arkade-os/arkade-wdk#readme) |
+| [`@base58-io/wdk-wallet-cosmos`](https://github.com/base58-io/wdk-wallet-cosmos) | Wallet | Cosmos-compatible wallet integration | [Docs](/sdk/community-modules/wdk-wallet-cosmos/) |
+| [`@morpho-org/wdk-protocol-lending-morpho-evm`](https://www.npmjs.com/package/@morpho-org/wdk-protocol-lending-morpho-evm) | Lending | Morpho Vault V2 and Morpho Blue lending integration | [Docs](/sdk/lending-modules/lending-morpho-evm/) |
 | [`wdk-protocol-swidge-orchestra`](https://github.com/flashnetxyz/wdk-protocol-swidge-orchestra) | Swidge | Flashnet Orchestra BTC and stablecoin route integration | [Docs](/sdk/swidge-modules/swidge-orchestra/) |
-| [`@rhino.fi/wdk-protocol-swidge-rhinofi`](https://www.npmjs.com/package/@rhino.fi/wdk-protocol-swidge-rhinofi) | Rhino.fi | Swidge cross-chain route integration | [Docs](/sdk/swidge-modules/swidge-rhinofi/) |
+| [`@rhino.fi/wdk-protocol-swidge-rhinofi`](https://www.npmjs.com/package/@rhino.fi/wdk-protocol-swidge-rhinofi) | Swidge | Rhino.fi cross-chain route integration | [Docs](/sdk/swidge-modules/swidge-rhinofi/) |
+| [`@symbiosis-finance/wdk-protocol-swidge-symbiosis`](https://www.npmjs.com/package/@symbiosis-finance/wdk-protocol-swidge-symbiosis) | Swidge | Cross-chain routes through Symbiosis | [Docs](/sdk/swidge-modules/swidge-symbiosis/) |
+| [`@lifi/wdk-protocol-swidge-lifi`](https://www.npmjs.com/package/@lifi/wdk-protocol-swidge-lifi) | Swidge | Routes through LI.FI | [README](https://github.com/lifinance/wdk-lifi-swidge-protocol#readme) |
+| [`@moonpay/wdk-protocol-swidge-moonpay-trade`](https://www.npmjs.com/package/@moonpay/wdk-protocol-swidge-moonpay-trade) | Swidge | Routes through MoonPay Trade | [README](https://www.npmjs.com/package/@moonpay/wdk-protocol-swidge-moonpay-trade#readme) |
+| [`@swapdk/wdk-protocol-swidge-swapdk`](https://www.npmjs.com/package/@swapdk/wdk-protocol-swidge-swapdk) | Swidge | Routes through SwapDK | [README](https://github.com/Swap-DK/wdk-protocol-bridges-swapdk#readme) |
+| [`@gobob/wdk-protocol-swidge-gateway`](https://www.npmjs.com/package/@gobob/wdk-protocol-swidge-gateway) | Swidge | Routes through the BOB Gateway | [README](https://github.com/bob-collective/wdk-protocol-swidge-gateway#readme) |

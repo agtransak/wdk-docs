@@ -62,6 +62,20 @@ const settlement = await lsp.awaitReceiveSettlement(receive.lnInvoice)
 
 `UtexoLsp` also exposes `waitForChannel()`, `waitForOutboundLiquidity()`, `sendAsset()`, `payAddress()`, `enableLightningAddress()`, and `claimPendingPayments()`.
 
+<Callout type="warn">
+In beta.15, `sendAsset()` requires `ln.amtMsat` and `ln.expirySec` at runtime even though the public declaration marks `ln` and those fields optional.
+</Callout>
+
+```js
+const sent = await lsp.sendAsset({
+  rgbInvoice,
+  ln: {
+    amtMsat: 5_000_000,
+    expirySec: 3_600,
+  },
+})
+```
+
 Bound every wait with a timeout or `AbortSignal`. Handle `LspChannelTimeoutError`, `LspLiquidityTimeoutError`, and `LspSettlementError` separately.
 
 ## Pay a Lightning Address

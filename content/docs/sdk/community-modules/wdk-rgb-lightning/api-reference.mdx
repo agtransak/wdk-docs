@@ -24,14 +24,14 @@ Tether and the WDK Team do not endorse or assume responsibility for their code, 
 | Bare entry | `bare.js` → `index-bare.js` |
 | Declarations | `index.d.ts` |
 
-Install the matching optional native peer. Node and Bare expose the same JavaScript API but load different native bindings.
+Install the matching optional native peer. The manager, account, error, and LSP surfaces are shared across runtimes; the package root exports only the binding class selected for the active runtime.
 
 ## Root exports
 
 | Group | Exports |
 |---|---|
 | Manager and accounts | Default `WalletManagerRgbLightning`, `WalletAccountRgbLightning`, `WalletAccountReadOnlyRgbLightning` |
-| Low-level bindings | `NodeRgbLightningBinding`, `BareRgbLightningBinding`, `IRgbLightningBinding` type |
+| Low-level binding (runtime-selected) | Node: `NodeRgbLightningBinding`; Bare: `BareRgbLightningBinding`; `IRgbLightningBinding` type. The declarations name both classes, but each runtime root exports only its selected class. |
 | Wallet errors | `RgbLightningError`, `UnlockError`, `AccountLockedError`, `VssError`, `VssNotConfiguredError`, `ApayError`, `NotImplementedError` |
 | LSP | `LspClient`, `LspError`, `UtexoLsp`, LSP result/config types, timeout and settlement errors |
 | LNURL / address | `isUmaAddress`, `normalizeLightningAddress`, `parseLightningAddress`, `fetchDiscovery`, `resolveAddressToInvoice`, `LnurlPayError` |
@@ -61,7 +61,7 @@ The read-only adapter exposes queries without signing, broadcasting, channel mut
 | Channels and peers | `listChannels()`, `getChannelId(tempId)`, `listPeers()` |
 | Lightning | `decodeInvoice()`, `getInvoiceStatus()`, `listPayments()`, `getPayment(hash, type)` |
 | RGB | `listAssets(filter?)`, `getAssetBalance()`, `getAssetMetadata()`, `listTransfers()`, `listTransfersByTxid()`, `decodeRgbInvoice()`, `getAssetMedia()` |
-| Bitcoin | `getBalance(skipSync?)`, `getBalanceDetails(skipSync?)`, `getTransactions(skipSync?)`, `getTransactionsByTxid()`, `listUnspents()`, `estimateFee()` |
+| Bitcoin | `getBalance(skipSync?)`, `getBalanceDetails(skipSync?)`, `getTransactions(skipSync?)`, `getTransactionsByTxid(txid, skipSync?)`, `listUnspents()`, `estimateFee()` |
 | WDK | `getTokenBalance()`, `verify()`, `quoteTransfer()`, `quoteSendTransaction()`, `getTransactionReceipt()` |
 | Diagnostics | `checkIndexerUrl()`, `checkProxyEndpoint()`, `vssStatus()` |
 
@@ -97,7 +97,7 @@ The full account has fixed identity fields:
 | `shutdown()` | Idempotently shuts down the account binding. |
 | `dispose()` | Account no-op; the manager owns terminal cleanup. |
 
-### Peers and channels
+### Peers, channels, and onion messages
 
 | Method | Behavior |
 |---|---|
@@ -108,6 +108,7 @@ The full account has fixed identity fields:
 | `closeChannel(request)` | Forwards the native close request. |
 | `listChannels()` | Returns native channel records. |
 | `getChannelId(temporaryId)` | Resolves a temporary channel ID. |
+| `sendOnionMessage(request)` | Forwards the caller-supplied native `JsonSendOnionMessageRequest` unchanged and returns `{ok: true}`. Validate the exact beta.15 request shape before calling; the declaration types it as `object`. |
 
 ### Invoices and payments
 
@@ -175,6 +176,10 @@ The Lightning quote uses a 50-basis-point allowance, not a live route fee. An RG
 | `UtexoLsp` | `connect`, `waitForChannel`, `receiveAsset`, settlement/liquidity waits, `sendAsset`, `payAddress`, `enableLightningAddress`, `claimPendingPayments` |
 | APay | `apayNew`, `bootstrapLsp`, `getLspConfig`, `createLsp` |
 | VSS | `vssStatus`, `vssBackup`, `clearVssFence` |
+
+<Callout type="warn">
+In beta.15, `UtexoLsp.sendAsset({rgbInvoice, ln})` requires `ln.amtMsat` and `ln.expirySec` at runtime even though the public declaration marks `ln` and those fields optional. Pass the complete shape until the declaration is corrected.
+</Callout>
 
 Public HTTP is rejected for LSP and VSS by default, except loopback where supported. LNURL callbacks remain on the discovery host unless `allowCrossHostCallback` is explicitly enabled. `$user@host` is normalized as UMA-style address syntax only; the package does not implement UMA signing, compliance, or currency negotiation.
 

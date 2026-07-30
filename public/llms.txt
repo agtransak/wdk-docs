@@ -45,6 +45,17 @@ Raw markdown is available by appending `.md` to any documentation page URL.
 - Usage: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-cosmos/usage
 - RGB wallet: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb
 - RGB wallet API reference: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/api-reference
+- RGB wallet configuration: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/configuration
+- Back up, restore, and migrate the RGB wallet: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/backup-restore-migrate
+- Read RGB balances and history: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/balances-history
+- Send Bitcoin and manage RGB UTXOs: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/btc-utxos
+- Get started with the RGB wallet: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/get-started
+- Handle RGB wallet errors: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors
+- Issue and receive RGB assets: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/issue-receive-assets
+- Manage the RGB account and storage: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/manage-account-storage
+- Sign and verify messages with the RGB wallet: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/sign-verify-messages
+- Transfer RGB assets: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/transfer-assets
+- RGB wallet usage: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/usage
 - WDK Core: https://docs.wdk.tether.io/sdk/core-module
 - WDK Core API Reference: https://docs.wdk.tether.io/sdk/core-module/api-reference
 - WDK Core Configuration: https://docs.wdk.tether.io/sdk/core-module/configuration

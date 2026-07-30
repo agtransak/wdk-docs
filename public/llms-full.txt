@@ -7165,71 +7165,84 @@ Review exports, types, methods, return values, and limitations.
 
 ## RGB wallet
 URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb
-Description: Use the UTEXO RGB wallet module for RGB assets on Bitcoin.
+Description: Use the community-maintained UTEXO wallet for on-chain RGB assets, Bitcoin UTXOs, and local RGB state.
 
-`@utexo/wdk-wallet-rgb` is a WDK wallet module for RGB assets on Bitcoin. It wraps the UTEXO RGB runtime behind WDK wallet manager and account classes.
+`@utexo/wdk-wallet-rgb` is a community-maintained WDK wallet module for on-chain RGB assets on Bitcoin. It wraps `@utexo/rgb-sdk` behind WDK wallet manager and account classes.
 
-Powered by [`@utexo/wdk-wallet-rgb`](https://github.com/UTEXO-Protocol/wdk-wallet-rgb).
+These pages describe the released [`@utexo/wdk-wallet-rgb@2.0.3`](https://github.com/UTEXO-Protocol/wdk-wallet-rgb/releases/tag/v2.0.3).
 
 <Callout type="warn">
-This module is developed and maintained independently by a third-party contributor. Tether and the WDK team do not endorse or assume responsibility for its code, security, or maintenance. Review the package and use your own judgment before using it with real funds.
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
 </Callout>
 
-## When to use it
+## Choose the correct RGB module
 
-Use this module when your application needs RGB asset support on Bitcoin and can persist local RGB wallet state.
+The on-chain wallet and RGB Lightning wallet are separate wallets. They derive different wallet identities, own separate `rgb-lib` state, and do not share asset records.
 
-| Use case | Module |
+| Requirement | Module |
 |---|---|
-| RGB asset issuance, balances, and transfers | `@utexo/wdk-wallet-rgb` |
-| Base-layer Bitcoin wallet flows without RGB assets | [`@tetherto/wdk-wallet-btc`](/sdk/wallet-modules/wallet-btc) |
-| Lightning payments through Spark | [`@tetherto/wdk-wallet-spark`](/sdk/wallet-modules/wallet-spark) |
+| Issue NIA assets, receive or send on-chain RGB assets, and manage RGB-aware Bitcoin UTXOs | `@utexo/wdk-wallet-rgb` |
+| Hold and transfer RGB assets through LDK channels, BOLT11 invoices, or an LSP | [`@utexo/wdk-rgb-lightning`](https://www.npmjs.com/package/@utexo/wdk-rgb-lightning) |
+| Manage Bitcoin without RGB state | [`@tetherto/wdk-wallet-btc`](/sdk/wallet-modules/wallet-btc) |
+
+Give the on-chain and Lightning modules different persistent `dataDir` values. Copying an asset ID between them does not copy its wallet records or balance.
 
 ## Requirements
 
-The module requires:
+For durable use, provide:
 
-- a BIP-39 seed phrase or seed bytes;
-- a supported RGB network;
-- a persistent app-private `dataDir` for RGB wallet state;
-- access to a Bitcoin indexer;
-- access to an RGB transport endpoint.
+- a BIP-39 mnemonic or seed bytes;
+- `mainnet`, `testnet`, or `regtest`;
+- a persistent, app-private `dataDir`;
+- a trusted Electrs-compatible indexer;
+- an RGB transport endpoint for consignment exchange.
 
-The package README warns that losing `dataDir` invalidates RGB asset balances even though seed-derived BTC addresses still exist. Pick a durable app-private path and include it in your backup strategy.
+The runtime allows `dataDir` to be omitted and then uses temporary storage. Do not rely on that behavior for a persistent wallet. A seed recreates key material, but it is not a substitute for preserving and backing up the local RGB state.
 
-## Install
+## Released runtime support
 
-```bash
-npm install @utexo/wdk-wallet-rgb
-```
+The package is ESM and exposes a conditional Bare entry. Its pinned native RGB dependencies publish artifacts for:
 
-## Minimal setup
+- Linux x64 and arm64;
+- macOS arm64.
 
-```js
-import WalletManagerRgb from '@utexo/wdk-wallet-rgb'
+No Windows or Intel macOS artifact was published for this release. The package does not declare a Node.js engine range; verify the exact host and native artifact before deployment.
 
-const manager = new WalletManagerRgb(seedPhrase, {
-  network: 'regtest',
-  dataDir: './wallet-data'
-})
+<Callout type="warn">
+The maintainer README labels the package beta despite the `2.0.3` version. Test backup, restore, fee, indexer, transport, and failure paths on the target runtime before handling real funds.
+</Callout>
 
-const account = await manager.getAccount()
-const address = await account.getAddress()
+## Capabilities and boundaries
 
-console.log(address)
-```
+- One account at index `0`, with BIP-86 vanilla and colored derivation paths.
+- Settled Bitcoin and RGB balance queries, transaction and transfer history, and receipts.
+- NIA issuance and blind or witness receive invoices.
+- High-level RGB transfers and lower-level PSBT transfer steps.
+- Bitcoin sends and RGB-compatible UTXO creation.
+- Encrypted local-state backup and restore.
+- Full-account message signing and verification.
 
-## Reference
+This release does not expose multiple accounts, arbitrary derivation paths, or UDA/CFA issuance through its declared WDK account API.
+
+## Start building
 
 <Cards>
+<Card title="Get started" href="/sdk/community-modules/wdk-wallet-rgb/guides/get-started">
+Install the released package and create the single RGB account.
+</Card>
+<Card title="Usage guides" href="/sdk/community-modules/wdk-wallet-rgb/usage">
+Follow task-focused guides for assets, UTXOs, storage, migration, and errors.
+</Card>
+<Card title="Configuration" href="/sdk/community-modules/wdk-wallet-rgb/configuration">
+Choose a network, durable storage, indexer, and transport endpoint.
+</Card>
 <Card title="API reference" href="/sdk/community-modules/wdk-wallet-rgb/api-reference">
-Review exports, configuration, wallet manager methods, and account methods.
+Review the public v2.0.3 manager and account surface.
 </Card>
-<Card title="Source repository" href="https://github.com/UTEXO-Protocol/wdk-wallet-rgb">
-Open the package source and README on GitHub.
-</Card>
-<Card title="Community modules" href="/sdk/community-modules">
-Review the community module disclaimer and submission flow.
+<Card title="v2.0.3 source" href="https://github.com/UTEXO-Protocol/wdk-wallet-rgb/tree/v2.0.3">
+Inspect the exact released source and security guidance.
 </Card>
 </Cards>
 
@@ -7237,136 +7250,1192 @@ Review the community module disclaimer and submission flow.
 
 ## RGB wallet API reference
 URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/api-reference
-Description: API reference for the independently maintained @utexo/wdk-wallet-rgb module.
+Description: Public API reference for the released @utexo/wdk-wallet-rgb 2.0.3 community module.
 
-This page summarizes the public API exposed by `@utexo/wdk-wallet-rgb` based on the package README, `package.json`, generated TypeScript declarations, and source files from commit `6d28bc9`.
+This page covers the public declarations and runtime methods in [`@utexo/wdk-wallet-rgb@2.0.3`](https://github.com/UTEXO-Protocol/wdk-wallet-rgb/releases/tag/v2.0.3).
 
 <Callout type="warn">
-This module is developed and maintained independently by a third-party contributor. Tether and the WDK team do not endorse or assume responsibility for its code, security, or maintenance. Review the package and use your own judgment before using it with real funds.
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
 </Callout>
 
 ## Package
 
 | Field | Value |
 |---|---|
-| Package | `@utexo/wdk-wallet-rgb` |
+| Package | `@utexo/wdk-wallet-rgb@2.0.3` |
 | Repository | [UTEXO-Protocol/wdk-wallet-rgb](https://github.com/UTEXO-Protocol/wdk-wallet-rgb) |
-| Main entry | `index.js` |
-| Bare entry | `bare.js` |
-| Types | `types/index.d.ts` |
+| Module format | ESM |
+| Entries | `index.js`; conditional Bare entry `bare.js` |
+| Declarations | `types/index.d.ts` |
 
 ## Exports
 
 | Export | Description |
 |---|---|
 | `default` | `WalletManagerRgb` |
-| `WalletAccountRgb` | Full RGB wallet account implementation |
-| `WalletAccountReadOnlyRgb` | Read-only RGB wallet account implementation |
-| `RgbWalletConfig` | RGB wallet configuration type |
-| `RgbTransaction` | Native BTC transaction shape for the RGB wallet |
-| `TransferOptions` | RGB transfer options |
-| `RgbTransactionReceipt` | RGB transaction receipt type from `@utexo/rgb-sdk` |
-| `RgbTransferReceipt` | RGB transfer receipt type from `@utexo/rgb-sdk` |
+| `WalletAccountRgb` | Full account class |
+| `WalletAccountReadOnlyRgb` | Query-only account class |
+| Types | `RgbWalletConfig`, `RgbTransaction`, `TransferOptions`, `RgbTransactionReceipt`, `RgbTransferReceipt`, and WDK fee/key/result aliases |
 
 ## `RgbWalletConfig`
 
-| Field | Required | Description |
+| Field | Runtime requirement | Description |
 |---|---:|---|
-| `network` | Yes | Target RGB network. Runtime source maps `mainnet`, `testnet`, `testnet4`, `signet`, `utexo`, and `regtest`; generated typedefs currently list `mainnet`, `testnet`, and `regtest`. |
-| `dataDir` | Yes | Persistent app-private path where RGB wallet state is stored. Losing this directory can lose RGB asset state. |
-| `keys` | No | Derived RGB wallet keys. The manager derives these from the seed before creating an account. |
-| `indexerUrl` | No | Electrs indexer URL. |
-| `transportEndpoint` | No | RGB transport endpoint. |
-| `transferMaxFee` | No | Maximum fee amount for transfer operations. |
+| `network` | Required | `'mainnet'`, `'testnet'`, or `'regtest'`. |
+| `dataDir` | Optional at construction | Local RGB state path. Treat it as operationally required and persistent. |
+| `indexerUrl` | Optional | Electrs-compatible indexer endpoint. |
+| `transportEndpoint` | Optional | RGB consignment transport endpoint. |
+| `keys` | Internal | Generated by `WalletManagerRgb`; applications normally do not set it. |
+| `transferMaxFee` | Not effective through the manager path | Declared on the config/account, but `WalletManagerRgb.getAccount()` does not forward it to the account in v2.0.3. Enforce a fee limit in application code after quoting. |
+
+<Callout type="warn">
+The generated `RgbWalletConfig` TypeScript alias exposes only `network` and `keys`, although the released runtime and JSDoc accept `dataDir`, `indexerUrl`, `transportEndpoint`, and `transferMaxFee`. JavaScript can pass the operational fields; TypeScript consumers may need a local, release-scoped augmentation until the package declarations are corrected.
+</Callout>
 
 ## `WalletManagerRgb`
+
+| Member | Returns | Behavior |
+|---|---|---|
+| `constructor(seed, config)` | `WalletManagerRgb` | Accepts a BIP-39 mnemonic string or seed bytes. Runtime requires `config.network`. |
+| `getAccount(index = 0)` | `Promise<WalletAccountRgb>` | Creates or returns the only account. Any nonzero index throws. |
+| `restoreAccountFromBackup(config)` | `Promise<WalletAccountRgb>` | Restores the backup into `config.dataDir`, creates the account, and caches it at index `0`. |
+| `getAccountByPath(path)` | `Promise<never>` | Always throws; arbitrary paths are unsupported. |
+| `getFeeRates()` | `Promise<{normal: bigint, fast: bigint}>` | Reads mempool.space recommended fees without selecting the wallet network. |
+| `dispose()` | `void` | Clears manager-owned derived-key fields and disposes cached accounts. |
+
+## `WalletAccountRgb`
+
+### Static factories
+
+| Member | Returns | Notes |
+|---|---|---|
+| `WalletAccountRgb.at(seed, config)` | `Promise<WalletAccountRgb>` | Low-level factory used by `WalletManagerRgb.getAccount()`. It requires `config.network` and generated `config.keys`, and accepts `dataDir`, `indexerUrl`, and `transportEndpoint`. Applications should normally use `manager.getAccount(0)` so the manager derives the keys and caches the account. |
+| `WalletAccountRgb.fromBackup(seed, config)` | `Promise<WalletAccountRgb>` | Low-level restore factory used by `WalletManagerRgb.restoreAccountFromBackup()`. It requires `config.network`, generated `config.keys`, `backupFilePath`, `password`, and `dataDir`; it restores before opening the account. Prefer the manager method so keys are derived and the restored account is cached at index `0`. |
+
+Both declarations make `config` optional, but the v2.0.3 runtime throws when these required fields are absent.
+
+### Identity and WDK methods
+
+| Member | Returns | Notes |
+|---|---|---|
+| `index` | `0` | The only supported account index. |
+| `path` | `string` | `m/86'/0'/0'` on mainnet; `m/86'/1'/0'` otherwise. |
+| `coloredPath` | `string` | `m/86'/827166'/0'` on mainnet; `m/86'/827167'/0'` otherwise. |
+| `keyPair` | `RgbKeyPair` | Includes WDK key bytes plus RGB xpubs and fingerprint. Treat every returned key field as sensitive. |
+| `getAddress()` | `string` | Returns the current Bitcoin address synchronously. |
+| `getBalance()` | `Promise<bigint>` | Settled Bitcoin balance in satoshis. |
+| `getTokenBalance(assetId)` | `Promise<bigint>` | Settled RGB amount in the asset's base unit. |
+| `sign(message)` | `Promise<string>` | Signs through the underlying RGB wallet. |
+| `verify(message, signature)` | `Promise<boolean>` | Full-account verification. |
+| `sendTransaction(tx)` | `Promise<{hash, fee}>` | Sends Bitcoin with `sendBtcBegin → signPsbt → sendBtcEnd`. |
+| `quoteSendTransaction(tx)` | `Promise<{fee}>` | Builds and signs a PSBT to estimate the fee. |
+| `transfer(options)` | `Promise<{hash, fee}>` | Sends an RGB asset to an `rgb:` invoice. |
+| `quoteTransfer(options)` | `Promise<{fee}>` | Builds and signs an RGB PSBT to estimate the fee. |
+| `getTransfers(options?)` | `RgbTransfer[]` | Filters and paginates; returns `[]` for both no results and any underlying error. |
+| `toReadOnlyAccount()` | `Promise<WalletAccountReadOnlyRgb>` in the declarations | The v2.0.3 runtime returns synchronously, but `await` works with both behaviors and satisfies the published type. |
+| `dispose()` | `void` | Zeroes the wrapper's derived private-key bytes and disposes its RGB wallet. |
+
+### RGB, UTXO, and state methods
+
+| Method | Returns | Notes |
+|---|---|---|
+| `getRgbWallet()` | RGB SDK `WalletManager` | Advanced escape hatch; its API and lifecycle are maintained by `@utexo/rgb-sdk`. |
+| `listAssets()` | `ListAssets[]` | Current asset inventory. |
+| `issueAssetNia({ticker, name, amounts, precision})` | `IssueAssetNIA` | Issues a Non-Inflatable Asset. Other issuance schemas are not declared by this release. |
+| `receiveAsset({assetId?, amount, witness})` | `InvoiceReceiveData` | Creates a witness invoice when `witness` is true, otherwise a blind invoice. |
+| `sendBegin(options)` | `string` | Creates a base64 PSBT for an RGB send. |
+| `signPsbt(psbt)` | `Promise<string>` | Signs a base64 PSBT. |
+| `sendEnd({signedPsbt})` | `SendResult` | Finalizes and broadcasts the RGB send. |
+| `createUtxos(options)` | `Promise<number>` | Combined create/sign/finalize flow. |
+| `createUtxosBegin(options)` | `string` | Creates a UTXO-creation PSBT. |
+| `createUtxosEnd({signedPsbt})` | `number` | Finalizes UTXO creation. |
+| `listUnspents()` | `Unspent[]` | Current RGB wallet UTXOs. |
+| `listTransactions()` | `RgbTransactionReceipt[]` | Bitcoin transaction records. |
+| `listTransfers(assetId?)` | `RgbTransfer[]` | Native transfer list with optional asset filter. |
+| `failTransfers(request)` | `boolean` | Forwards transfer-failure handling to the RGB SDK. The v2.0.3 declaration and JSDoc disagree on the parameter name/type; inspect the matching SDK before calling it. |
+| `createBackup({password, backupPath})` | Backup response | Creates an encrypted backup file. |
+| `restoreFromBackup({password, backupFilePath, dataDir})` | Restore response | Low-level account restore. Prefer the manager restore flow before opening the destination. |
+| `refreshWallet()` | `void` | Refreshes RGB transfer state. |
+| `registerWallet()` | `Promise<{address, btcBalance}>` | Registers the wallet and returns its address and Bitcoin balance. |
+| `syncWallet()` | `void` | Synchronizes with the Bitcoin chain. |
+
+<Callout type="warn">
+Version 2.0.3 has a declaration/runtime mismatch for `sendEnd()`: the published declaration requires `signed_psbt`, while the runtime reads `signedPsbt`. Pass the runtime-correct camel-case field and use a narrow type assertion until the upstream declaration is corrected:
+
+```typescript
+const request = { signedPsbt } as unknown as Parameters<typeof account.sendEnd>[0]
+const result = account.sendEnd(request)
+```
+</Callout>
+
+## `WalletAccountReadOnlyRgb`
+
+The read-only class is constructed from an address and configuration. It inherits balance methods and exposes:
+
+| Method | Returns | Behavior |
+|---|---|---|
+| `getBalance()` | `Promise<bigint>` | Settled Bitcoin balance. |
+| `getTokenBalance(assetId)` | `Promise<bigint>` | Settled RGB balance. |
+| `getTransactionReceipt(hash)` | `Promise<RgbTransactionReceipt \| null>` | Bitcoin receipt or `null`. |
+| `getTransferReceipt(hash)` | `Promise<RgbTransferReceipt \| null>` | RGB transfer receipt or `null`. |
+| `quoteSendTransaction()` | Rejected promise | Read-only accounts cannot construct or sign a quote PSBT. |
+| `quoteTransfer()` | Rejected promise | Read-only accounts cannot construct or sign a quote PSBT. |
+
+The v2.0.3 read-only class does not implement `verify()`. Use a live full account or a separately validated public-key verification path.
+
+## Input shapes
+
+### Bitcoin transaction
+
+| Field | Required | Meaning |
+|---|---:|---|
+| `to` | Yes | Bitcoin address. |
+| `value` | Yes | Satoshis as `number` or `bigint`. |
+| `feeRate` | No | sat/vbyte; send defaults to `1`, while quote obtains an estimate. |
+
+### RGB transfer
+
+| Field | Required | Meaning |
+|---|---:|---|
+| `recipient` | Yes | Single-use RGB invoice beginning with `rgb:`. |
+| `token` | Yes | RGB asset ID. |
+| `amount` | Yes | Asset base units as `number` or `bigint`. |
+| `feeRate` | No | Bitcoin fee rate in sat/vbyte. |
+| `minConfirmations` | No | Minimum confirmations. |
+| `witnessData` | No | Optional `{amountSat, blinding}` witness data. |
+
+## Release-specific cautions
+
+- `getTransfers()` suppresses native errors and returns `[]`; use direct state checks when an empty result is consequential.
+- `sendTransaction()` wraps Bitcoin-send failures with the text `RGB transfer failed`, so the prefix does not identify the failed operation.
+- Quote methods construct and sign PSBTs. Treat them as wallet operations, not pure arithmetic.
+- `getFeeRates()` reads main mempool.space recommendations without choosing `testnet` or `regtest`.
+- `transferMaxFee` is dropped by the normal manager-to-account construction path. Quote and enforce your own limit before sending.
+- Preserve and back up `dataDir`; do not assume the mnemonic alone reconstructs RGB state.
+
+## Guides
+
+- [Configure the wallet](/sdk/community-modules/wdk-wallet-rgb/configuration)
+- [Issue and receive assets](/sdk/community-modules/wdk-wallet-rgb/guides/issue-receive-assets)
+- [Transfer assets](/sdk/community-modules/wdk-wallet-rgb/guides/transfer-assets)
+- [Back up, restore, and migrate](/sdk/community-modules/wdk-wallet-rgb/guides/backup-restore-migrate)
+- [Handle errors](/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors)
+
+***
+
+## RGB wallet configuration
+URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/configuration
+Description: Configure network, durable state, indexing, transport, and fee controls for @utexo/wdk-wallet-rgb 2.0.3.
+
+`WalletManagerRgb` accepts a BIP-39 mnemonic or seed bytes and an RGB wallet configuration.
+
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+## Recommended configuration
 
 ```js
 import WalletManagerRgb from '@utexo/wdk-wallet-rgb'
 
-const manager = new WalletManagerRgb(seed, config)
+const manager = new WalletManagerRgb(seedPhrase, {
+  network: 'regtest',
+  dataDir: '/app-private/wdk/rgb-onchain',
+  indexerUrl: 'tcp://127.0.0.1:50001',
+  transportEndpoint: 'rpc://127.0.0.1:3000/json-rpc',
+})
 ```
 
-| Method | Description |
+Replace the paths and endpoints with values for your environment. Do not use a public example endpoint without evaluating its availability, privacy, and trust model.
+
+## Options
+
+| Field | Type | Runtime default | Guidance |
+|---|---|---|---|
+| `network` | `'mainnet' \| 'testnet' \| 'regtest'` | None | Required by the manager. |
+| `dataDir` | `string` | Temporary directory | Use a durable, app-private path and include it in backup and restore testing. |
+| `indexerUrl` | `string` | RGB SDK default | Use a trusted Electrs-compatible endpoint for the selected network. |
+| `transportEndpoint` | `string` | RGB SDK default | Used for RGB consignment exchange. Validate its scheme, network, and availability. |
+| `keys` | RGB SDK generated keys | Derived by the manager | Internal account-construction field; do not replace manager derivation in normal use. |
+| `transferMaxFee` | `number \| bigint` | None | Not forwarded by `WalletManagerRgb.getAccount()` in v2.0.3; do not rely on it through the manager path. |
+
+<Callout type="warn">
+The generated v2.0.3 TypeScript alias omits `dataDir`, `indexerUrl`, `transportEndpoint`, and `transferMaxFee`, although the released runtime and source JSDoc accept them. Keep any local type augmentation pinned to this package version and remove it when upstream declarations converge.
+</Callout>
+
+## Network
+
+Only these values are supported by the released declarations and account path logic:
+
+| Network | Vanilla path | Colored path |
+|---|---|---|
+| `mainnet` | `m/86'/0'/0'` | `m/86'/827166'/0'` |
+| `testnet` | `m/86'/1'/0'` | `m/86'/827167'/0'` |
+| `regtest` | `m/86'/1'/0'` | `m/86'/827167'/0'` |
+
+Do not configure `signet`, `testnet4`, or a custom network for this release even if a transitive RGB dependency recognizes additional names.
+
+## Local state
+
+The wallet stores RGB records under `dataDir`. Use a path that is:
+
+- persistent across restarts and upgrades;
+- private to the application and OS user;
+- unavailable to concurrent wallet instances;
+- covered by encrypted backup and tested restoration;
+- distinct from [`@utexo/wdk-rgb-lightning`](https://www.npmjs.com/package/@utexo/wdk-rgb-lightning).
+
+<Callout type="warn">
+The seed derives wallet keys, but it does not replace the local RGB database. Do not delete `dataDir` or treat a mnemonic-only recovery drill as proof that RGB state is recoverable.
+</Callout>
+
+## Indexer and transport
+
+`indexerUrl` supplies Bitcoin chain data. `transportEndpoint` carries RGB consignments. Both services can observe request metadata and can be unavailable, stale, or malicious.
+
+Before production use:
+
+1. Bind each endpoint to the configured Bitcoin network.
+2. Apply TLS or an authenticated private network where supported.
+3. Set application-level timeouts and operational monitoring.
+4. Reconcile transfer state before retrying a timed-out write.
+5. Test failover without assuming a failed response means a failed broadcast.
+
+## Fee policy
+
+`manager.getFeeRates()` reads `https://mempool.space/api/v1/fees/recommended` and returns `normal` and `fast` as `bigint`. The request does not select `testnet` or `regtest`, so use it only as a mainnet-oriented display hint.
+
+`quoteSendTransaction()` and `quoteTransfer()` create and sign PSBTs to estimate a fee. Apply an application-owned limit before sending:
+
+```js
+const maximumFee = 2_000n
+const quote = await account.quoteTransfer(transfer)
+
+if (quote.fee > maximumFee) {
+  throw new Error('Quoted RGB transfer fee exceeds the application limit')
+}
+
+const result = await account.transfer(transfer)
+```
+
+Do not use `transferMaxFee` as the sole guard. The manager omits that field when it constructs the released account.
+
+## Runtime artifacts
+
+The released dependency graph provides native artifacts for Linux x64, Linux arm64, and macOS arm64. It does not provide a verified Windows or Intel macOS artifact for this version. The package does not declare a Node.js engine range.
+
+Validate installation, native loading, backup/restore, and real network calls on the exact deployment target.
+
+## Next steps
+
+- [Get started](/sdk/community-modules/wdk-wallet-rgb/guides/get-started)
+- [Manage account storage](/sdk/community-modules/wdk-wallet-rgb/guides/manage-account-storage)
+- [Handle errors](/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors)
+- [API reference](/sdk/community-modules/wdk-wallet-rgb/api-reference)
+
+***
+
+## Back up, restore, and migrate the RGB wallet
+URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/backup-restore-migrate
+Description: Protect local RGB state, restore encrypted backups, and choose a privacy-aware v1-to-v2 migration.
+
+The seed and local RGB database are separate recovery inputs. Test both before funding the wallet.
+
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+## Create an encrypted backup
+
+```js
+const backup = account.createBackup({
+  password: backupPassword,
+  backupPath: '/secure-backups/rgb-wallet.backup',
+})
+
+console.log(backup.message)
+```
+
+Store the backup and password as sensitive recovery material, with access controls and separation appropriate to your threat model. Test readability and retention; a successful method return is not a completed recovery drill.
+
+## Restore into an empty directory
+
+Create a fresh manager with the same seed and network. Call `restoreAccountFromBackup()` before opening a normal account in the destination directory.
+
+```js
+import WalletManagerRgb from '@utexo/wdk-wallet-rgb'
+
+const restoredManager = new WalletManagerRgb(seedPhrase, {
+  network: 'testnet',
+  indexerUrl: trustedIndexerUrl,
+  transportEndpoint: trustedTransportEndpoint,
+})
+
+try {
+  const restored = await restoredManager.restoreAccountFromBackup({
+    backupFilePath: '/secure-backups/rgb-wallet.backup',
+    password: backupPassword,
+    dataDir: '/app-private/wdk/rgb-restored',
+  })
+
+  await restored.registerWallet()
+  restored.syncWallet()
+  restored.refreshWallet()
+
+  console.log({
+    address: restored.getAddress(),
+    assets: restored.listAssets(),
+    transactions: restored.listTransactions(),
+  })
+} finally {
+  restoredManager.dispose()
+}
+```
+
+Use an empty, private destination and do not run the original and restored wallet concurrently against the same state.
+
+## Validate the restore
+
+Compare more than the address:
+
+- vanilla and colored derivation paths;
+- asset IDs, precision, and settled balances;
+- RGB transfer history and status;
+- Bitcoin transactions and unspents;
+- ability to create a new backup;
+- a low-value receive and transfer on a test network.
+
+## Migrate from v1
+
+Version 1 relied on a remote RGB Node. The maintainer migration guide warns that the node operator may have learned wallet xpubs and transaction-graph metadata.
+
+Choose one of two paths:
+
+### Privacy-preserving reset
+
+1. Create a v2 wallet with a new seed and new persistent `dataDir`.
+2. Generate recipient invoices on the new wallet.
+3. Transfer assets from the old wallet.
+4. Verify settlement and back up the new state.
+5. Retire the old seed according to your incident and retention policy.
+
+This is the maintainer-recommended path when historical metadata exposure matters.
+
+### Same-seed state migration
+
+1. In a separate environment pinned to the v1 package, create and securely download the v1 backup.
+2. Stop and dispose the v1 wallet.
+3. Install v2 and restore the backup into a new local directory.
+4. Open v2 with the same seed, network, and restored `dataDir`.
+5. Verify all state before retiring the remote-node setup.
+
+<Callout type="warn">
+A same-seed restore preserves identity and state but cannot undo information already disclosed to a legacy remote node. An upgrade is not a privacy reset.
+</Callout>
+
+Use normal package imports in each pinned environment. A package version suffix inside an ESM import specifier, such as `import x from 'package@version'`, is not valid npm package import syntax.
+
+## Next steps
+
+- [Manage account storage](/sdk/community-modules/wdk-wallet-rgb/guides/manage-account-storage)
+- [Read balances and history](/sdk/community-modules/wdk-wallet-rgb/guides/balances-history)
+- [Handle errors](/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors)
+- [Maintainer migration guide](https://github.com/UTEXO-Protocol/wdk-wallet-rgb/blob/v2.0.3/MIGRATION.md)
+
+***
+
+## Read RGB balances and history
+URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/balances-history
+Description: Read settled Bitcoin and RGB balances, transactions, transfers, and receipts from the on-chain RGB wallet.
+
+Use the account's read methods after synchronizing Bitcoin and RGB transfer state.
+
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+## Synchronize first
+
+```js
+account.syncWallet()
+account.refreshWallet()
+```
+
+The freshness of every result depends on the selected indexer, transport endpoint, and local `dataDir`.
+
+## Read balances
+
+```js
+const bitcoinSats = await account.getBalance()
+const assetUnits = await account.getTokenBalance(assetId)
+
+console.log({
+  bitcoinSats: bitcoinSats.toString(),
+  assetUnits: assetUnits.toString(),
+})
+```
+
+Both WDK balance methods return settled values as `bigint`. RGB values are asset base units; apply the asset's precision only when formatting for display.
+
+To inspect the native asset records:
+
+```js
+const assets = account.listAssets()
+```
+
+Native result objects come from the pinned `@utexo/rgb-sdk`. Validate the fields your application consumes instead of assuming an unreleased repository shape.
+
+## Read Bitcoin history and UTXOs
+
+```js
+const transactions = account.listTransactions()
+const unspents = account.listUnspents()
+```
+
+These methods are synchronous wrappers over local/native state. A returned record is not, by itself, proof of finality; inspect its status and confirmations.
+
+## Read RGB transfer history
+
+Use `listTransfers()` when an error must remain observable:
+
+```js
+const allTransfers = account.listTransfers()
+const oneAssetTransfers = account.listTransfers(assetId)
+```
+
+Use `getTransfers()` for local filtering and pagination:
+
+```js
+const page = account.getTransfers({
+  assetId,
+  limit: 20,
+  skip: 0,
+})
+```
+
+<Callout type="warn">
+`getTransfers()` catches every underlying error and returns `[]`. An empty array therefore means either “no matching transfers” or “the native query failed.” Do not use it alone for reconciliation, audit, or retry decisions.
+</Callout>
+
+## Read receipts
+
+```js
+const bitcoinReceipt = await account.getTransactionReceipt(txid)
+const rgbReceipt = await account.getTransferReceipt(transferHash)
+```
+
+Each method returns a receipt or `null`. Treat `null` as pending, absent, or not yet indexed—not proof that a previous write failed.
+
+## Read-only access
+
+```js
+const readOnly = await account.toReadOnlyAccount()
+
+const [btcBalance, rgbBalance] = await Promise.all([
+  readOnly.getBalance(),
+  readOnly.getTokenBalance(assetId),
+])
+```
+
+Keep the originating wallet state and endpoints available for the lifetime of the read-only view.
+
+## Next steps
+
+- [Manage Bitcoin and UTXOs](/sdk/community-modules/wdk-wallet-rgb/guides/btc-utxos)
+- [Transfer RGB assets](/sdk/community-modules/wdk-wallet-rgb/guides/transfer-assets)
+- [Handle errors](/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors)
+
+***
+
+## Send Bitcoin and manage RGB UTXOs
+URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/btc-utxos
+Description: Quote and send Bitcoin, inspect unspents, and create UTXOs with @utexo/wdk-wallet-rgb 2.0.3.
+
+RGB transfers require suitable Bitcoin UTXOs. The account exposes both WDK Bitcoin sends and RGB SDK UTXO helpers.
+
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+## Inspect unspents
+
+```js
+account.syncWallet()
+
+const unspents = account.listUnspents()
+console.log(unspents)
+```
+
+Check native status fields and confirmation requirements before selecting an output for a consequential flow.
+
+## Create RGB-compatible UTXOs
+
+Use the combined method when the wallet can construct and sign the whole operation:
+
+```js
+const created = await account.createUtxos({
+  upTo: true,
+  num: 5,
+  size: 1_000,
+  feeRate: 2,
+})
+
+console.log('UTXOs created:', created)
+```
+
+`size` is satoshis and `feeRate` is sat/vbyte. Confirm appropriate values for the current network and RGB workflow.
+
+The release also exposes `createUtxosBegin()`, `signPsbt()`, and `createUtxosEnd()` for a lower-level PSBT flow. Use the exact v2.0.3 declaration and pinned RGB SDK shape when integrating those methods.
+
+## Quote a Bitcoin send
+
+```js
+const transaction = {
+  to: recipientAddress,
+  value: 50_000n,
+  feeRate: 2,
+}
+
+const quote = await account.quoteSendTransaction(transaction)
+console.log('Estimated fee:', quote.fee.toString())
+```
+
+<Callout type="warn">
+In v2.0.3, `quoteSendTransaction()` ignores the supplied `feeRate`, obtains its own one-block estimate, and constructs and signs a PSBT. `sendTransaction()` then uses the supplied `feeRate` or defaults to `1`. The quoted fee can therefore differ from the send path. Recheck policy and resulting state instead of treating the quote as a binding guarantee.
+</Callout>
+
+## Send Bitcoin
+
+```js
+const maximumQuotedFee = 2_000n
+const quote = await account.quoteSendTransaction(transaction)
+
+if (quote.fee > maximumQuotedFee) {
+  throw new Error('Quoted Bitcoin fee exceeds the application limit')
+}
+
+const result = await account.sendTransaction(transaction)
+console.log('Transaction ID:', result.hash)
+```
+
+`sendTransaction()` runs `sendBtcBegin → signPsbt → sendBtcEnd` and returns `{hash, fee}`.
+
+<Callout type="warn">
+Bitcoin-send failures are wrapped with the message prefix `RGB transfer failed` in this release. Classify the operation from your call context, not that text. A timeout also does not prove that broadcast failed; reconcile by transaction ID, UTXOs, and history before retrying.
+</Callout>
+
+`manager.getFeeRates()` reads main mempool.space recommendations without selecting the wallet network. Do not treat it as authoritative for `testnet` or `regtest`.
+
+## Next steps
+
+- [Issue and receive assets](/sdk/community-modules/wdk-wallet-rgb/guides/issue-receive-assets)
+- [Transfer assets](/sdk/community-modules/wdk-wallet-rgb/guides/transfer-assets)
+- [API reference](/sdk/community-modules/wdk-wallet-rgb/api-reference)
+
+***
+
+## Get started with the RGB wallet
+URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/get-started
+Description: Install @utexo/wdk-wallet-rgb 2.0.3 and create its single on-chain RGB account.
+
+This guide installs the documented release, creates a durable local wallet, and reads its first address.
+
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+## 1. Check the target runtime
+
+The v2.0.3 dependency set publishes native artifacts for Linux x64, Linux arm64, and macOS arm64. It does not publish a verified Windows or Intel macOS artifact, and the package does not declare a Node.js engine range.
+
+Test installation and native loading on the exact deployment target before integrating wallet state.
+
+## 2. Install the released package
+
+```bash
+npm install @utexo/wdk-wallet-rgb@2.0.3
+```
+
+## 3. Choose durable state and services
+
+Create an app-private, persistent directory. Configure an indexer and transport endpoint for the same network.
+
+```js
+import WalletManagerRgb from '@utexo/wdk-wallet-rgb'
+
+const seedPhrase = await loadSeedFromSecretStorage()
+
+const manager = new WalletManagerRgb(seedPhrase, {
+  network: 'regtest',
+  dataDir: '/app-private/wdk/rgb-onchain',
+  indexerUrl: 'tcp://127.0.0.1:50001',
+  transportEndpoint: 'rpc://127.0.0.1:3000/json-rpc',
+})
+```
+
+`loadSeedFromSecretStorage()` represents your application's secret-management boundary. Do not embed a mnemonic in source, logs, telemetry, or crash reports.
+
+## 4. Get the account
+
+RGB supports only account index `0`.
+
+```js
+try {
+  const account = await manager.getAccount(0)
+  const address = account.getAddress()
+
+  console.log('RGB-aware Bitcoin address:', address)
+} finally {
+  manager.dispose()
+}
+```
+
+`getAddress()` is synchronous in the released runtime. Using `await` on its value is harmless, but it is not required.
+
+## 5. Verify recovery before funding
+
+Before using real funds:
+
+1. Register and synchronize the wallet against trusted services.
+2. Create an encrypted backup.
+3. Restore into an empty test directory with the same seed.
+4. Confirm addresses, assets, balances, transfers, and UTXOs.
+5. Repeat on the exact deployment runtime.
+
+<Callout type="warn">
+Do not assume the seed alone restores RGB state. Preserve and test recovery of `dataDir` and encrypted backups.
+</Callout>
+
+## Next steps
+
+- [Manage account storage](/sdk/community-modules/wdk-wallet-rgb/guides/manage-account-storage)
+- [Issue and receive assets](/sdk/community-modules/wdk-wallet-rgb/guides/issue-receive-assets)
+- [Back up, restore, and migrate](/sdk/community-modules/wdk-wallet-rgb/guides/backup-restore-migrate)
+- [Configuration](/sdk/community-modules/wdk-wallet-rgb/configuration)
+
+***
+
+## Handle RGB wallet errors
+URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors
+Description: Handle native failures, ambiguous transfer history, fee-policy gaps, and secure cleanup in @utexo/wdk-wallet-rgb 2.0.3.
+
+The v2.0.3 package does not expose a typed public error hierarchy. Handle failures by operation, preserve the original cause, and reconcile state before retrying writes.
+
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+## Preserve operation context
+
+```js
+async function transferRgb(account, transfer) {
+  try {
+    return await account.transfer(transfer)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+
+    reportWalletFailure({
+      operation: 'rgb_transfer',
+      message,
+    })
+
+    throw error
+  }
+}
+```
+
+Do not log the seed, keys, backup password, complete invoice, or user-identifying endpoint credentials.
+
+## Account for misleading and suppressed errors
+
+Two release-specific behaviors require explicit handling:
+
+- `sendTransaction()` wraps Bitcoin-send failures with `RGB transfer failed: ...`. The prefix is misleading; classify it as the Bitcoin operation you invoked.
+- `getTransfers()` catches every native error and returns `[]`. Use `listTransfers()` plus synchronization when failure visibility matters.
+
+```js
+try {
+  account.syncWallet()
+  account.refreshWallet()
+  const transfers = account.listTransfers(assetId)
+  renderTransfers(transfers)
+} catch (error) {
+  renderTransferStateUnavailable()
+  throw error
+}
+```
+
+## Reconcile before retrying
+
+Indexer, transport, or broadcast calls can succeed remotely and fail locally. After a timeout or connection loss:
+
+1. Preserve any returned transaction or transfer identifier.
+2. Synchronize Bitcoin and refresh RGB state.
+3. Inspect transactions, transfers, receipts, and UTXOs.
+4. Retry only when an idempotency or reconciliation rule proves it safe.
+
+Never regenerate and resend against a single-use invoice merely because the first response timed out.
+
+## Enforce fees in application code
+
+The normal manager path drops `transferMaxFee`. Quote, compare with an application limit, and then send.
+
+For Bitcoin sends, remember that v2.0.3 quote logic uses its own estimated fee rate while the send uses the supplied `feeRate` or `1`. Treat the quote as advisory and reconcile the actual result.
+
+## Handle common setup failures
+
+| Failure area | Check |
 |---|---|
-| `constructor(seed, config)` | Creates a manager from a BIP-39 seed phrase or seed bytes. `network` and `dataDir` are required in config. |
-| `getAccount(index = 0)` | Returns the RGB account. RGB supports only account index `0`; other indexes throw. |
-| `restoreAccountFromBackup(restoreConfig)` | Restores account state from encrypted backup material. |
-| `getAccountByPath(path)` | Always throws because RGB does not support arbitrary BIP-44 account paths in this module. |
-| `getFeeRates()` | Fetches normal and fast Bitcoin fee rates from mempool.space. |
-| `dispose()` | Clears cached account and key material from the manager. |
+| Manager construction | `network` is exactly `mainnet`, `testnet`, or `regtest`. |
+| Account creation | Seed is present and native artifact supports the host. |
+| Empty or stale state | Correct persistent `dataDir`, network, indexer, and transport endpoint. |
+| Transfer rejection | Complete `rgb:` invoice, matching asset ID, base-unit amount, UTXOs, confirmations, and fee rate. |
+| Restore rejection | Backup path, password, empty destination, matching seed, and call order before opening the account. |
 
-## `WalletAccountRgb`
+## Clean up without hiding the primary failure
 
-| Method or property | Description |
-|---|---|
-| `static at(seed, config)` | Creates a full RGB wallet account. |
-| `static fromBackup(seed, config)` | Creates an account from encrypted backup material. |
-| `index` | Account index. |
-| `path` | WDK-compatible path representation for the RGB account. |
-| `coloredPath` | RGB colored-account path representation. |
-| `keyPair` | Public key material and RGB-specific extended public keys. |
-| `getAddress()` | Returns the wallet address. |
-| `sign(message)` | Signs a message. |
-| `verify(message, signature)` | Verifies a message signature. |
-| `sendTransaction(options)` | Sends native BTC through the RGB wallet flow. |
-| `quoteSendTransaction(options)` | Quotes native BTC send cost. |
-| `transfer(options)` | Transfers an RGB asset. |
-| `quoteTransfer(options)` | Quotes RGB asset transfer cost. |
-| `toReadOnlyAccount()` | Returns a `WalletAccountReadOnlyRgb`. |
-| `dispose()` | Erases account key material managed by this wrapper. |
-| `getRgbWallet()` | Returns the underlying RGB SDK wallet manager. |
+```js
+let operationError
 
-## RGB-specific account methods
+try {
+  await runWalletFlow(manager)
+} catch (error) {
+  operationError = error
+  throw error
+} finally {
+  try {
+    manager.dispose()
+  } catch (cleanupError) {
+    reportCleanupFailure(cleanupError, { operationError })
+  }
+}
+```
 
-| Method | Description |
-|---|---|
-| `listAssets()` | Lists RGB assets in the wallet. |
-| `issueAssetNia(options)` | Issues a Non-Inflatable Asset. |
-| `receiveAsset(options)` | Creates a blind or witness receive invoice. |
-| `sendBegin(options)` | Begins an RGB send and returns a PSBT. |
-| `signPsbt(psbt)` | Signs a PSBT. |
-| `sendEnd(options)` | Broadcasts a signed RGB send. |
-| `createUtxos(options)` | Creates UTXOs using the combined flow. |
-| `createUtxosBegin(options)` | Begins UTXO creation and returns a PSBT. |
-| `createUtxosEnd(options)` | Finalizes UTXO creation from a signed PSBT. |
-| `listUnspents()` | Lists UTXOs. |
-| `listTransactions()` | Lists Bitcoin transactions. |
-| `getTransfers(options)` | Lists RGB transfers with optional asset filtering and pagination. |
-| `listTransfers(assetId)` | Lists RGB transfers for an optional asset ID. |
-| `failTransfers(transferId)` | Marks a transfer as failed. |
-| `createBackup(options)` | Creates an encrypted wallet backup. |
-| `restoreFromBackup(params)` | Restores a wallet from encrypted backup material. |
+The account zeroes its wrapper-owned derived private-key bytes during disposal, and the manager clears its derived-key fields. Cleanup cannot erase external copies or compensate for logged secrets.
 
-## `WalletAccountReadOnlyRgb`
+## Next steps
 
-| Method | Description |
-|---|---|
-| `verify(message, signature)` | Verifies a message signature without private key access. |
-| `getBalance()` | Returns the Bitcoin balance in satoshis. |
-| `getTokenBalance(tokenAddress)` | Returns the settled RGB asset balance for the given asset ID. |
-| `quoteSendTransaction(tx)` | Throws; use `WalletAccountRgb` for this operation. |
-| `quoteTransfer(options)` | Throws; use `WalletAccountRgb` for this operation. |
-| `getTransactionReceipt(hash)` | Looks up a Bitcoin transaction receipt by hash. |
-| `getTransferReceipt(hash)` | Looks up an RGB transfer receipt by hash. |
+- [Configuration](/sdk/community-modules/wdk-wallet-rgb/configuration)
+- [Transfer assets](/sdk/community-modules/wdk-wallet-rgb/guides/transfer-assets)
+- [Back up, restore, and migrate](/sdk/community-modules/wdk-wallet-rgb/guides/backup-restore-migrate)
+- [API reference](/sdk/community-modules/wdk-wallet-rgb/api-reference)
 
-## Transfer options
+***
 
-| Field | Required | Description |
-|---|---:|---|
-| `token` | Yes | RGB asset ID. |
-| `recipient` | Yes | RGB invoice recipient. |
-| `amount` | Yes | Transfer amount. |
-| `feeRate` | No | Fee rate in sat/vbyte. |
-| `minConfirmations` | No | Minimum confirmations. |
-| `witnessData` | No | Witness data for transfer construction. |
+## Issue and receive RGB assets
+URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/issue-receive-assets
+Description: Issue NIA assets and create blind or witness receive invoices with the on-chain RGB wallet.
 
-## Limitations
+The v2.0.3 account declares Non-Inflatable Asset issuance and blind or witness receive invoices.
 
-- RGB account creation is limited to account index `0`.
-- `getAccountByPath()` is not supported.
-- Read-only accounts cannot quote transactions or transfers.
-- `dataDir` is part of the wallet state and needs durable storage.
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+## Prepare the wallet
+
+Register, synchronize, and confirm that the wallet has suitable Bitcoin UTXOs:
+
+```js
+await account.registerWallet()
+account.syncWallet()
+
+const unspents = account.listUnspents()
+if (unspents.length === 0) {
+  throw new Error('Fund or create RGB-compatible UTXOs before continuing')
+}
+```
+
+## Issue an NIA
+
+```js
+const issued = account.issueAssetNia({
+  ticker: 'DEMO',
+  name: 'Demo Asset',
+  amounts: [1_000],
+  precision: 0,
+})
+
+console.log(issued)
+```
+
+`amounts` contains issued allocations in asset base units. Validate ticker, name, precision, supply, and destination policy before issuance because issuance is a consequential state change.
+
+<Callout type="info">
+The released WDK account declares only `issueAssetNia()`. Do not infer UDA, CFA, IFA, inflation, or atomic-swap support from another RGB repository or unreleased branch.
+</Callout>
+
+## Create a blind receive invoice
+
+```js
+const receive = account.receiveAsset({
+  assetId,
+  amount: 100,
+  witness: false,
+})
+
+console.log(receive.invoice)
+```
+
+A blind receive normally consumes an available allocation-capable UTXO.
+
+## Create a witness receive invoice
+
+```js
+const receive = account.receiveAsset({
+  assetId,
+  amount: 100,
+  witness: true,
+})
+```
+
+Witness receive uses an on-chain witness flow. Select the mode according to the recipient's wallet state, privacy model, and fee requirements.
+
+## Handle invoices safely
+
+- Generate the invoice on the receiving wallet.
+- Transmit the complete invoice over an authenticated channel.
+- Verify the asset ID and amount in your application.
+- Treat the invoice as single-use.
+- Do not log invoices with user-identifying metadata.
+- Refresh transfer state before deciding whether an expired or timed-out receive failed.
+
+The sender needs the invoice string beginning with `rgb:`. An ordinary Bitcoin address is not an RGB transfer recipient.
+
+## Next steps
+
+- [Create and inspect UTXOs](/sdk/community-modules/wdk-wallet-rgb/guides/btc-utxos)
+- [Transfer an asset](/sdk/community-modules/wdk-wallet-rgb/guides/transfer-assets)
+- [Read balances and history](/sdk/community-modules/wdk-wallet-rgb/guides/balances-history)
+
+***
+
+## Manage the RGB account and storage
+URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/manage-account-storage
+Description: Manage the single RGB account, derivation paths, durable local state, and read-only access.
+
+The on-chain RGB module owns one account and a local RGB database. Treat both limits as part of the wallet identity.
+
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+## Use account index 0
+
+```js
+const account = await manager.getAccount(0)
+
+console.log(account.index)       // 0
+console.log(account.path)        // BIP-86 vanilla path
+console.log(account.coloredPath) // RGB colored path
+```
+
+`manager.getAccount(1)` throws. `manager.getAccountByPath()` always throws.
+
+| Network | `path` | `coloredPath` |
+|---|---|---|
+| `mainnet` | `m/86'/0'/0'` | `m/86'/827166'/0'` |
+| `testnet` or `regtest` | `m/86'/1'/0'` | `m/86'/827167'/0'` |
+
+## Persist the local state
+
+Use a durable, app-private `dataDir`:
+
+```js
+const manager = new WalletManagerRgb(seedPhrase, {
+  network: 'mainnet',
+  dataDir: '/app-private/wdk/rgb-onchain',
+})
+```
+
+The runtime falls back to temporary storage if the field is omitted. That fallback is unsuitable for a durable wallet.
+
+Protect the directory from:
+
+- deletion by cache or temporary-file cleanup;
+- concurrent access by multiple wallet instances;
+- unencrypted device or cloud backups;
+- reuse by [`@utexo/wdk-rgb-lightning`](https://www.npmjs.com/package/@utexo/wdk-rgb-lightning);
+- accidental cross-network reuse.
+
+The on-chain and Lightning RGB modules have different identities and databases. Give them separate paths even when they use the same BIP-39 mnemonic.
+
+## Register and synchronize
+
+```js
+const { address, btcBalance } = await account.registerWallet()
+
+account.syncWallet()
+account.refreshWallet()
+
+console.log({ address, btcBalance })
+```
+
+`syncWallet()` synchronizes Bitcoin state. `refreshWallet()` refreshes RGB transfer state. The released runtime exposes both synchronously; failures can still propagate from native code.
+
+## Create a read-only view
+
+```js
+const readOnly = await account.toReadOnlyAccount()
+
+const btc = await readOnly.getBalance()
+const rgb = await readOnly.getTokenBalance(assetId)
+```
+
+The read-only account can query balances and receipts. It cannot quote transactions or transfers, and v2.0.3 does not implement message verification on the read-only class.
+
+## Dispose at the owner boundary
+
+```js
+try {
+  const account = await manager.getAccount(0)
+  // Use the account.
+} finally {
+  manager.dispose()
+}
+```
+
+The manager disposes cached accounts and clears manager-owned derived-key fields. Disposal cannot erase mnemonic or key copies retained by application code or dependencies.
+
+## Next steps
+
+- [Read balances and history](/sdk/community-modules/wdk-wallet-rgb/guides/balances-history)
+- [Back up and restore](/sdk/community-modules/wdk-wallet-rgb/guides/backup-restore-migrate)
+- [Handle errors](/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors)
+
+***
+
+## Sign and verify messages with the RGB wallet
+URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/sign-verify-messages
+Description: Sign and verify application messages with the full on-chain RGB account.
+
+The full v2.0.3 account exposes Bitcoin message signing and verification through the underlying RGB wallet.
+
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+## Sign a domain-separated message
+
+```js
+const message = [
+  'example-wallet-auth',
+  'version=1',
+  `origin=${expectedOrigin}`,
+  `nonce=${serverNonce}`,
+  `expires=${expiresAt}`,
+].join('\n')
+
+const signature = await account.sign(message)
+```
+
+Include an application name, purpose, origin, nonce, expiry, and version. Do not ask users to sign opaque or transaction-like data.
+
+## Verify with the full account
+
+```js
+const valid = await account.verify(message, signature)
+
+if (!valid) {
+  throw new Error('Invalid RGB wallet message signature')
+}
+```
+
+Verify the exact bytes and application context that were presented to the signer. Reject reused nonces and expired challenges at the application boundary.
+
+## Read-only limitation
+
+```js
+const readOnly = await account.toReadOnlyAccount()
+```
+
+The released `WalletAccountReadOnlyRgb` does not implement `verify()`. Do not copy an API claim from a later commit or another wallet module. If verification must run without the live full account, use a separately reviewed verifier with the correct public key, signature format, and domain rules.
+
+## Protect key material
+
+- Do not log `account.keyPair`, signatures attached to sensitive challenges, or seed material.
+- Keep challenge generation server-side when using signatures for authentication.
+- Bind signatures to one origin and one intended action.
+- Call `manager.dispose()` when the wallet session ends.
+- Remember that disposal cannot erase key copies retained by application code.
+
+Message signing does not authorize a Bitcoin or RGB transfer unless your application explicitly gives the signed message that meaning. Keep authentication and transaction approval domains separate.
+
+## Next steps
+
+- [Manage account storage](/sdk/community-modules/wdk-wallet-rgb/guides/manage-account-storage)
+- [Handle errors](/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors)
+- [API reference](/sdk/community-modules/wdk-wallet-rgb/api-reference)
+
+***
+
+## Transfer RGB assets
+URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/guides/transfer-assets
+Description: Quote and send an on-chain RGB asset to a recipient-generated invoice.
+
+An RGB transfer is invoice-driven: the recipient generates an invoice and the sender funds, signs, and broadcasts the transfer.
+
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+## 1. Obtain a recipient invoice
+
+On the receiving wallet:
+
+```js
+const receive = recipientAccount.receiveAsset({
+  assetId,
+  amount: 100,
+  witness: false,
+})
+
+const rgbInvoice = receive.invoice
+```
+
+Transfer the invoice over an authenticated channel. The sender should validate that it begins with `rgb:` and that the intended asset and amount match the user-confirmed action.
+
+## 2. Build the transfer
+
+```js
+const transfer = {
+  recipient: rgbInvoice,
+  token: assetId,
+  amount: 100n,
+  feeRate: 2,
+  minConfirmations: 1,
+}
+```
+
+`amount` is in asset base units. `feeRate` is the Bitcoin fee rate in sat/vbyte.
+
+## 3. Quote and enforce policy
+
+```js
+const maximumFee = 2_000n
+const quote = await senderAccount.quoteTransfer(transfer)
+
+if (quote.fee > maximumFee) {
+  throw new Error('Quoted RGB transfer fee exceeds the application limit')
+}
+```
+
+`quoteTransfer()` creates and signs a transfer PSBT to estimate its fee. It is not a pure arithmetic call, and changing wallet state or fee inputs after the quote can invalidate the result.
+
+<Callout type="warn">
+Although `transferMaxFee` exists in the v2.0.3 config source, `WalletManagerRgb.getAccount()` does not forward it to the account. Enforce an application-owned limit on every transfer instead of relying on that option.
+</Callout>
+
+## 4. Send once
+
+```js
+const result = await senderAccount.transfer(transfer)
+
+console.log({
+  txid: result.hash,
+  estimatedFee: result.fee.toString(),
+})
+```
+
+The high-level method runs `sendBegin → signPsbt → sendEnd`. The release also exposes those primitives for advanced PSBT orchestration; keep their exact argument naming pinned to v2.0.3 and the included `@utexo/rgb-sdk`.
+
+## 5. Reconcile state
+
+```js
+senderAccount.refreshWallet()
+
+const transfers = senderAccount.listTransfers(assetId)
+const receipt = await senderAccount.getTransferReceipt(result.hash)
+```
+
+Do not resend automatically after a timeout. The write may have reached the transport endpoint or Bitcoin network even when the caller did not receive a success response.
+
+## Operational cautions
+
+- Treat each recipient invoice as single-use.
+- Do not substitute a Bitcoin address for the `rgb:` invoice.
+- Confirm the asset ID, asset precision, base-unit amount, and network.
+- Ensure suitable RGB allocations and Bitcoin UTXOs exist before quoting.
+- Preserve the sender and recipient `dataDir` state until settlement is reconciled.
+- `getTransfers()` hides native errors as `[]`; use `listTransfers()` when failure visibility matters.
+
+## Next steps
+
+- [Read balances and history](/sdk/community-modules/wdk-wallet-rgb/guides/balances-history)
+- [Back up and restore](/sdk/community-modules/wdk-wallet-rgb/guides/backup-restore-migrate)
+- [Handle errors](/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors)
+
+***
+
+## RGB wallet usage
+URL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-rgb/usage
+Description: Task-focused guides for the released @utexo/wdk-wallet-rgb 2.0.3 community module.
+
+Use these guides for the single-account, on-chain RGB wallet in `@utexo/wdk-wallet-rgb@2.0.3`.
+
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+<Cards>
+<Card title="Get started" href="/sdk/community-modules/wdk-wallet-rgb/guides/get-started">
+Install the package and open the index-0 account.
+</Card>
+<Card title="Manage account storage" href="/sdk/community-modules/wdk-wallet-rgb/guides/manage-account-storage">
+Persist local RGB state and understand the account and derivation boundaries.
+</Card>
+<Card title="Balances and history" href="/sdk/community-modules/wdk-wallet-rgb/guides/balances-history">
+Read Bitcoin and RGB balances, transactions, transfers, and receipts.
+</Card>
+<Card title="Bitcoin and UTXOs" href="/sdk/community-modules/wdk-wallet-rgb/guides/btc-utxos">
+Send Bitcoin and create the UTXOs needed by RGB workflows.
+</Card>
+<Card title="Issue and receive assets" href="/sdk/community-modules/wdk-wallet-rgb/guides/issue-receive-assets">
+Issue NIA assets and create blind or witness invoices.
+</Card>
+<Card title="Transfer assets" href="/sdk/community-modules/wdk-wallet-rgb/guides/transfer-assets">
+Quote and send RGB assets to a recipient-generated invoice.
+</Card>
+<Card title="Backup, restore, and migrate" href="/sdk/community-modules/wdk-wallet-rgb/guides/backup-restore-migrate">
+Protect local state and move from the legacy remote-node architecture.
+</Card>
+<Card title="Sign and verify messages" href="/sdk/community-modules/wdk-wallet-rgb/guides/sign-verify-messages">
+Use the full account's message-signing surface.
+</Card>
+<Card title="Handle errors" href="/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors">
+Handle ambiguous history, fee, network, and cleanup failures.
+</Card>
+</Cards>
+
+## Reference
+
+- [Configuration](/sdk/community-modules/wdk-wallet-rgb/configuration)
+- [API reference](/sdk/community-modules/wdk-wallet-rgb/api-reference)
+- [v2.0.3 release](https://github.com/UTEXO-Protocol/wdk-wallet-rgb/releases/tag/v2.0.3)
 
 ***
 

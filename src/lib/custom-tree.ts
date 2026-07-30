@@ -248,6 +248,19 @@ export const customTree: Node[] = [
   ]),
 
   folder('RGB', '/sdk/community-modules/wdk-wallet-rgb', 'Palette', [
+    usage('/sdk/community-modules/wdk-wallet-rgb/usage'),
+    guides([
+      page('Get Started', '/sdk/community-modules/wdk-wallet-rgb/guides/get-started'),
+      page('Manage Account and Storage', '/sdk/community-modules/wdk-wallet-rgb/guides/manage-account-storage'),
+      page('Balances and History', '/sdk/community-modules/wdk-wallet-rgb/guides/balances-history'),
+      page('BTC and UTXOs', '/sdk/community-modules/wdk-wallet-rgb/guides/btc-utxos'),
+      page('Issue and Receive Assets', '/sdk/community-modules/wdk-wallet-rgb/guides/issue-receive-assets'),
+      page('Transfer Assets', '/sdk/community-modules/wdk-wallet-rgb/guides/transfer-assets'),
+      page('Backup, Restore, and Migrate', '/sdk/community-modules/wdk-wallet-rgb/guides/backup-restore-migrate'),
+      page('Sign and Verify Messages', '/sdk/community-modules/wdk-wallet-rgb/guides/sign-verify-messages'),
+      page('Handle Errors', '/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors'),
+    ]),
+    configuration('/sdk/community-modules/wdk-wallet-rgb/configuration'),
     apiReference('/sdk/community-modules/wdk-wallet-rgb/api-reference'),
   ]),
   folder('Cosmos', '/sdk/community-modules/wdk-wallet-cosmos', 'Orbit', [

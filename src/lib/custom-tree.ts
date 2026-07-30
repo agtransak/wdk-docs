@@ -241,8 +241,41 @@ export const customTree: Node[] = [
       apiReference('/sdk/wallet-modules/wallet-solana-gasless/api-reference'),
     ]),
   ]),
-  folder('RGB', '/sdk/community-modules/wdk-wallet-rgb', 'Palette', [
-    apiReference('/sdk/community-modules/wdk-wallet-rgb/api-reference'),
+  group('RGB', 'Palette', [
+    folder('On-chain RGB', '/sdk/community-modules/wdk-wallet-rgb', 'Wallet', [
+      usage('/sdk/community-modules/wdk-wallet-rgb/usage'),
+      guides([
+        page('Get Started', '/sdk/community-modules/wdk-wallet-rgb/guides/get-started'),
+        page('Manage Account and Storage', '/sdk/community-modules/wdk-wallet-rgb/guides/manage-account-storage'),
+        page('Balances and History', '/sdk/community-modules/wdk-wallet-rgb/guides/balances-history'),
+        page('BTC and UTXOs', '/sdk/community-modules/wdk-wallet-rgb/guides/btc-utxos'),
+        page('Issue and Receive Assets', '/sdk/community-modules/wdk-wallet-rgb/guides/issue-receive-assets'),
+        page('Transfer Assets', '/sdk/community-modules/wdk-wallet-rgb/guides/transfer-assets'),
+        page('Backup, Restore, and Migrate', '/sdk/community-modules/wdk-wallet-rgb/guides/backup-restore-migrate'),
+        page('Sign and Verify Messages', '/sdk/community-modules/wdk-wallet-rgb/guides/sign-verify-messages'),
+        page('Handle Errors', '/sdk/community-modules/wdk-wallet-rgb/guides/handle-errors'),
+      ]),
+      configuration('/sdk/community-modules/wdk-wallet-rgb/configuration'),
+      apiReference('/sdk/community-modules/wdk-wallet-rgb/api-reference'),
+    ]),
+    folder('RGB Lightning', '/sdk/community-modules/wdk-rgb-lightning', 'Zap', [
+      usage('/sdk/community-modules/wdk-rgb-lightning/usage'),
+      guides([
+        page('Get Started', '/sdk/community-modules/wdk-rgb-lightning/guides/get-started'),
+        page('Manage Node and Account', '/sdk/community-modules/wdk-rgb-lightning/guides/manage-node-account'),
+        page('Balances and History', '/sdk/community-modules/wdk-rgb-lightning/guides/balances-history'),
+        page('BTC and UTXOs', '/sdk/community-modules/wdk-rgb-lightning/guides/send-btc-utxos'),
+        page('Peers and Channels', '/sdk/community-modules/wdk-rgb-lightning/guides/peers-channels'),
+        page('Lightning Payments', '/sdk/community-modules/wdk-rgb-lightning/guides/lightning-payments'),
+        page('RGB Assets', '/sdk/community-modules/wdk-rgb-lightning/guides/rgb-assets'),
+        page('LSP, Lightning Address, and APay', '/sdk/community-modules/wdk-rgb-lightning/guides/lsp-lightning-address-apay'),
+        page('VSS Backup and Recovery', '/sdk/community-modules/wdk-rgb-lightning/guides/vss-backup-recovery'),
+        page('Sign and Verify Messages', '/sdk/community-modules/wdk-rgb-lightning/guides/sign-verify-messages'),
+        page('Handle Errors and Cleanup', '/sdk/community-modules/wdk-rgb-lightning/guides/handle-errors-cleanup'),
+      ]),
+      configuration('/sdk/community-modules/wdk-rgb-lightning/configuration'),
+      apiReference('/sdk/community-modules/wdk-rgb-lightning/api-reference'),
+    ]),
   ]),
   folder('Cosmos', '/sdk/community-modules/wdk-wallet-cosmos', 'Orbit', [
     apiReference('/sdk/community-modules/wdk-wallet-cosmos/api-reference'),

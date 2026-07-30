@@ -1,11 +1,11 @@
 ---
-title: Swidge Modules Overview
-description: Compare WDK Swidge providers for swaps, bridges, and combined asset routes.
+title: Swap and Bridge Modules Overview
+description: Compare documented WDK Swidge providers and standalone swap and bridge modules.
 docType: explanation
 schemaType: TechArticle
 ---
 
-Swidge modules connect WDK accounts to providers that can quote and execute a swap, a bridge, or both as one route. Choose a provider by its supported chains, tokens, runtime, and operational requirements.
+WDK supports documented Swidge providers alongside standalone swap and bridge modules. Use a Swidge provider for routes supplied by an external routing service, Velora for standalone EVM token swaps, or USDT0 for standalone cross-chain transfers.
 
 <Callout type="warn">
 Rows marked Community are developed and maintained independently by third-party contributors.
@@ -13,17 +13,24 @@ Rows marked Community are developed and maintained independently by third-party 
 Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
 </Callout>
 
-## Released provider modules
+## Swidge provider modules
+
+These modules implement the Swidge interface for routes returned by their providers.
 
 | Module | Provider | Ownership | Documentation |
 |--------|----------|-----------|---------------|
 | [`wdk-protocol-swidge-orchestra`](https://www.npmjs.com/package/wdk-protocol-swidge-orchestra) | Flashnet Orchestra | Community | [Documentation](/sdk/swidge-modules/swidge-orchestra/) |
 | [`@rhino.fi/wdk-protocol-swidge-rhinofi`](https://www.npmjs.com/package/@rhino.fi/wdk-protocol-swidge-rhinofi) | Rhino.fi | Community | [Documentation](/sdk/swidge-modules/swidge-rhinofi/) |
 | [`@symbiosis-finance/wdk-protocol-swidge-symbiosis`](https://www.npmjs.com/package/@symbiosis-finance/wdk-protocol-swidge-symbiosis) | Symbiosis | Community | [Documentation](/sdk/swidge-modules/swidge-symbiosis/) |
-| [`@lifi/wdk-protocol-swidge-lifi`](https://www.npmjs.com/package/@lifi/wdk-protocol-swidge-lifi) | LI.FI | Community | [README](https://github.com/lifinance/wdk-lifi-swidge-protocol#readme) |
-| [`@moonpay/wdk-protocol-swidge-moonpay-trade`](https://www.npmjs.com/package/@moonpay/wdk-protocol-swidge-moonpay-trade) | MoonPay Trade | Community | [README](https://www.npmjs.com/package/@moonpay/wdk-protocol-swidge-moonpay-trade#readme) |
-| [`@swapdk/wdk-protocol-swidge-swapdk`](https://www.npmjs.com/package/@swapdk/wdk-protocol-swidge-swapdk) | SwapDK | Community | [README](https://github.com/Swap-DK/wdk-protocol-bridges-swapdk#readme) |
-| [`@gobob/wdk-protocol-swidge-gateway`](https://www.npmjs.com/package/@gobob/wdk-protocol-swidge-gateway) | BOB Gateway | Community | [README](https://github.com/bob-collective/wdk-protocol-swidge-gateway#readme) |
+
+## Standalone protocol modules
+
+These modules use dedicated swap or bridge interfaces rather than the Swidge interface.
+
+| Module | Integration | Documentation |
+|--------|-------------|---------------|
+| [`@tetherto/wdk-protocol-swap-velora-evm`](https://github.com/tetherto/wdk-protocol-swap-velora-evm) | Velora EVM swaps | [Documentation](/sdk/swap-modules/swap-velora-evm/) |
+| [`@tetherto/wdk-protocol-bridge-usdt0-evm`](https://github.com/tetherto/wdk-protocol-bridge-usdt0-evm) | USDT0 cross-chain transfers | [Documentation](/sdk/bridge-modules/bridge-usdt0-evm/) |
 
 ## Next steps
 
@@ -37,9 +44,13 @@ Use the Rhino.fi community provider for its supported cross-chain routes.
 <Card title="Symbiosis" href="/sdk/swidge-modules/swidge-symbiosis/">
 Use the Symbiosis community provider for dynamically discovered routes.
 </Card>
+<Card title="Velora" href="/sdk/swap-modules/swap-velora-evm/">
+Use the Tether-maintained Velora module for standalone EVM token swaps.
+</Card>
+<Card title="USDT0 bridge" href="/sdk/bridge-modules/bridge-usdt0-evm/">
+Use the Tether-maintained USDT0 module for standalone cross-chain transfers.
+</Card>
 </Cards>
-
-Maintaining an integration that does not implement Swidge? Use the released [standalone swap modules](/sdk/swap-modules/) or [standalone bridge modules](/sdk/bridge-modules/).
 
 ***
 

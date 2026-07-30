@@ -247,7 +247,6 @@ export const customTree: Node[] = [
     apiReference('/sdk/wallet-modules/wallet-aptos/api-reference'),
   ]),
 
-  separator('Community wallets'),
   group('RGB', 'Palette', [
     folder('On-chain RGB', '/sdk/community-modules/wdk-wallet-rgb', 'Wallet', [
       usage('/sdk/community-modules/wdk-wallet-rgb/usage'),
@@ -300,7 +299,7 @@ export const customTree: Node[] = [
   ]),
 
   separator('Swap and Bridge'),
-  page('Swidge modules', '/sdk/swidge-modules', 'Route'),
+  page('Swap and bridge modules', '/sdk/swidge-modules', 'Route'),
   folder('Orchestra', '/sdk/swidge-modules/swidge-orchestra', 'Waypoints', [
     usage('/sdk/swidge-modules/swidge-orchestra/usage'),
     guides([

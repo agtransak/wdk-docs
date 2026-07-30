@@ -125,7 +125,7 @@ Raw markdown is available by appending `.md` to any documentation page URL.
 - Get Swap Quotes: https://docs.wdk.tether.io/sdk/swap-modules/swap-velora-evm/guides/get-swap-quotes
 - Handle Errors: https://docs.wdk.tether.io/sdk/swap-modules/swap-velora-evm/guides/handle-errors
 - Swap velora EVM Guides: https://docs.wdk.tether.io/sdk/swap-modules/swap-velora-evm/usage
-- Swidge Modules Overview: https://docs.wdk.tether.io/sdk/swidge-modules
+- Swap and Bridge Modules Overview: https://docs.wdk.tether.io/sdk/swidge-modules
 - Route with Orchestra: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-orchestra
 - Orchestra API Reference: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-orchestra/api-reference
 - Orchestra Configuration: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-orchestra/configuration

@@ -10,10 +10,25 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 ---
 
+### July 30, 2026
+
+**Changes**
+- **swidge-symbiosis** ([v1.2.0](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/tree/v1.2.0)): Add a 30-second default API timeout and configurable `X-Partner-Id`, validate a positive integer input amount, reset non-zero insufficient EVM allowances before approval, and recognize partner fees by their `Partner fee` description. TON joins Tron and Solana as quote-only because WDK TON accounts cannot submit the raw BoC route payload; Monero and Zcash custodial routes are excluded from discovery and resolution.
+- **swidge-symbiosis** ([v1.1.2](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/tree/v1.1.2)): Move publishing to version-tagged npm trusted publishing without changing the public module API.
+
+---
+
 ### July 29, 2026
 
 **Changes**
 - **lending-aave-evm** ([v1.0.0-beta.5](https://github.com/tetherto/wdk-protocol-lending-aave-evm/releases/tag/v1.0.0-beta.5)): Refresh the wallet and ethers dependencies without changing the Aave adapter's public runtime or type surface. ERC-4337 integrations must now provide the dependency's required `safeModulesVersion`; token-paymaster mode also requires a paymaster address, URL, and token configuration.
+
+---
+
+### July 28, 2026
+
+**What's New**
+- **swidge-symbiosis** ([v1.1.1](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/tree/v1.1.1)): Add typed provider errors, expose named `SymbiosisProtocol` and `ISwidgeProtocol` exports alongside the default export, and map Symbiosis status code `2` to WDK `pending`.
 
 ---
 

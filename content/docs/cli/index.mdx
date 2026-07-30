@@ -17,8 +17,10 @@ WDK CLI provides a local command-line wallet built with WDK. Use it to manage na
 WDK CLI requires Node.js 22.18.0 or later.
 
 ```bash title="Terminal"
-npm install -g @tetherto/wdk-cli@1.0.0-beta.1
+npm install -g --allow-scripts=@tetherto/wdk-cli @tetherto/wdk-cli@1.0.0-beta.1
 ```
+
+The allowlist permits the CLI package's postinstall script, which installs the version-pinned wallet modules in its bundled network configuration.
 
 Verify the installation:
 
@@ -34,7 +36,7 @@ Install the scoped `@tetherto/wdk-cli` package. The unscoped `wdk-cli` package i
 | --- | --- |
 | `wdk` | Runs wallet, read, send, configuration, network, token, fiat-ramp, and MCP setup commands |
 | `wdk-daemon` | Holds unlocked wallet instances and serves local wallet requests; `wdk` starts it when needed |
-| `wdk-mcp` | Exposes WDK CLI wallet operations to supported MCP clients |
+| `wdk-mcp` | Exposes WDK CLI wallet operations to MCP-compatible clients |
 
 Most users invoke `wdk`. The CLI and MCP integrations manage the other two binaries.
 
@@ -49,7 +51,7 @@ Most users invoke `wdk`. The CLI and MCP integrations manage the other two binar
 | `wdk config` | Read, update, reset, or locate local configuration |
 | `wdk network` | Inspect built-in networks and manage custom networks |
 | `wdk token` | Inspect built-in tokens and manage custom token entries |
-| `wdk mcp` | Configure the bundled MCP server for a supported AI client |
+| `wdk mcp` | Configure the bundled MCP server for Claude Desktop, Claude Code, or OpenClaw |
 
 Run `wdk --help` for the command map or append `--help` to a command:
 
@@ -63,7 +65,7 @@ wdk get balance --help
 | Interface | Use it when |
 | --- | --- |
 | WDK CLI | A person, shell script, or local agent can run `wdk` commands |
-| Bundled MCP server | Claude Desktop, Claude Code, or OpenClaw should call the CLI's structured wallet tools |
+| Bundled MCP server | An MCP-compatible client should call the CLI's structured wallet tools; automated setup supports Claude Desktop, Claude Code, and OpenClaw |
 | [MCP Toolkit](/ai/mcp-toolkit/) | You are building and customizing an MCP server in code |
 
 The CLI and bundled MCP server use the same local wallet store and daemon. Review the [security model](/cli/reference/security-model) before unlocking a funded wallet or giving another local process access to the MCP server.
@@ -72,7 +74,7 @@ The CLI and bundled MCP server use the same local wallet store and daemon. Revie
 
 <Cards>
 <Card title="Get Started" href="/cli/guides/get-started">
-Create a wallet, derive an address, read its balance, and preview a transfer
+Create, fund, and use an Ethereum wallet from the command line
 </Card>
 <Card title="Configuration" href="/cli/configuration">
 Configure paths, defaults, indexer access, wallet modules, and MoonPay
@@ -84,7 +86,7 @@ Review all commands, required parameters, options, and defaults
 Create, import, unlock, lock, rename, export, and delete wallets
 </Card>
 <Card title="Use the MCP Server" href="/cli/guides/use-mcp-server">
-Connect the bundled MCP server to a supported AI client
+Connect the bundled MCP server to an MCP-compatible client
 </Card>
 <Card title="Handle Errors" href="/cli/guides/handle-errors">
 Use exit statuses and understand the current `--json` contract

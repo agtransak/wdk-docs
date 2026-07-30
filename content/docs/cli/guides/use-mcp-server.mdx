@@ -1,6 +1,6 @@
 ---
 title: Use the MCP Server
-description: Connect WDK CLI to Claude Desktop, Claude Code, or OpenClaw
+description: Connect WDK CLI to an MCP-compatible AI client
 docType: how-to
 schemaType: TechArticle
 icon: Wand
@@ -14,14 +14,16 @@ Use a dedicated development wallet with limited funds. On Unix-like systems, whi
 
 ## Prepare A Wallet
 
-Install WDK CLI and create a wallet as described in [Get Started](/cli/guides/get-started/).
+Install WDK CLI with the command in [Install](/cli/#install). This guide deliberately uses a dedicated development wallet and Sepolia test funds; the general Get Started guide uses Ethereum mainnet.
 
 If `agent-dev` is your first wallet, it becomes the default automatically:
 
 ```bash title="Terminal"
-wdk wallet create --name agent-dev --words 24
+wdk wallet create --name agent-dev --words 12
 wdk wallet unlock --name agent-dev --ttl 5
 ```
+
+Enter and confirm a strong, non-empty passphrase when the create command prompts, then record the generated seed phrase offline.
 
 If another wallet is already the default, select `agent-dev` explicitly:
 
@@ -33,7 +35,7 @@ Wallet-dependent MCP tools use the default wallet unless the request includes `w
 
 The TTL is absolute from unlock; MCP activity does not extend it. Use a short TTL during development and lock the wallet when the session ends.
 
-## Configure A Supported AI Client
+## Configure An MCP Client
 
 Choose one setup target:
 
@@ -77,6 +79,22 @@ wdk mcp remove --ai-tool claude-desktop
 
 Replace `claude-desktop` with `claude-code` or `openclaw` as needed.
 
+### Other MCP Clients
+
+`wdk-mcp` is a standard stdio MCP server. For clients that accept the common `mcpServers` JSON shape, add:
+
+```json
+{
+  "mcpServers": {
+    "wdk-wallet": {
+      "command": "wdk-mcp"
+    }
+  }
+}
+```
+
+This configuration requires the client process to find `wdk-mcp` on its `PATH`. If the client uses a different configuration shape or does not inherit your shell `PATH`, configure a stdio server named `wdk-wallet` and point its command to the installed `wdk-mcp` executable.
+
 ## Available MCP Tools
 
 | Tool | Wallet required | Purpose |
@@ -92,6 +110,15 @@ Replace `claude-desktop` with `claude-code` or `openclaw` as needed.
 | `sell_crypto` | Yes | Create a signed MoonPay sell URL. |
 
 `get_history` needs indexer configuration. `buy_crypto` and `sell_crypto` need MoonPay configuration. See [Configuration](/cli/configuration/).
+
+## CLI Capabilities Not Exposed Over MCP
+
+`wdk-mcp` registers only the nine tools listed above. Through this server, an agent can operate a wallet that a person has already unlocked, but it cannot call the CLI's wallet administration or persistent-configuration commands.
+
+- Wallet administration: `wdk wallet create`, `import`, `export`, `unlock`, `lock`, `delete`, `rename`, and `default`. These commands create, import, or reveal seed material; confirm wallet ownership; change wallet identity or default selection; or control an unlock session. `wdk wallet unlock` is deliberately the human authorization moment, and `wdk wallet lock` ends that session.
+- Persistent configuration: `wdk config set` and `reset`, `wdk network create` and `delete`, and `wdk token add` and `delete`. These commands change durable local configuration and remain user-driven decisions.
+
+This is a boundary of the MCP tool surface, not an operating-system sandbox. An AI client with separate shell access is outside this boundary and may be able to invoke `wdk` directly.
 
 ## Preview And Confirm Transfers
 
@@ -149,7 +176,7 @@ wdk wallet lock --name agent-dev
 
 Use [MCP Toolkit](/ai/mcp-toolkit/) when you need to build and control an MCP server in application code, select individual WDK tools, or add custom tools.
 
-Use the WDK CLI MCP server when you want the bundled tool set, local wallet daemon, and setup commands for Claude Desktop, Claude Code, or OpenClaw.
+Use the WDK CLI MCP server when you want the bundled tool set and local wallet daemon, with automated setup for Claude Desktop, Claude Code, and OpenClaw or manual stdio configuration for another MCP-compatible client.
 
 ***
 

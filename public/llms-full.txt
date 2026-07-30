@@ -224,8 +224,10 @@ WDK CLI provides a local command-line wallet built with WDK. Use it to manage na
 WDK CLI requires Node.js 22.18.0 or later.
 
 ```bash title="Terminal"
-npm install -g @tetherto/wdk-cli@1.0.0-beta.1
+npm install -g --allow-scripts=@tetherto/wdk-cli @tetherto/wdk-cli@1.0.0-beta.1
 ```
+
+The allowlist permits the CLI package's postinstall script, which installs the version-pinned wallet modules in its bundled network configuration.
 
 Verify the installation:
 
@@ -241,7 +243,7 @@ Install the scoped `@tetherto/wdk-cli` package. The unscoped `wdk-cli` package i
 | --- | --- |
 | `wdk` | Runs wallet, read, send, configuration, network, token, fiat-ramp, and MCP setup commands |
 | `wdk-daemon` | Holds unlocked wallet instances and serves local wallet requests; `wdk` starts it when needed |
-| `wdk-mcp` | Exposes WDK CLI wallet operations to supported MCP clients |
+| `wdk-mcp` | Exposes WDK CLI wallet operations to MCP-compatible clients |
 
 Most users invoke `wdk`. The CLI and MCP integrations manage the other two binaries.
 
@@ -256,7 +258,7 @@ Most users invoke `wdk`. The CLI and MCP integrations manage the other two binar
 | `wdk config` | Read, update, reset, or locate local configuration |
 | `wdk network` | Inspect built-in networks and manage custom networks |
 | `wdk token` | Inspect built-in tokens and manage custom token entries |
-| `wdk mcp` | Configure the bundled MCP server for a supported AI client |
+| `wdk mcp` | Configure the bundled MCP server for Claude Desktop, Claude Code, or OpenClaw |
 
 Run `wdk --help` for the command map or append `--help` to a command:
 
@@ -270,7 +272,7 @@ wdk get balance --help
 | Interface | Use it when |
 | --- | --- |
 | WDK CLI | A person, shell script, or local agent can run `wdk` commands |
-| Bundled MCP server | Claude Desktop, Claude Code, or OpenClaw should call the CLI's structured wallet tools |
+| Bundled MCP server | An MCP-compatible client should call the CLI's structured wallet tools; automated setup supports Claude Desktop, Claude Code, and OpenClaw |
 | [MCP Toolkit](/ai/mcp-toolkit/) | You are building and customizing an MCP server in code |
 
 The CLI and bundled MCP server use the same local wallet store and daemon. Review the [security model](/cli/reference/security-model) before unlocking a funded wallet or giving another local process access to the MCP server.
@@ -279,7 +281,7 @@ The CLI and bundled MCP server use the same local wallet store and daemon. Revie
 
 <Cards>
 <Card title="Get Started" href="/cli/guides/get-started">
-Create a wallet, derive an address, read its balance, and preview a transfer
+Create, fund, and use an Ethereum wallet from the command line
 </Card>
 <Card title="Configuration" href="/cli/configuration">
 Configure paths, defaults, indexer access, wallet modules, and MoonPay
@@ -291,7 +293,7 @@ Review all commands, required parameters, options, and defaults
 Create, import, unlock, lock, rename, export, and delete wallets
 </Card>
 <Card title="Use the MCP Server" href="/cli/guides/use-mcp-server">
-Connect the bundled MCP server to a supported AI client
+Connect the bundled MCP server to an MCP-compatible client
 </Card>
 <Card title="Handle Errors" href="/cli/guides/handle-errors">
 Use exit statuses and understand the current `--json` contract
@@ -380,8 +382,8 @@ Environment variables can be inherited by child processes and may be visible to 
 | `defaultIndex` | Non-negative integer | `0` |
 | `indexer.baseUrl` | Indexer base URL | `https://wdk-api.tether.io` |
 | `indexer.apiKey` | Indexer API key | Empty; `WDK_INDEXER_API_KEY` overrides it |
-| `ramp.moonpay.apiKey` | MoonPay API key | Empty |
-| `ramp.moonpay.signUrl` | URL of your MoonPay signing service | Empty |
+| `ramp.moonpay.apiKey` | MoonPay publishable key (`pk_test_...` or `pk_live_...`) | Empty; do not use a MoonPay secret key |
+| `ramp.moonpay.signUrl` | URL of an HTTP service that signs MoonPay widget URLs | Empty; the service must return a `signedUrl` |
 | `ramp.moonpay.environment` | `sandbox` or `production` | Empty; required by `wdk buy` and `wdk sell` |
 | `networks.NETWORK` | Wallet-module configuration object | Defaults come from the installed `wdk.config.json` |
 | `networks.NETWORK.KEY` | One wallet-module configuration value | Depends on the selected wallet module |
@@ -420,7 +422,7 @@ wdk config get --all
 `config.json` is plaintext. The CLI does not request an owner-only mode for this file, so its effective permissions follow the operating system and runtime defaults and may be `0644`. `config get --all` can reveal stored API keys, signing URLs, and credentials embedded in provider URLs. Do not publish the file or command output.
 </Callout>
 
-Prefer `WDK_INDEXER_API_KEY` when you do not want to persist the indexer key. No environment override is available for the other supported secrets in beta.1.
+Prefer `WDK_INDEXER_API_KEY` when you do not want to persist the indexer key. No environment override is available for MoonPay configuration in beta.1.
 
 ## Set Configuration
 
@@ -504,32 +506,92 @@ Changing or resetting a key under `networks` locks all wallets so the next unloc
 
 ## Indexer
 
-Transfer history uses the WDK Indexer API:
+Within the CLI command set, only `wdk get history` uses the WDK Indexer API. The MCP `get_history` tool uses the same history path. [Request an Indexer API key](/tools/indexer-api/get-started) before connecting directly.
+
+### Connect Directly
+
+The default `indexer.baseUrl` is `https://wdk-api.tether.io`. Store your API key:
+
+```bash title="Terminal"
+wdk config set --key indexer.apiKey --value YOUR_INDEXER_API_KEY
+```
+
+Alternatively, supply it to the current process without writing it to `config.json`:
 
 ```bash title="Terminal"
 WDK_INDEXER_API_KEY=YOUR_INDEXER_API_KEY \
   wdk get history --network ethereum --wallet dev
 ```
 
-Set a custom endpoint when needed:
+### Use an Indexer Proxy
+
+Point the CLI at your own endpoint when you do not want Indexer API keys on developer machines:
 
 ```bash title="Terminal"
-wdk config set --key indexer.baseUrl --value https://indexer.example.com
+wdk config reset --key indexer.apiKey
+wdk config set --key indexer.baseUrl --value https://indexer-proxy.example.com
 ```
+
+Also ensure `WDK_INDEXER_API_KEY` is not set in the CLI process. A non-empty environment value overrides the stored empty value and causes the CLI to send an `x-api-key` header.
+
+The proxy must accept both history request forms:
+
+| Request | Used when |
+| --- | --- |
+| `GET /api/v1/{blockchain}/{token}/{address}/token-transfers` with optional `limit`, `fromTs`, and `toTs` query parameters | `wdk get history` includes `--token` |
+| `POST /api/v1/batch/token-transfers` | The command queries all Indexer-supported tokens |
+
+Forward the query parameters or JSON request body and the Indexer response unchanged. Add the Indexer `x-api-key` header when forwarding the request upstream.
 
 `WDK_INDEXER_BASE_URL` is not read by beta.1.
 
 ## MoonPay
 
-`wdk buy` and `wdk sell` require all three MoonPay values:
+`wdk buy` and `wdk sell` derive the selected wallet address and build a signed MoonPay widget URL. The CLI prints the URL, or returns it in JSON output; it does not open the browser or execute the fiat transaction. Open the URL to continue on MoonPay, which processes the transaction through the integration associated with your MoonPay account.
+
+Get a publishable key from **Developers → API Keys** in the [MoonPay dashboard](https://dashboard.moonpay.com/). Use a `pk_test_...` or `pk_live_...` publishable key here, never the `sk_test_...` or `sk_live_...` secret key.
+
+The commands require all three MoonPay values:
 
 ```bash title="Terminal"
-wdk config set --key ramp.moonpay.apiKey --value YOUR_MOONPAY_API_KEY
+wdk config set --key ramp.moonpay.apiKey --value pk_test_...
 wdk config set --key ramp.moonpay.signUrl --value https://example.com/moonpay/sign
 wdk config set --key ramp.moonpay.environment --value sandbox
 ```
 
-Use `sandbox` for testnets and `production` for mainnets. The CLI rejects a sandbox/mainnet or production/testnet mismatch.
+### Sign Widget URLs
+
+Because the CLI includes a wallet address in the MoonPay widget URL, it sends the unsigned URL to your signing service. That service signs the URL with your MoonPay secret key and returns the complete signed URL. See MoonPay's [on-ramp URL signing](https://dev.moonpay.com/widget/on-ramp/customization/url-signing) and [off-ramp URL signing](https://dev.moonpay.com/widget/off-ramp/customization/url-signing) guides.
+
+The CLI sends this request to `ramp.moonpay.signUrl`:
+
+```http
+POST /moonpay/sign HTTP/1.1
+Content-Type: application/json
+
+{"urlForSignature":"https://..."}
+```
+
+Return a successful JSON response with the complete signed URL:
+
+```json
+{"signedUrl":"https://...&signature=..."}
+```
+
+Returning only the signature is not supported.
+
+<Callout type="warn">
+Keep the MoonPay secret key in the signing service. Beta.1 does not send configurable authentication headers to `signUrl`, so bind the service locally, keep it on a private network, or restrict access with network-level controls. Do not expose an unauthenticated public signing endpoint.
+</Callout>
+
+### Select an Environment
+
+| Environment | Publishable key | Network |
+| --- | --- | --- |
+| `sandbox` | `pk_test_...` | Testnet |
+| `production` | `pk_live_...` | Mainnet |
+
+The CLI rejects a sandbox/mainnet or production/testnet mismatch. It does not validate the publishable-key prefix, so configure the matching key yourself.
 
 ***
 
@@ -735,7 +797,7 @@ Without `--dry-run`, the command broadcasts immediately. There is no additional 
 
 ## Fiat Ramp Commands
 
-`wdk buy` and `wdk sell` derive the selected wallet address and create a provider URL. Both require an unlocked wallet and valid [MoonPay configuration](/cli/configuration#moonpay).
+`wdk buy` and `wdk sell` derive the selected wallet address and print a signed provider URL to open in a browser. Both require an unlocked wallet and valid [MoonPay configuration](/cli/configuration#moonpay).
 
 ### `wdk buy`
 
@@ -906,25 +968,30 @@ Parse stdout separately from stderr and always check the exit status. See [Handl
 
 ## Get Started
 URL: https://docs.wdk.tether.io/cli/guides/get-started
-Description: Install WDK CLI and complete a testnet wallet flow
+Description: Install WDK CLI and complete an Ethereum mainnet wallet flow
 
 Install WDK CLI globally:
 
 ```bash title="Terminal"
-npm install -g @tetherto/wdk-cli@1.0.0-beta.1
+npm install -g --allow-scripts=@tetherto/wdk-cli @tetherto/wdk-cli@1.0.0-beta.1
 ```
 
 The current release is `1.0.0-beta.1`. Beta releases can change before the stable release.
 
 <Callout type="warn">
-Use a dedicated development wallet with testnet funds for this guide. Do not import a production seed phrase or fund this wallet with mainnet assets.
+This guide uses Ethereum mainnet and can spend real funds. Create a dedicated wallet, fund it with only the amount you intend to use, and verify every address and amount before approving a purchase or transfer.
 </Callout>
 
 ## Prerequisites
 
 - Node.js `22.18.0` or later
 - npm
-- A trusted source of Sepolia test ETH
+- A MoonPay integration with production access and a `pk_live_...` publishable key
+- A deployed, reachable endpoint that follows the [MoonPay signing contract](/cli/configuration#sign-widget-urls)
+- A payment method supported by MoonPay
+- An Ethereum address you control to receive the example transfer
+
+Creating and deploying the signing service is outside this guide. Complete that prerequisite before step 1; the service must keep the MoonPay secret key on the server and return the signed URL expected by WDK CLI.
 
 Verify the installation:
 
@@ -935,85 +1002,133 @@ wdk --help
 
 The package installs the `wdk`, `wdk-mcp`, and `wdk-daemon` binaries. Use `wdk` for the steps below.
 
-## 1. Create A Development Wallet
+## 1. Create A Wallet
 
-Create a named 24-word wallet:
+Create a named 12-word wallet:
 
 ```bash title="Terminal"
-wdk wallet create --name quickstart-dev --words 24
+wdk wallet create --name quickstart --words 12
 ```
 
-Enter a non-empty, unique passphrase when prompted. The command displays the generated seed phrase. Record it offline before continuing and do not put it in a terminal command, source file, or screenshot.
+The CLI then asks for the wallet-encryption passphrase:
 
-The first wallet you create or import becomes the default wallet automatically. You do not need to run `wdk wallet default` for this flow.
+1. At `Passphrase (empty for none):`, enter a strong, unique passphrase. The input is hidden.
+2. At `Confirm passphrase:`, enter the same passphrase again.
+3. After the wallet is stored, the CLI displays the generated seed phrase once. Record it offline before continuing.
+
+Store the seed phrase and passphrase separately. Do not put either value in a terminal command, source file, screenshot, agent transcript, or online note. The current CLI permits an empty passphrase, but an empty value provides no meaningful protection for the encrypted seed file.
+
+If this is your first wallet, it becomes the default automatically. You do not need to change an existing default wallet because the wallet-dependent commands below select `quickstart` explicitly.
+
+## 2. Configure The On-Ramp
+
+WDK CLI uses MoonPay to create a signed purchase URL for the wallet. Configure the production environment with your MoonPay publishable key and signing endpoint:
+
+```bash title="Terminal"
+wdk config set \
+  --key ramp.moonpay \
+  --value '{"apiKey":"pk_live_...","signUrl":"https://YOUR_SIGNING_SERVICE.example/moonpay/sign","environment":"production"}'
+```
+
+Because at least one wallet exists, the command asks for the current default wallet's passphrase before changing the configuration. Run `wdk wallet list` if you are unsure which wallet is the default. Enter the `quickstart` passphrase if it is the default; otherwise enter the existing default wallet's passphrase. This confirmation does not unlock either wallet.
+
+`apiKey` is the publishable key, not the MoonPay secret key. Keep the secret key in the signing service; WDK CLI does not store it. See [MoonPay configuration](/cli/configuration#moonpay) for the required signing request and response.
+
+## 3. Unlock The Wallet
 
 Unlock the wallet for five minutes:
 
 ```bash title="Terminal"
-wdk wallet unlock --name quickstart-dev --ttl 5
+wdk wallet unlock --name quickstart --ttl 5
 ```
 
-The TTL starts at unlock and does not restart when you use the wallet. Unlock it again if the session expires while you complete this guide. See [Manage Wallets](/cli/guides/manage-wallets/) for session details.
+At `Enter passphrase of 'quickstart' wallet to unlock:`, enter the wallet passphrase. The input is hidden.
 
-## 2. Get A Receiving Address
+The TTL starts at unlock and does not restart when you use the wallet. Unlock it again if the session expires while you complete this guide.
 
-Derive the wallet's Sepolia address:
+Set `--ttl 0` to disable automatic expiry:
 
 ```bash title="Terminal"
-wdk get address --network sepolia --wallet quickstart-dev
+wdk wallet unlock --name quickstart --ttl 0
 ```
 
-Copy the returned address into a trusted Sepolia faucet. Fund it with only enough test ETH to complete the example.
+An unlimited session remains unlocked until you explicitly lock it, the daemon stops, its process fails, or the machine restarts. Any process running as the same operating-system user that can connect to the daemon can use an unlocked wallet without entering the passphrase again. Prefer a finite TTL and use `--ttl 0` only in a controlled local environment.
 
-<Callout type="info">
-Receiving funds is an on-chain operation outside WDK CLI. Wait for the faucet transaction to confirm before checking the balance.
-</Callout>
+## 4. Get The Ethereum Address
 
-## 3. Check The Balance
-
-Read the wallet's native Sepolia balance:
+Derive the wallet's Ethereum mainnet address:
 
 ```bash title="Terminal"
-wdk get balance --network sepolia --wallet quickstart-dev
+wdk get address --network ethereum --wallet quickstart
+```
+
+The on-ramp uses this address as the purchase recipient. Keep it available so you can verify the destination shown by MoonPay.
+
+## 5. Fund The Wallet
+
+Create a MoonPay URL to buy `50 USD` of ETH for the wallet:
+
+```bash title="Terminal"
+wdk buy \
+  --network ethereum \
+  --token eth \
+  --fiat-amount 50 \
+  --wallet quickstart
+```
+
+The CLI prints the selected address, quote details when available, and a signed MoonPay URL. Open that URL in a browser, verify that the recipient matches the address from step 4, and complete the payment and any verification requested by MoonPay. The purchase occurs through MoonPay, not inside WDK CLI.
+
+Availability, supported payment methods, limits, fees, and verification requirements depend on MoonPay and your location. If the command reports that the wallet is locked, unlock it again and repeat the command.
+
+Wait for the purchase transaction to confirm before checking the balance.
+
+## 6. Check The Balance
+
+Read the wallet's native Ethereum balance:
+
+```bash title="Terminal"
+wdk get balance --network ethereum --wallet quickstart
 ```
 
 If the command reports that the wallet is locked, unlock it again and repeat the balance check.
 
-## 4. Preview A Send
+## 7. Send ETH
 
-Use an address you control as the recipient. A dry run estimates the fee and returns a transaction summary without broadcasting:
+Use an Ethereum address you control as the recipient.
+
+<Callout type="warn">
+The next command broadcasts an irreversible Ethereum mainnet transaction and spends real ETH. WDK CLI does not ask for another confirmation after the wallet is unlocked. Replace the placeholder, then review the network, recipient, amount, and available balance before running it.
+</Callout>
 
 ```bash title="Terminal"
 wdk send \
-  --network sepolia \
-  --to YOUR_SEPOLIA_ADDRESS \
+  --network ethereum \
+  --to YOUR_ETHEREUM_ADDRESS \
   --amount 0.0001 \
-  --wallet quickstart-dev \
+  --wallet quickstart
+```
+
+The command broadcasts immediately and prints the resulting transaction identifier.
+
+### Optional: Estimate Without Broadcasting
+
+Add `--dry-run` to estimate the fee and return a transaction summary without broadcasting:
+
+```bash title="Terminal"
+wdk send \
+  --network ethereum \
+  --to YOUR_ETHEREUM_ADDRESS \
+  --amount 0.0001 \
+  --wallet quickstart \
   --dry-run
 ```
 
-Check the network, recipient, amount, and estimated fee in the preview.
-
-<Callout type="warn">
-Removing `--dry-run` broadcasts the transaction. WDK CLI does not ask for another confirmation after the wallet is unlocked. Replace the placeholder with an address you control and review every value first.
-</Callout>
-
-When you intend to send the testnet transaction, run the same command without `--dry-run`:
-
-```bash title="Terminal"
-wdk send \
-  --network sepolia \
-  --to YOUR_SEPOLIA_ADDRESS \
-  --amount 0.0001 \
-  --wallet quickstart-dev
-```
-
-## 5. Lock The Wallet
+## 8. Lock The Wallet
 
 End the wallet session when you finish:
 
 ```bash title="Terminal"
-wdk wallet lock --name quickstart-dev
+wdk wallet lock --name quickstart
 ```
 
 Lock every unlocked wallet with:
@@ -1026,7 +1141,7 @@ wdk wallet lock --all
 
 - [Manage Wallets](/cli/guides/manage-wallets/) - Import, export, rename, unlock, and delete wallets
 - [Manage Tokens](/cli/guides/manage-tokens/) - Inspect and extend the token registry
-- [Use the MCP Server](/cli/guides/use-mcp-server/) - Connect a supported AI client
+- [Use the MCP Server](/cli/guides/use-mcp-server/) - Connect an MCP-compatible AI client
 - [Security Model](/cli/reference/security-model/) - Understand the daemon trust boundary and session trade-offs
 
 ***
@@ -1563,7 +1678,7 @@ Deleting registry configuration does not move blockchain assets or delete a wall
 
 ## Use the MCP Server
 URL: https://docs.wdk.tether.io/cli/guides/use-mcp-server
-Description: Connect WDK CLI to Claude Desktop, Claude Code, or OpenClaw
+Description: Connect WDK CLI to an MCP-compatible AI client
 
 WDK CLI includes the `wdk-mcp` Model Context Protocol server. It exposes wallet operations as structured tools over stdio and routes wallet-dependent operations to the same local daemon used by the CLI.
 
@@ -1573,14 +1688,16 @@ Use a dedicated development wallet with limited funds. On Unix-like systems, whi
 
 ## Prepare A Wallet
 
-Install WDK CLI and create a wallet as described in [Get Started](/cli/guides/get-started/).
+Install WDK CLI with the command in [Install](/cli/#install). This guide deliberately uses a dedicated development wallet and Sepolia test funds; the general Get Started guide uses Ethereum mainnet.
 
 If `agent-dev` is your first wallet, it becomes the default automatically:
 
 ```bash title="Terminal"
-wdk wallet create --name agent-dev --words 24
+wdk wallet create --name agent-dev --words 12
 wdk wallet unlock --name agent-dev --ttl 5
 ```
+
+Enter and confirm a strong, non-empty passphrase when the create command prompts, then record the generated seed phrase offline.
 
 If another wallet is already the default, select `agent-dev` explicitly:
 
@@ -1592,7 +1709,7 @@ Wallet-dependent MCP tools use the default wallet unless the request includes `w
 
 The TTL is absolute from unlock; MCP activity does not extend it. Use a short TTL during development and lock the wallet when the session ends.
 
-## Configure A Supported AI Client
+## Configure An MCP Client
 
 Choose one setup target:
 
@@ -1636,6 +1753,22 @@ wdk mcp remove --ai-tool claude-desktop
 
 Replace `claude-desktop` with `claude-code` or `openclaw` as needed.
 
+### Other MCP Clients
+
+`wdk-mcp` is a standard stdio MCP server. For clients that accept the common `mcpServers` JSON shape, add:
+
+```json
+{
+  "mcpServers": {
+    "wdk-wallet": {
+      "command": "wdk-mcp"
+    }
+  }
+}
+```
+
+This configuration requires the client process to find `wdk-mcp` on its `PATH`. If the client uses a different configuration shape or does not inherit your shell `PATH`, configure a stdio server named `wdk-wallet` and point its command to the installed `wdk-mcp` executable.
+
 ## Available MCP Tools
 
 | Tool | Wallet required | Purpose |
@@ -1651,6 +1784,15 @@ Replace `claude-desktop` with `claude-code` or `openclaw` as needed.
 | `sell_crypto` | Yes | Create a signed MoonPay sell URL. |
 
 `get_history` needs indexer configuration. `buy_crypto` and `sell_crypto` need MoonPay configuration. See [Configuration](/cli/configuration/).
+
+## CLI Capabilities Not Exposed Over MCP
+
+`wdk-mcp` registers only the nine tools listed above. Through this server, an agent can operate a wallet that a person has already unlocked, but it cannot call the CLI's wallet administration or persistent-configuration commands.
+
+- Wallet administration: `wdk wallet create`, `import`, `export`, `unlock`, `lock`, `delete`, `rename`, and `default`. These commands create, import, or reveal seed material; confirm wallet ownership; change wallet identity or default selection; or control an unlock session. `wdk wallet unlock` is deliberately the human authorization moment, and `wdk wallet lock` ends that session.
+- Persistent configuration: `wdk config set` and `reset`, `wdk network create` and `delete`, and `wdk token add` and `delete`. These commands change durable local configuration and remain user-driven decisions.
+
+This is a boundary of the MCP tool surface, not an operating-system sandbox. An AI client with separate shell access is outside this boundary and may be able to invoke `wdk` directly.
 
 ## Preview And Confirm Transfers
 
@@ -1708,7 +1850,7 @@ wdk wallet lock --name agent-dev
 
 Use [MCP Toolkit](/ai/mcp-toolkit/) when you need to build and control an MCP server in application code, select individual WDK tools, or add custom tools.
 
-Use the WDK CLI MCP server when you want the bundled tool set, local wallet daemon, and setup commands for Claude Desktop, Claude Code, or OpenClaw.
+Use the WDK CLI MCP server when you want the bundled tool set and local wallet daemon, with automated setup for Claude Desktop, Claude Code, and OpenClaw or manual stdio configuration for another MCP-compatible client.
 
 ***
 

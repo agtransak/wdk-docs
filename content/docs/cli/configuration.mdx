@@ -76,8 +76,8 @@ Environment variables can be inherited by child processes and may be visible to 
 | `defaultIndex` | Non-negative integer | `0` |
 | `indexer.baseUrl` | Indexer base URL | `https://wdk-api.tether.io` |
 | `indexer.apiKey` | Indexer API key | Empty; `WDK_INDEXER_API_KEY` overrides it |
-| `ramp.moonpay.apiKey` | MoonPay API key | Empty |
-| `ramp.moonpay.signUrl` | URL of your MoonPay signing service | Empty |
+| `ramp.moonpay.apiKey` | MoonPay publishable key (`pk_test_...` or `pk_live_...`) | Empty; do not use a MoonPay secret key |
+| `ramp.moonpay.signUrl` | URL of an HTTP service that signs MoonPay widget URLs | Empty; the service must return a `signedUrl` |
 | `ramp.moonpay.environment` | `sandbox` or `production` | Empty; required by `wdk buy` and `wdk sell` |
 | `networks.NETWORK` | Wallet-module configuration object | Defaults come from the installed `wdk.config.json` |
 | `networks.NETWORK.KEY` | One wallet-module configuration value | Depends on the selected wallet module |
@@ -116,7 +116,7 @@ wdk config get --all
 `config.json` is plaintext. The CLI does not request an owner-only mode for this file, so its effective permissions follow the operating system and runtime defaults and may be `0644`. `config get --all` can reveal stored API keys, signing URLs, and credentials embedded in provider URLs. Do not publish the file or command output.
 </Callout>
 
-Prefer `WDK_INDEXER_API_KEY` when you do not want to persist the indexer key. No environment override is available for the other supported secrets in beta.1.
+Prefer `WDK_INDEXER_API_KEY` when you do not want to persist the indexer key. No environment override is available for MoonPay configuration in beta.1.
 
 ## Set Configuration
 
@@ -200,32 +200,92 @@ Changing or resetting a key under `networks` locks all wallets so the next unloc
 
 ## Indexer
 
-Transfer history uses the WDK Indexer API:
+Within the CLI command set, only `wdk get history` uses the WDK Indexer API. The MCP `get_history` tool uses the same history path. [Request an Indexer API key](/tools/indexer-api/get-started) before connecting directly.
+
+### Connect Directly
+
+The default `indexer.baseUrl` is `https://wdk-api.tether.io`. Store your API key:
+
+```bash title="Terminal"
+wdk config set --key indexer.apiKey --value YOUR_INDEXER_API_KEY
+```
+
+Alternatively, supply it to the current process without writing it to `config.json`:
 
 ```bash title="Terminal"
 WDK_INDEXER_API_KEY=YOUR_INDEXER_API_KEY \
   wdk get history --network ethereum --wallet dev
 ```
 
-Set a custom endpoint when needed:
+### Use an Indexer Proxy
+
+Point the CLI at your own endpoint when you do not want Indexer API keys on developer machines:
 
 ```bash title="Terminal"
-wdk config set --key indexer.baseUrl --value https://indexer.example.com
+wdk config reset --key indexer.apiKey
+wdk config set --key indexer.baseUrl --value https://indexer-proxy.example.com
 ```
+
+Also ensure `WDK_INDEXER_API_KEY` is not set in the CLI process. A non-empty environment value overrides the stored empty value and causes the CLI to send an `x-api-key` header.
+
+The proxy must accept both history request forms:
+
+| Request | Used when |
+| --- | --- |
+| `GET /api/v1/{blockchain}/{token}/{address}/token-transfers` with optional `limit`, `fromTs`, and `toTs` query parameters | `wdk get history` includes `--token` |
+| `POST /api/v1/batch/token-transfers` | The command queries all Indexer-supported tokens |
+
+Forward the query parameters or JSON request body and the Indexer response unchanged. Add the Indexer `x-api-key` header when forwarding the request upstream.
 
 `WDK_INDEXER_BASE_URL` is not read by beta.1.
 
 ## MoonPay
 
-`wdk buy` and `wdk sell` require all three MoonPay values:
+`wdk buy` and `wdk sell` derive the selected wallet address and build a signed MoonPay widget URL. The CLI prints the URL, or returns it in JSON output; it does not open the browser or execute the fiat transaction. Open the URL to continue on MoonPay, which processes the transaction through the integration associated with your MoonPay account.
+
+Get a publishable key from **Developers → API Keys** in the [MoonPay dashboard](https://dashboard.moonpay.com/). Use a `pk_test_...` or `pk_live_...` publishable key here, never the `sk_test_...` or `sk_live_...` secret key.
+
+The commands require all three MoonPay values:
 
 ```bash title="Terminal"
-wdk config set --key ramp.moonpay.apiKey --value YOUR_MOONPAY_API_KEY
+wdk config set --key ramp.moonpay.apiKey --value pk_test_...
 wdk config set --key ramp.moonpay.signUrl --value https://example.com/moonpay/sign
 wdk config set --key ramp.moonpay.environment --value sandbox
 ```
 
-Use `sandbox` for testnets and `production` for mainnets. The CLI rejects a sandbox/mainnet or production/testnet mismatch.
+### Sign Widget URLs
+
+Because the CLI includes a wallet address in the MoonPay widget URL, it sends the unsigned URL to your signing service. That service signs the URL with your MoonPay secret key and returns the complete signed URL. See MoonPay's [on-ramp URL signing](https://dev.moonpay.com/widget/on-ramp/customization/url-signing) and [off-ramp URL signing](https://dev.moonpay.com/widget/off-ramp/customization/url-signing) guides.
+
+The CLI sends this request to `ramp.moonpay.signUrl`:
+
+```http
+POST /moonpay/sign HTTP/1.1
+Content-Type: application/json
+
+{"urlForSignature":"https://..."}
+```
+
+Return a successful JSON response with the complete signed URL:
+
+```json
+{"signedUrl":"https://...&signature=..."}
+```
+
+Returning only the signature is not supported.
+
+<Callout type="warn">
+Keep the MoonPay secret key in the signing service. Beta.1 does not send configurable authentication headers to `signUrl`, so bind the service locally, keep it on a private network, or restrict access with network-level controls. Do not expose an unauthenticated public signing endpoint.
+</Callout>
+
+### Select an Environment
+
+| Environment | Publishable key | Network |
+| --- | --- | --- |
+| `sandbox` | `pk_test_...` | Testnet |
+| `production` | `pk_live_...` | Mainnet |
+
+The CLI rejects a sandbox/mainnet or production/testnet mismatch. It does not validate the publishable-key prefix, so configure the matching key yourself.
 
 ***
 

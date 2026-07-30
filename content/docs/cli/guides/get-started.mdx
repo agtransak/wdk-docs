@@ -1,6 +1,6 @@
 ---
 title: Get Started
-description: Install WDK CLI and complete a testnet wallet flow
+description: Install WDK CLI and complete an Ethereum mainnet wallet flow
 docType: getting-started
 schemaType: TechArticle
 icon: Rocket
@@ -9,20 +9,25 @@ icon: Rocket
 Install WDK CLI globally:
 
 ```bash title="Terminal"
-npm install -g @tetherto/wdk-cli@1.0.0-beta.1
+npm install -g --allow-scripts=@tetherto/wdk-cli @tetherto/wdk-cli@1.0.0-beta.1
 ```
 
 The current release is `1.0.0-beta.1`. Beta releases can change before the stable release.
 
 <Callout type="warn">
-Use a dedicated development wallet with testnet funds for this guide. Do not import a production seed phrase or fund this wallet with mainnet assets.
+This guide uses Ethereum mainnet and can spend real funds. Create a dedicated wallet, fund it with only the amount you intend to use, and verify every address and amount before approving a purchase or transfer.
 </Callout>
 
 ## Prerequisites
 
 - Node.js `22.18.0` or later
 - npm
-- A trusted source of Sepolia test ETH
+- A MoonPay integration with production access and a `pk_live_...` publishable key
+- A deployed, reachable endpoint that follows the [MoonPay signing contract](/cli/configuration#sign-widget-urls)
+- A payment method supported by MoonPay
+- An Ethereum address you control to receive the example transfer
+
+Creating and deploying the signing service is outside this guide. Complete that prerequisite before step 1; the service must keep the MoonPay secret key on the server and return the signed URL expected by WDK CLI.
 
 Verify the installation:
 
@@ -33,85 +38,133 @@ wdk --help
 
 The package installs the `wdk`, `wdk-mcp`, and `wdk-daemon` binaries. Use `wdk` for the steps below.
 
-## 1. Create A Development Wallet
+## 1. Create A Wallet
 
-Create a named 24-word wallet:
+Create a named 12-word wallet:
 
 ```bash title="Terminal"
-wdk wallet create --name quickstart-dev --words 24
+wdk wallet create --name quickstart --words 12
 ```
 
-Enter a non-empty, unique passphrase when prompted. The command displays the generated seed phrase. Record it offline before continuing and do not put it in a terminal command, source file, or screenshot.
+The CLI then asks for the wallet-encryption passphrase:
 
-The first wallet you create or import becomes the default wallet automatically. You do not need to run `wdk wallet default` for this flow.
+1. At `Passphrase (empty for none):`, enter a strong, unique passphrase. The input is hidden.
+2. At `Confirm passphrase:`, enter the same passphrase again.
+3. After the wallet is stored, the CLI displays the generated seed phrase once. Record it offline before continuing.
+
+Store the seed phrase and passphrase separately. Do not put either value in a terminal command, source file, screenshot, agent transcript, or online note. The current CLI permits an empty passphrase, but an empty value provides no meaningful protection for the encrypted seed file.
+
+If this is your first wallet, it becomes the default automatically. You do not need to change an existing default wallet because the wallet-dependent commands below select `quickstart` explicitly.
+
+## 2. Configure The On-Ramp
+
+WDK CLI uses MoonPay to create a signed purchase URL for the wallet. Configure the production environment with your MoonPay publishable key and signing endpoint:
+
+```bash title="Terminal"
+wdk config set \
+  --key ramp.moonpay \
+  --value '{"apiKey":"pk_live_...","signUrl":"https://YOUR_SIGNING_SERVICE.example/moonpay/sign","environment":"production"}'
+```
+
+Because at least one wallet exists, the command asks for the current default wallet's passphrase before changing the configuration. Run `wdk wallet list` if you are unsure which wallet is the default. Enter the `quickstart` passphrase if it is the default; otherwise enter the existing default wallet's passphrase. This confirmation does not unlock either wallet.
+
+`apiKey` is the publishable key, not the MoonPay secret key. Keep the secret key in the signing service; WDK CLI does not store it. See [MoonPay configuration](/cli/configuration#moonpay) for the required signing request and response.
+
+## 3. Unlock The Wallet
 
 Unlock the wallet for five minutes:
 
 ```bash title="Terminal"
-wdk wallet unlock --name quickstart-dev --ttl 5
+wdk wallet unlock --name quickstart --ttl 5
 ```
 
-The TTL starts at unlock and does not restart when you use the wallet. Unlock it again if the session expires while you complete this guide. See [Manage Wallets](/cli/guides/manage-wallets/) for session details.
+At `Enter passphrase of 'quickstart' wallet to unlock:`, enter the wallet passphrase. The input is hidden.
 
-## 2. Get A Receiving Address
+The TTL starts at unlock and does not restart when you use the wallet. Unlock it again if the session expires while you complete this guide.
 
-Derive the wallet's Sepolia address:
+Set `--ttl 0` to disable automatic expiry:
 
 ```bash title="Terminal"
-wdk get address --network sepolia --wallet quickstart-dev
+wdk wallet unlock --name quickstart --ttl 0
 ```
 
-Copy the returned address into a trusted Sepolia faucet. Fund it with only enough test ETH to complete the example.
+An unlimited session remains unlocked until you explicitly lock it, the daemon stops, its process fails, or the machine restarts. Any process running as the same operating-system user that can connect to the daemon can use an unlocked wallet without entering the passphrase again. Prefer a finite TTL and use `--ttl 0` only in a controlled local environment.
 
-<Callout type="info">
-Receiving funds is an on-chain operation outside WDK CLI. Wait for the faucet transaction to confirm before checking the balance.
-</Callout>
+## 4. Get The Ethereum Address
 
-## 3. Check The Balance
-
-Read the wallet's native Sepolia balance:
+Derive the wallet's Ethereum mainnet address:
 
 ```bash title="Terminal"
-wdk get balance --network sepolia --wallet quickstart-dev
+wdk get address --network ethereum --wallet quickstart
+```
+
+The on-ramp uses this address as the purchase recipient. Keep it available so you can verify the destination shown by MoonPay.
+
+## 5. Fund The Wallet
+
+Create a MoonPay URL to buy `50 USD` of ETH for the wallet:
+
+```bash title="Terminal"
+wdk buy \
+  --network ethereum \
+  --token eth \
+  --fiat-amount 50 \
+  --wallet quickstart
+```
+
+The CLI prints the selected address, quote details when available, and a signed MoonPay URL. Open that URL in a browser, verify that the recipient matches the address from step 4, and complete the payment and any verification requested by MoonPay. The purchase occurs through MoonPay, not inside WDK CLI.
+
+Availability, supported payment methods, limits, fees, and verification requirements depend on MoonPay and your location. If the command reports that the wallet is locked, unlock it again and repeat the command.
+
+Wait for the purchase transaction to confirm before checking the balance.
+
+## 6. Check The Balance
+
+Read the wallet's native Ethereum balance:
+
+```bash title="Terminal"
+wdk get balance --network ethereum --wallet quickstart
 ```
 
 If the command reports that the wallet is locked, unlock it again and repeat the balance check.
 
-## 4. Preview A Send
+## 7. Send ETH
 
-Use an address you control as the recipient. A dry run estimates the fee and returns a transaction summary without broadcasting:
+Use an Ethereum address you control as the recipient.
+
+<Callout type="warn">
+The next command broadcasts an irreversible Ethereum mainnet transaction and spends real ETH. WDK CLI does not ask for another confirmation after the wallet is unlocked. Replace the placeholder, then review the network, recipient, amount, and available balance before running it.
+</Callout>
 
 ```bash title="Terminal"
 wdk send \
-  --network sepolia \
-  --to YOUR_SEPOLIA_ADDRESS \
+  --network ethereum \
+  --to YOUR_ETHEREUM_ADDRESS \
   --amount 0.0001 \
-  --wallet quickstart-dev \
+  --wallet quickstart
+```
+
+The command broadcasts immediately and prints the resulting transaction identifier.
+
+### Optional: Estimate Without Broadcasting
+
+Add `--dry-run` to estimate the fee and return a transaction summary without broadcasting:
+
+```bash title="Terminal"
+wdk send \
+  --network ethereum \
+  --to YOUR_ETHEREUM_ADDRESS \
+  --amount 0.0001 \
+  --wallet quickstart \
   --dry-run
 ```
 
-Check the network, recipient, amount, and estimated fee in the preview.
-
-<Callout type="warn">
-Removing `--dry-run` broadcasts the transaction. WDK CLI does not ask for another confirmation after the wallet is unlocked. Replace the placeholder with an address you control and review every value first.
-</Callout>
-
-When you intend to send the testnet transaction, run the same command without `--dry-run`:
-
-```bash title="Terminal"
-wdk send \
-  --network sepolia \
-  --to YOUR_SEPOLIA_ADDRESS \
-  --amount 0.0001 \
-  --wallet quickstart-dev
-```
-
-## 5. Lock The Wallet
+## 8. Lock The Wallet
 
 End the wallet session when you finish:
 
 ```bash title="Terminal"
-wdk wallet lock --name quickstart-dev
+wdk wallet lock --name quickstart
 ```
 
 Lock every unlocked wallet with:
@@ -124,7 +177,7 @@ wdk wallet lock --all
 
 - [Manage Wallets](/cli/guides/manage-wallets/) - Import, export, rename, unlock, and delete wallets
 - [Manage Tokens](/cli/guides/manage-tokens/) - Inspect and extend the token registry
-- [Use the MCP Server](/cli/guides/use-mcp-server/) - Connect a supported AI client
+- [Use the MCP Server](/cli/guides/use-mcp-server/) - Connect an MCP-compatible AI client
 - [Security Model](/cli/reference/security-model/) - Understand the daemon trust boundary and session trade-offs
 
 ***

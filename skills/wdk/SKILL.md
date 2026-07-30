@@ -59,7 +59,7 @@ When a task targets a specific chain or protocol, read the relevant reference fi
     │   ├── wdk-wallet-tron     # TRON
     │   ├── wdk-wallet-tron-gasfree  # TRON gas-free
     └── Protocol Modules
-        ├── swidge protocol interface             # Preferred route interface for new swap, bridge, or combined providers
+        ├── swidge provider modules               # Provider implementations for swap, bridge, or combined routes
         ├── wdk-protocol-swap-velora-evm   # DEX swaps on EVM
         ├── wdk-protocol-bridge-usdt0-evm  # Cross-chain USDT0 bridge
         ├── wdk-protocol-lending-aave-evm  # Aave V3 lending

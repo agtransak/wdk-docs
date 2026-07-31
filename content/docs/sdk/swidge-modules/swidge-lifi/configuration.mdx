@@ -6,7 +6,7 @@ schemaType: TechArticle
 icon: Settings
 ---
 
-Configure `LifiSwidgeProtocol` with a WDK EVM account when you need execution, or without an account when you only need discovery.
+Configure `LifiSwidgeProtocol` with a WDK EVM account when you need execution, account-address-based quotes, or status lookups. Without an account, the module supports quotes and discovery when `config.provider` is supplied.
 
 ```javascript
 import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm'
@@ -34,6 +34,8 @@ new LifiSwidgeProtocol(account?, config?)
 |-----------|-------------|
 | `account` | Optional WDK EVM account. Writable accounts can execute. Read-only accounts can quote, check status, and discover support. |
 | `config` | Optional `LifiSwidgeProtocolConfig` for fee caps, provider setup, LI.FI route selection, retries, and contract validation. |
+
+When `account` is omitted, `config.provider` is required for `quoteSwidge()`. Accountless quote requests omit `fromAddress`.
 
 ## Configuration Options
 

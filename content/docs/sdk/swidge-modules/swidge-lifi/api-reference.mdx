@@ -29,9 +29,9 @@ new LifiSwidgeProtocol(account?, config?)
 | `WalletAccountEvm` | Discovery, quote, status, and execution. |
 | `WalletAccountEvmErc4337` | Discovery, quote, status, and execution through a smart account. |
 | `WalletAccountReadOnlyEvm` | Discovery, quote, and status. |
-| `undefined` | Chain and token discovery only. |
+| `undefined` | Quote, chain discovery, and token discovery when `config.provider` is supplied. |
 
-Use `WalletAccountReadOnlyEvm` for quote-only flows that should not sign transactions. No-account mode cannot provide the source address required by LI.FI quotes.
+Use `WalletAccountReadOnlyEvm` for quote-only flows that should include the account address or support status lookups. In no-account mode, `quoteSwidge()` resolves the source chain through `config.provider` and omits `fromAddress` from the LI.FI request.
 
 ## Methods
 

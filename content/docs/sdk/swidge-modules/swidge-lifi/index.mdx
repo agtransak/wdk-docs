@@ -1,6 +1,6 @@
 ---
 title: LI.FI Swidge Overview
-description: Overview of the @kenny_io/wdk-protocol-swidge-lifi module for LI.FI swap and bridge routes.
+description: Overview of the @lifi/wdk-protocol-swidge-lifi module for LI.FI swap and bridge routes.
 docType: explanation
 schemaType: TechArticle
 ---
@@ -16,6 +16,7 @@ Use this module when an app needs live LI.FI route discovery, exact-input or exa
 - **EVM account support**: Works with `@tetherto/wdk-wallet-evm` and `@tetherto/wdk-wallet-evm-erc-4337`.
 - **Discovery without signing**: Supports chain and token discovery without a bound wallet account.
 - **Fee controls**: Applies optional `maxNetworkFeeBps` and `maxProtocolFeeBps` limits before execution.
+- **Gasless-friendly**: Opt-in `denyBridges: NATIVE_VALUE_BRIDGE_DENY_LIST` and `allowNativeValue: false` filter native-value bridge routes and reject native-value quotes, so ERC-4337 sponsored execution can cover gas without the LI.FI route requiring separate native token value.
 - **Reliability controls**: Provides request timeouts, retry handling, rate-limit classification, and typed LI.FI errors.
 - **Transaction validation**: Validates quote transaction data before forwarding it to the wallet account.
 - **Optional contract allowlist**: `trustedContracts` can require quote targets and approval addresses to match known LI.FI contracts.
@@ -47,7 +48,9 @@ Numeric LI.FI chain IDs are also accepted where the module accepts chain input.
 | `WalletAccountEvm` | Quotes and executes routes. |
 | `WalletAccountEvmErc4337` | Quotes and executes routes with smart-account gas handling. |
 | `WalletAccountReadOnlyEvm` | Quotes, status lookups, and discovery only. |
-| No account | Discovery and account-independent quote setup only. |
+| No account | Chain and token discovery only. |
+
+Use a read-only EVM account when you need quotes without signing. LI.FI quotes require a source address, so no-account mode is limited to chain and token discovery.
 
 <Callout type="warn">
 `swidge()` can approve and submit one or more EVM transactions. Show the quote, fee breakdown, destination token, destination chain, and recipient before calling it.

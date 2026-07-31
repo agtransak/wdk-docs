@@ -1,6 +1,6 @@
 ---
 title: LI.FI Swidge API Reference
-description: API reference for @kenny_io/wdk-protocol-swidge-lifi.
+description: API reference for @lifi/wdk-protocol-swidge-lifi.
 docType: reference
 schemaType: APIReference
 icon: Code
@@ -13,7 +13,7 @@ icon: Code
 ```javascript
 import {
   LifiSwidgeProtocol
-} from '@kenny_io/wdk-protocol-swidge-lifi'
+} from '@lifi/wdk-protocol-swidge-lifi'
 
 const swidge = new LifiSwidgeProtocol(account, config)
 ```
@@ -29,7 +29,9 @@ new LifiSwidgeProtocol(account?, config?)
 | `WalletAccountEvm` | Discovery, quote, status, and execution. |
 | `WalletAccountEvmErc4337` | Discovery, quote, status, and execution through a smart account. |
 | `WalletAccountReadOnlyEvm` | Discovery, quote, and status. |
-| `undefined` | Discovery and account-independent quote setup. |
+| `undefined` | Chain and token discovery only. |
+
+Use `WalletAccountReadOnlyEvm` for quote-only flows that should not sign transactions. No-account mode cannot provide the source address required by LI.FI quotes.
 
 ## Methods
 
@@ -60,7 +62,9 @@ swidge(
 
 Executes through the bound writable account. The module sends required approval transactions before the route transaction where needed.
 
-Throws before execution when validation fails, a configured fee cap is exceeded, or `trustedContracts` rejects the quote target or approval address.
+For quote-first flows, pass the `minAmountOut` field in `options`: set it to the `toTokenAmountMin` from a previously displayed `quoteSwidge()` result, and `swidge()` throws before any approval or transaction is sent if the fresh execution quote's minimum output falls below it. `minAmountOut` is not forwarded to LI.FI, and `quoteSwidge()` ignores it.
+
+Throws before execution when validation fails, a fee cap is exceeded, the quote falls below `minAmountOut`, `allowNativeValue: false` and the quote requires native value, or `trustedContracts` rejects the quote target or approval address.
 
 ### `getSwidgeStatus(id, options?)`
 
@@ -92,6 +96,8 @@ type LifiSwidgeProtocolConfig = {
   order?: LifiRouteOrder
   allowBridges?: string[]
   denyBridges?: string[]
+  allowDestinationCall?: boolean
+  allowNativeValue?: boolean
   timeout?: number
   retries?: number
   retryDelay?: number

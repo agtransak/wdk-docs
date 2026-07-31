@@ -6,6 +6,12 @@ schemaType: TechArticle
 icon: Settings
 ---
 
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
 Configure `LifiSwidgeProtocol` with a WDK EVM account when you need execution, account-address-based quotes, or status lookups. Without an account, the module supports quotes and discovery when `config.provider` is supplied.
 
 ```javascript
@@ -49,7 +55,7 @@ When `account` is omitted, `config.provider` is required for `quoteSwidge()`. Ac
 | `denyBridges` | `string[]` | Bridge protocol denylist, for example `['across']`. When omitted, no bridge filter is sent and LI.FI considers all bridges. For gasless integrations, pass the exported `NATIVE_VALUE_BRIDGE_DENY_LIST` to exclude bridges that require native token value. |
 | `allowDestinationCall` | `boolean` | Allows LI.FI routes that execute a destination-chain call, such as a destination-chain swap. Forwarded only when set explicitly; when omitted, LI.FI's own default (`true`) applies. Set `false` to filter out routes that may leave the user with an intermediary token if the destination call fails. |
 | `allowNativeValue` | `boolean` | Whether `swidge()` may execute quotes whose transaction requires native token value (`transactionRequest.value > 0`). Defaults to `true`. Set `false` for gasless setups (for example ERC-4337 with a paymaster): such quotes are rejected before any approval is sent. |
-| `maxNetworkFeeBps` | `number \| bigint` | Rejects execution when network fees exceed this many basis points of the input amount. |
+| `maxNetworkFeeBps` | `number \| bigint` | Rejects execution when LI.FI reports `SEND` gas costs above this many basis points of a positive `fromAmountUSD`. If input USD pricing is missing or zero, the check is skipped; missing gas-cost USD values count as zero. |
 | `maxProtocolFeeBps` | `number \| bigint` | Rejects execution when protocol fees exceed this many basis points of the input amount. |
 | `timeout` | `number` | Per-request timeout in milliseconds. Defaults to `30000`. |
 | `retries` | `number` | Extra attempts for transient failures. Defaults to `1`; set `0` to disable retries. |
@@ -61,7 +67,14 @@ When `account` is omitted, `config.provider` is required for `quoteSwidge()`. Ac
 Pass a config object to `swidge(options, config)` to override fee caps or execution settings for one operation.
 
 ```javascript
-await swidge.swidge(options, {
+const route = {
+  fromToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+  toToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+  toChain: 'arbitrum',
+  fromTokenAmount: 10_000_000n
+}
+
+await swidge.swidge(route, {
   maxProtocolFeeBps: 20,
   maxNetworkFeeBps: 75
 })
@@ -106,10 +119,12 @@ To extend the built-in allowlist for a chain, pass chain IDs mapped to one or mo
 ```javascript
 const swidge = new LifiSwidgeProtocol(account, {
   trustedContracts: {
-    137: ['0x...']
+    137: [trustedPolygonContractAddress]
   }
 })
 ```
+
+`trustedPolygonContractAddress` must be a validated EVM address for the additional contract your integration trusts.
 
 ## Security Notes
 

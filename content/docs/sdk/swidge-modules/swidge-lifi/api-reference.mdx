@@ -6,6 +6,12 @@ schemaType: APIReference
 icon: Code
 ---
 
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
 ## LifiSwidgeProtocol
 
 `LifiSwidgeProtocol` extends `SwidgeProtocol` from `@tetherto/wdk-wallet/protocols` and implements the shared WDK swidge methods.
@@ -29,7 +35,7 @@ new LifiSwidgeProtocol(account?, config?)
 | `WalletAccountEvm` | Discovery, quote, status, and execution. |
 | `WalletAccountEvmErc4337` | Discovery, quote, status, and execution through a smart account. |
 | `WalletAccountReadOnlyEvm` | Discovery, quote, and status. |
-| `undefined` | Quote, chain discovery, and token discovery when `config.provider` is supplied. |
+| `undefined` | Chain and token discovery without a provider; quote when `config.provider` is supplied. |
 
 Use `WalletAccountReadOnlyEvm` for quote-only flows that should include the account address or support status lookups. In no-account mode, `quoteSwidge()` resolves the source chain through `config.provider` and omits `fromAddress` from the LI.FI request.
 
@@ -124,6 +130,8 @@ type LifiSwidgeProtocolConfig = {
 | `gasCosts[].type === 'SEND'` | `network` | `fee` |
 | `feeCosts[]` | `protocol` | `bridgeFee` |
 
+When LI.FI supplies cost-token metadata, `fee.chain` identifies that token's chain and may differ from the source or execution chain. The field is omitted when LI.FI does not supply a chain.
+
 ## Error Types
 
 All LI.FI module errors extend `LifiProtocolError`.
@@ -133,7 +141,7 @@ All LI.FI module errors extend `LifiProtocolError`.
 | `LifiConfigurationError` | Required provider or configuration is missing or invalid. |
 | `LifiQuoteError` | LI.FI quote or token API request fails. |
 | `LifiExecutionError` | Execution cannot proceed, including fee-cap failures. |
-| `LifiStatusError` | Status lookup fails or the operation ID is invalid. |
+| `LifiStatusError` | Status lookup fails. Inspect `lifiStatus`: `NOT_FOUND` can mean indexing is pending, while `INVALID` is terminal. |
 | `LifiReadOnlyAccountError` | `swidge()` is called without a writable account. |
 | `LifiUnsupportedChainError` | An unknown chain name is passed. |
 | `LifiTimeoutError` | A LI.FI request exceeds the configured timeout. |
@@ -147,7 +155,7 @@ All LI.FI module errors extend `LifiProtocolError`.
 <Card title="Usage" href="/sdk/swidge-modules/swidge-lifi/usage">
 Install, quote, execute, and track LI.FI routes.
 </Card>
-<Card title="Swidge Interface" href="/sdk/swidge-modules">
-Review the shared WDK swidge protocol shape.
+<Card title="Swap and Bridge Modules" href="/sdk/swidge-modules">
+Compare the available WDK swap and bridge integrations.
 </Card>
 </Cards>

@@ -6,6 +6,12 @@ schemaType: TechArticle
 icon: BookOpen
 ---
 
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
 ## Install
 
 ```bash
@@ -16,6 +22,11 @@ Install the wallet module for the account type you plan to use:
 
 ```bash
 npm install @tetherto/wdk-wallet-evm
+```
+
+For an ERC-4337 smart account, install its wallet module instead:
+
+```bash
 npm install @tetherto/wdk-wallet-evm-erc-4337
 ```
 
@@ -57,19 +68,22 @@ Use returned chain and token identifiers when building route forms.
 Call `quoteSwidge()` before execution so users can review the expected output and fees.
 
 ```javascript
-const quote = await swidge.quoteSwidge({
+const route = {
   fromToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
   toToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
   toChain: 'arbitrum',
-  recipient: '0xRecipient...',
   fromTokenAmount: 10_000_000n,
   slippage: 0.01
-})
+}
+
+const quote = await swidge.quoteSwidge(route)
 
 console.log('Expected output:', quote.toTokenAmount)
 console.log('Minimum output:', quote.toTokenAmountMin)
 console.log('Fees:', quote.fees)
 ```
+
+When sending to another account, set `recipient` to its complete EVM address. If omitted, the module uses the bound account address.
 
 For same-chain swaps, omit `toChain` and provide the destination token on the source chain.
 
@@ -86,13 +100,7 @@ const quote = await swidge.quoteSwidge({
 After the user confirms the quote, call `swidge()` with the same route shape. The module handles required ERC-20 approvals, including reset-to-zero flows for tokens such as USDT on Ethereum.
 
 ```javascript
-const result = await swidge.swidge({
-  fromToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-  toToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-  toChain: 'arbitrum',
-  recipient: '0xRecipient...',
-  fromTokenAmount: 10_000_000n
-}, {
+const result = await swidge.swidge(route, {
   maxNetworkFeeBps: 100,
   maxProtocolFeeBps: 50
 })
@@ -106,27 +114,62 @@ console.log('Transaction hash:', result.hash)
 `swidge()` fetches a fresh quote at execution time, which can differ from the quote the user reviewed. Pass `minAmountOut` — the `toTokenAmountMin` from the displayed quote — to reject execution if the fresh quote's minimum output has dropped below what the user accepted. The guard runs before any approval or transaction is sent, and the value is never forwarded to LI.FI.
 
 ```javascript
-const quote = await swidge.quoteSwidge(options)
+const quote = await swidge.quoteSwidge(route)
 // ...user reviews and confirms the quote...
 
 const result = await swidge.swidge({
-  ...options,
+  ...route,
   minAmountOut: quote.toTokenAmountMin
 })
 ```
 
 ## Track Status
 
-Use `getSwidgeStatus()` with the returned operation ID. Chain hints can speed up indexing.
+`swidge()` returns after the source transaction is broadcast. Use `getSwidgeStatus()` with the returned operation ID to follow the route to a terminal state. Chain hints can speed up indexing. LI.FI can return `NOT_FOUND` while a transaction is waiting to be indexed; keep polling only for that status error.
 
 ```javascript
-const status = await swidge.getSwidgeStatus(result.id, {
-  fromChain: 1,
-  toChain: 42161
-})
+import { LifiStatusError } from '@lifi/wdk-protocol-swidge-lifi'
 
-if (status.status === 'completed') {
-  console.log('Route completed')
+const terminalStatuses = new Set([
+  'completed',
+  'failed',
+  'refunded',
+  'partial',
+  'cancelled',
+  'expired'
+])
+const maxStatusAttempts = 60
+
+let status
+
+for (let attempt = 0; attempt < maxStatusAttempts; attempt += 1) {
+  if (attempt > 0) {
+    await new Promise(resolve => setTimeout(resolve, 10_000))
+  }
+
+  try {
+    const statusResult = await swidge.getSwidgeStatus(result.id, {
+      fromChain: 1,
+      toChain: 42161
+    })
+    status = statusResult.status
+  } catch (error) {
+    if (error instanceof LifiStatusError && error.lifiStatus === 'NOT_FOUND') {
+      continue
+    }
+
+    throw error
+  }
+
+  console.log('Route status:', status)
+
+  if (terminalStatuses.has(status)) {
+    break
+  }
+}
+
+if (!terminalStatuses.has(status)) {
+  throw new Error('Timed out waiting for a terminal LI.FI status')
 }
 ```
 
@@ -141,7 +184,7 @@ import {
 } from '@lifi/wdk-protocol-swidge-lifi'
 
 try {
-  await swidge.swidge(options)
+  await swidge.swidge(route)
 } catch (error) {
   if (error instanceof LifiSlippageError) {
     // Request a fresh quote before retrying.

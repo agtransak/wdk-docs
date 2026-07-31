@@ -180,7 +180,7 @@ For client-backed balance and transaction operations, the TON network is determi
 - Testnet: `https://testnet.toncenter.com/api/v2/jsonRPC`
 
 <Callout type="warning">
-In `@tetherto/wdk-wallet-ton` `1.0.0-beta.10`, `getTransactionReceipt()` starts its lookup against a hard-coded mainnet TON Center v3 endpoint, even when `tonClient` points to testnet. `getFeeRates()` likewise always reads mainnet TON API configuration. Do not rely on these methods for testnet-specific receipts or fee rates.
+Through `@tetherto/wdk-wallet-ton` `1.0.0-beta.12`, `getTransactionReceipt()` starts its lookup against a hard-coded mainnet TON Center v3 endpoint, even when `tonClient` points to testnet. `getFeeRates()` likewise always reads mainnet TON API configuration. Do not rely on these methods for testnet-specific receipts or fee rates.
 </Callout>
 
 ## Derivation Paths

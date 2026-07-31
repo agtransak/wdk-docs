@@ -12,7 +12,19 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 ### July 30, 2026
 
+**What's New**
+- **wdk-core** ([v1.0.0-beta.15](https://github.com/tetherto/wdk/releases/tag/v1.0.0-beta.15)): Add global and account-scoped SDA protocol registration, `getSdaProtocol()`, and policy coverage for deposit-address creation, renewal, recovery, and disablement. Governed proxies now hide `keyPair` and underscore-prefixed members from direct access and own-property reflection and reject freezing; retained raw references, prototype inspection, and nested module calls remain outside that proxy boundary.
+- **wallet-evm-erc-4337** ([v1.0.0-beta.14](https://github.com/tetherto/wdk-wallet-evm-erc-4337/releases/tag/v1.0.0-beta.14)): Add opt-in ERC-4337 nonce lanes with `parallel` and `nonceKey` for sign, send, and transfer flows, replacing local sequential nonce reservation. Lane operations rebuild rather than reuse quote-cache UserOperations; same-lane operations require sequential inclusion and overlapping calls can collide. The beta.14 per-call declarations omit the runtime-supported lane fields.
+- **create-wdk-module** ([v1.0.0-beta.3](https://github.com/tetherto/create-wdk-module/releases/tag/v1.0.0-beta.3)): Add the `sda` scaffold type and `wdk-protocol-sda-<provider>` template. The generated provider contains empty method stubs and todo-only tests, so implement both required methods and implement or remove every optional override before publishing.
+- **wdk-utils** ([v1.0.0-beta.11](https://github.com/tetherto/wdk-utils/releases/tag/v1.0.0-beta.11)): [Breaking] Add CAIP-2-aware `validateAddress()` dispatch for Bitcoin, EVM, Solana, Spark, and Tron. Bitcoin success results replace `network` with `compatibleNetworks` and rename mainnet to `bitcoin`; Spark successes also add `compatibleNetworks`.
+
+**Fixes**
+- **worklet-bundler** ([v1.0.0-beta.7](https://github.com/tetherto/wdk-worklet-bundler/releases/tag/v1.0.0-beta.7)): Check root, nested, scoped, and symlinked package trees before deferring an optional peer, preventing installed dependencies from being omitted and later failing with `MODULE_NOT_FOUND`. Public exports and configuration signatures are unchanged.
+
 **Changes**
+- **wallet-btc** ([v1.0.0-beta.12](https://github.com/tetherto/wdk-wallet-btc/releases/tag/v1.0.0-beta.12)): Publish a version-only source update plus a repository lockfile refresh from `valibot` 1.4.1 to 1.4.2. Runtime source, declarations, declared dependencies, and the Node.js requirement are unchanged.
+- **wallet-ton** ([v1.0.0-beta.12](https://github.com/tetherto/wdk-wallet-ton/releases/tag/v1.0.0-beta.12)): Publish a version-only source update plus a development lockfile refresh from `fast-uri` 3.1.2 to 3.1.4. Runtime source, declarations, declared dependencies, and existing mainnet endpoint caveats are unchanged.
+- **wallet-ton-gasless** ([v1.0.0-beta.8](https://github.com/tetherto/wdk-wallet-ton-gasless/releases/tag/v1.0.0-beta.8)): Publish a version-only source update plus a development lockfile refresh from `fast-uri` 3.1.2 to 3.1.4. Runtime source, declarations, declared dependencies, and existing mainnet endpoint caveats are unchanged.
 - **swidge-symbiosis** ([v1.2.0](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/tree/v1.2.0)): Add a 30-second default API timeout and configurable `X-Partner-Id`, validate a positive integer input amount, reset non-zero insufficient EVM allowances before approval, and recognize partner fees by their `Partner fee` description. TON joins Tron and Solana as quote-only because WDK TON accounts cannot submit the raw BoC route payload; Monero and Zcash custodial routes are excluded from discovery and resolution.
 - **swidge-symbiosis** ([v1.1.2](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/tree/v1.1.2)): Move publishing to version-tagged npm trusted publishing without changing the public module API.
 

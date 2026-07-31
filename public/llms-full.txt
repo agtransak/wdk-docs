@@ -2999,7 +2999,19 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 ### July 30, 2026
 
+**What's New**
+- **wdk-core** ([v1.0.0-beta.15](https://github.com/tetherto/wdk/releases/tag/v1.0.0-beta.15)): Add global and account-scoped SDA protocol registration, `getSdaProtocol()`, and policy coverage for deposit-address creation, renewal, recovery, and disablement. Governed proxies now hide `keyPair` and underscore-prefixed members from direct access and own-property reflection and reject freezing; retained raw references, prototype inspection, and nested module calls remain outside that proxy boundary.
+- **wallet-evm-erc-4337** ([v1.0.0-beta.14](https://github.com/tetherto/wdk-wallet-evm-erc-4337/releases/tag/v1.0.0-beta.14)): Add opt-in ERC-4337 nonce lanes with `parallel` and `nonceKey` for sign, send, and transfer flows, replacing local sequential nonce reservation. Lane operations rebuild rather than reuse quote-cache UserOperations; same-lane operations require sequential inclusion and overlapping calls can collide. The beta.14 per-call declarations omit the runtime-supported lane fields.
+- **create-wdk-module** ([v1.0.0-beta.3](https://github.com/tetherto/create-wdk-module/releases/tag/v1.0.0-beta.3)): Add the `sda` scaffold type and `wdk-protocol-sda-<provider>` template. The generated provider contains empty method stubs and todo-only tests, so implement both required methods and implement or remove every optional override before publishing.
+- **wdk-utils** ([v1.0.0-beta.11](https://github.com/tetherto/wdk-utils/releases/tag/v1.0.0-beta.11)): [Breaking] Add CAIP-2-aware `validateAddress()` dispatch for Bitcoin, EVM, Solana, Spark, and Tron. Bitcoin success results replace `network` with `compatibleNetworks` and rename mainnet to `bitcoin`; Spark successes also add `compatibleNetworks`.
+
+**Fixes**
+- **worklet-bundler** ([v1.0.0-beta.7](https://github.com/tetherto/wdk-worklet-bundler/releases/tag/v1.0.0-beta.7)): Check root, nested, scoped, and symlinked package trees before deferring an optional peer, preventing installed dependencies from being omitted and later failing with `MODULE_NOT_FOUND`. Public exports and configuration signatures are unchanged.
+
 **Changes**
+- **wallet-btc** ([v1.0.0-beta.12](https://github.com/tetherto/wdk-wallet-btc/releases/tag/v1.0.0-beta.12)): Publish a version-only source update plus a repository lockfile refresh from `valibot` 1.4.1 to 1.4.2. Runtime source, declarations, declared dependencies, and the Node.js requirement are unchanged.
+- **wallet-ton** ([v1.0.0-beta.12](https://github.com/tetherto/wdk-wallet-ton/releases/tag/v1.0.0-beta.12)): Publish a version-only source update plus a development lockfile refresh from `fast-uri` 3.1.2 to 3.1.4. Runtime source, declarations, declared dependencies, and existing mainnet endpoint caveats are unchanged.
+- **wallet-ton-gasless** ([v1.0.0-beta.8](https://github.com/tetherto/wdk-wallet-ton-gasless/releases/tag/v1.0.0-beta.8)): Publish a version-only source update plus a development lockfile refresh from `fast-uri` 3.1.2 to 3.1.4. Runtime source, declarations, declared dependencies, and existing mainnet endpoint caveats are unchanged.
 - **swidge-symbiosis** ([v1.2.0](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/tree/v1.2.0)): Add a 30-second default API timeout and configurable `X-Partner-Id`, validate a positive integer input amount, reset non-zero insufficient EVM allowances before approval, and recognize partner fees by their `Partner fee` description. TON joins Tron and Solana as quote-only because WDK TON accounts cannot submit the raw BoC route payload; Monero and Zcash custodial routes are excluded from discovery and resolution.
 - **swidge-symbiosis** ([v1.1.2](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/tree/v1.1.2)): Move publishing to version-tagged npm trusted publishing without changing the public module API.
 
@@ -5888,7 +5900,7 @@ Want to extend WDK with your own custom module? Use the `create-wdk-module` CLI 
 npx @tetherto/create-wdk-module@latest
 ```
 
-The CLI generates source files, tests, TypeScript type definitions, and CI workflows for all six module types (wallet, swap, bridge, lending, fiat, swidge). See the [Create WDK Module documentation](/tools/create-wdk-module) for the full guide, CLI options, and generated project structure.
+The CLI generates source files, tests, TypeScript type definitions, and CI workflows for supported wallet and protocol module types. See the [Create WDK Module documentation](/tools/create-wdk-module) for the full guide, CLI options, and generated project structure.
 
 You can also:
 
@@ -8460,7 +8472,7 @@ WDK Core is the main runtime for registering and managing wallet, protocol, midd
 Use WDK Core to:
 
 - Register wallet managers for the chains your app supports.
-- Attach swap, bridge, lending, fiat, and swidge protocol providers to accounts.
+- Attach protocol providers to accounts globally or per account.
 - Decorate accounts with middleware before they reach the application.
 - Register local transaction policies that allow, deny, or simulate write operations before they execute.
 
@@ -8589,18 +8601,20 @@ const wdk2 = new WDK(seedPhrase)
 ##### `registerProtocol(blockchain, label, protocol, config)`
 Registers a protocol globally for all accounts of a specific blockchain.
 
-For swidge integrations, pass a concrete provider class that extends `SwidgeProtocol` from `@tetherto/wdk-wallet/protocols`.
+For swidge or Smart Deposit Address (SDA) integrations, pass a concrete provider class that extends the corresponding base class from `@tetherto/wdk-wallet/protocols`.
 
 **Type Parameters:**
-- `P`: `typeof SwapProtocol | typeof BridgeProtocol | typeof LendingProtocol | typeof FiatProtocol | typeof SwidgeProtocol` - A class that extends one of the `@tetherto/wdk-wallet/protocols` classes
+- `P`: `typeof SwapProtocol | typeof BridgeProtocol | typeof LendingProtocol | typeof FiatProtocol | typeof SwidgeProtocol | typeof SdaProtocol` - A class that extends one of the `@tetherto/wdk-wallet/protocols` classes
 
 **Parameters:**
 - `blockchain` (string): The name of the blockchain
-- `label` (string): Unique label for the protocol (must be unique per blockchain and protocol type)
+- `label` (string): Registry label for the protocol. Registering the same blockchain, protocol type, and label again replaces the previous global registration.
 - `protocol` (P): The protocol class
 - `config` (`ConstructorParameters<P>[1]`): The protocol configuration
 
 **Returns:** `WDK` - The WDK instance (supports method chaining)
+
+Global registration stores the provider class and config without constructing or validating the provider. Provider-constructor errors therefore surface when an account retrieves the protocol. A global registration takes precedence over an account-scoped registration with the same type and label.
 
 **Example:**
 ```javascript title="Register Protocols"
@@ -8617,6 +8631,9 @@ wdk.registerProtocol('ethereum', 'usdt0', Usdt0ProtocolEvm)
 
 // Register a concrete swidge provider for Ethereum
 wdk.registerProtocol('ethereum', 'swidge', MySwidgeProtocol, swidgeProtocolConfig)
+
+// Register an illustrative SDA provider for Ethereum
+wdk.registerProtocol('ethereum', 'deposits', MySdaProtocol, sdaProtocolConfig)
 
 // Method chaining
 const wdk2 = new WDK(seedPhrase)
@@ -8740,7 +8757,7 @@ try {
 }
 ```
 
-Supported `PolicyOperation` values are `sendTransaction`, `signTransaction`, `transfer`, `approve`, `sign`, `signTypedData`, `signAuthorization`, `delegate`, `revokeDelegation`, `swap`, `bridge`, `supply`, `withdraw`, `borrow`, `repay`, `buy`, `sell`, `swidge`, and `*`.
+Supported `PolicyOperation` values are `sendTransaction`, `signTransaction`, `transfer`, `approve`, `sign`, `signTypedData`, `signAuthorization`, `delegate`, `revokeDelegation`, `swap`, `bridge`, `supply`, `withdraw`, `borrow`, `repay`, `buy`, `sell`, `swidge`, `createDepositAddress`, `renewDepositAddress`, `recoverDepositAddress`, `disableDepositAddress`, and `*`.
 
 Use `sign` for message-style signing in this release. `signMessage` and `signHash` are not valid policy operation names.
 
@@ -8925,15 +8942,16 @@ Protocol registration and access surface that WDK adds to a wallet account. The 
 | `getLendingProtocol(label)` | Returns the lending protocol with the given label | `ILendingProtocol` | If protocol not found |
 | `getFiatProtocol(label)` | Returns the fiat protocol with the given label | `IFiatProtocol` | If protocol not found |
 | `getSwidgeProtocol(label)` | Returns the swidge protocol with the given label | `ISwidgeProtocol` | If protocol not found |
+| `getSdaProtocol(label)` | Returns the SDA protocol with the given label | `ISdaProtocol` | If protocol not found |
 
 ##### `registerProtocol(label, protocol, config)`
 Registers a new protocol for this specific account.
 
 **Type Parameters:**
-- `P`: `typeof SwapProtocol | typeof BridgeProtocol | typeof LendingProtocol | typeof FiatProtocol | typeof SwidgeProtocol` - A class that extends one of the `@tetherto/wdk-wallet/protocols` classes
+- `P`: `typeof SwapProtocol | typeof BridgeProtocol | typeof LendingProtocol | typeof FiatProtocol | typeof SwidgeProtocol | typeof SdaProtocol` - A class that extends one of the `@tetherto/wdk-wallet/protocols` classes
 
 **Parameters:**
-- `label` (string): Unique label for the protocol (must be unique per account and protocol type)
+- `label` (string): Registry label for the protocol. Registering the same protocol type and label again replaces the account-scoped instance.
 - `protocol` (P): The protocol class
 - `config` (`ConstructorParameters<P>[1]`): The protocol configuration
 
@@ -8950,8 +8968,8 @@ account.registerProtocol('usdt0', Usdt0ProtocolEvm, {
   apiKey: 'YOUR_API_KEY'
 })
 
-// Method chaining
-const account2 = await wdk.getAccount('ethereum', 1)
+// Method chaining on the resolved account
+const account2 = (await wdk.getAccount('ethereum', 1))
   .registerProtocol('usdt0', Usdt0ProtocolEvm, usdt0ProtocolConfig)
 ```
 
@@ -9108,6 +9126,30 @@ const quote = await swidge.quoteSwidge({
 })
 ```
 
+##### `getSdaProtocol(label)`
+Returns the Smart Deposit Address protocol with the given label.
+
+The example uses `MySdaProtocol` as an illustrative provider class extending `SdaProtocol`; it does not imply that a provider package is available in the WDK documentation catalog.
+
+**Parameters:**
+- `label` (string): The protocol label
+
+**Returns:** `ISdaProtocol` - The SDA protocol instance
+
+**Throws:** `Error` with `No sda protocol registered for label: <label>.` if no SDA protocol has been registered under that label
+
+**Example:**
+```javascript title="Register And Retrieve An SDA Protocol"
+const account = await wdk.getAccount('ethereum', 0)
+
+account.registerProtocol('deposits', MySdaProtocol, sdaProtocolConfig)
+
+const deposits = account.getSdaProtocol('deposits')
+const routes = await deposits.getSupportedRoutes({ outputAsset: 'USDT' })
+```
+
+Global SDA registrations are constructed when retrieved. Account-scoped SDA registrations are constructed when registered. If both scopes use the same label, the global provider is returned.
+
 ## Complete Example
 
 ```javascript title="Complete WDK Flow"
@@ -9218,6 +9260,10 @@ type PolicyOperation =
   | 'buy'
   | 'sell'
   | 'swidge'
+  | 'createDepositAddress'
+  | 'renewDepositAddress'
+  | 'recoverDepositAddress'
+  | 'disableDepositAddress'
   | '*'
 
 type PolicyCondition = (context: PolicyContext) => boolean | Promise<boolean>
@@ -9309,7 +9355,24 @@ interface ISwidgeProtocol extends ISwapProtocol, IBridgeProtocol {
   getSupportedChains(): Promise<SwidgeSupportedChain[]>;
   getSupportedTokens(options?: SwidgeSupportedTokensOptions): Promise<SwidgeSupportedToken[]>;
 }
+
+// Smart Deposit Address Protocol
+interface ISdaProtocol {
+  getSupportedRoutes(options?: SdaRoutesOptions): Promise<SdaRoute[]>;
+  createDepositAddress(options: SdaCreateDepositAddressOptions): Promise<SdaDepositAddress[]>;
+  quoteDeposit(options: SdaDepositOptions): Promise<SdaDepositQuote>;
+  deriveDepositAddress(options: SdaCreateDepositAddressOptions): Promise<string>;
+  getDepositAddress(id: string): Promise<SdaDepositAddress>;
+  renewDepositAddress(id: string): Promise<SdaDepositAddress>;
+  getTransfers(address: string, options?: SdaTransfersOptions): Promise<SdaTransfer[]>;
+  getTransfersByRecipient(destinationChain: string | number, recipient: string, options?: SdaTransfersOptions): Promise<SdaTransfer[]>;
+  getTransfer(id: string): Promise<SdaTransfer>;
+  recoverDepositAddress(options: SdaRecoveryOptions): Promise<SdaRecoveryResult>;
+  disableDepositAddress(id: string): Promise<void>;
+}
 ```
+
+`SdaProtocol` requires provider subclasses to implement `getSupportedRoutes()` and `createDepositAddress()`. The remaining methods are optional in the base class and throw `UnsupportedOperationError` unless the provider implements them. Output assets are provider- and route-specific; USDT is a common example, not a base-interface guarantee.
 
 ### Swidge Protocol
 
@@ -9503,15 +9566,17 @@ const wdk = new WDK(process.env.SEED_PHRASE)
 
 ## Configuration Validation
 
-The WDK Manager will validate configurations when wallets and protocols are registered:
+Registration does not validate every downstream module configuration:
 
-- **Wallet Registration**: Ensures the wallet class extends the required base class
-- **Protocol Registration**: Validates that protocol labels are unique per blockchain and protocol type
-- **Middleware Registration**: Validates that middleware functions have the correct signature
+- **Wallet Registration**: WDK constructs the wallet manager during registration, so wallet-constructor validation errors surface immediately. Registering a second wallet under the same blockchain throws.
+- **Protocol Registration**: Global registration stores a supported protocol class and config for later construction. Reusing the same blockchain, protocol type, and label replaces the previous global registration. Provider-constructor and config errors surface when an account retrieves the protocol.
+- **Middleware Registration**: WDK stores the middleware for later account decoration. Errors thrown by the middleware surface when an account is retrieved.
+
+In JavaScript, a protocol class that does not extend a supported WDK protocol base class is ignored rather than rejected. Keep protocol classes typed, use distinct labels, and test retrieval during application startup. A global registration shadows an account-scoped provider with the same type and label.
 
 ## Error Handling
 
-Configuration errors will be thrown during registration:
+Handle wallet registration errors at registration time and protocol errors at retrieval time:
 
 ```javascript title="Configuration errors"
 try {
@@ -9522,8 +9587,10 @@ try {
 
 try {
   wdk.registerProtocol('ethereum', 'velora', veloraProtocolEvm, invalidConfig)
+  const account = await wdk.getAccount('ethereum', 0)
+  account.getSwapProtocol('velora')
 } catch (error) {
-  console.error('Protocol registration failed:', error.message)
+  console.error('Protocol construction or retrieval failed:', error.message)
 }
 ```
 
@@ -9895,9 +9962,9 @@ Learn about [error handling and best practices](/sdk/core-module/guides/error-ha
 
 ## Integrate Protocols
 URL: https://docs.wdk.tether.io/sdk/core-module/guides/protocol-integration
-Description: Learn how to use Swidge, Swap, Bridge, and Lending protocols.
+Description: Register and access WDK protocol providers from wallet accounts.
 
-The WDK Core module supports registering external protocols. This allows you to extend the basic wallet functionality with advanced features like [swidge routes](/sdk/swidge-modules), [token swapping](#swapping-tokens), [cross-chain bridging](#bridging-assets), and lending.
+The WDK Core module supports registering external protocol providers. This lets you extend wallet accounts with protocol-specific discovery, quote, and write operations.
 
 ## Register Protocols
 
@@ -9946,7 +10013,27 @@ const wdk = new WDK(seedPhrase)
 
 ## Use Protocols
 
-Once [registered](#register-protocols), you can access the protocol instance using the specific getter methods, such as [`getSwidgeProtocol()`](/sdk/core-module/api-reference#getswidgeprotocollabel), `getSwapProtocol`, `getBridgeProtocol`, `getLendingProtocol`, or `getFiatProtocol`.
+Once [registered](#register-protocols), access the protocol instance with its typed getter, such as `getSwapProtocol()`, `getBridgeProtocol()`, `getLendingProtocol()`, `getFiatProtocol()`, [`getSwidgeProtocol()`](/sdk/core-module/api-reference#getswidgeprotocollabel), or [`getSdaProtocol()`](/sdk/core-module/api-reference#getsdaprotocollabel).
+
+### Smart Deposit Addresses
+
+WDK Core beta.15 registers and retrieves SDA providers through the same account protocol surface. The concrete provider must extend `SdaProtocol`; `MySdaProtocol` below is illustrative.
+
+```typescript title="Register And Access An SDA Provider"
+const wdk = new WDK(seedPhrase)
+  .registerWallet('ethereum', WalletManagerEvm, ethConfig)
+  .registerProtocol('ethereum', 'deposits', MySdaProtocol, sdaProtocolConfig)
+
+const account = await wdk.getAccount('ethereum', 0)
+const deposits = account.getSdaProtocol('deposits')
+
+const routes = await deposits.getSupportedRoutes({
+  sourceChain: 'ethereum',
+  outputAsset: 'USDT'
+})
+```
+
+Every SDA provider implements route discovery and deposit-address creation. Quote, derivation, renewal, lookup, history, recovery, and disable operations are optional. Check the concrete provider's contract before calling them; the base implementations throw `UnsupportedOperationError`. Output assets are route-specific, with USDT shown only as an example.
 
 ### Swidge Routes
 
@@ -10227,6 +10314,7 @@ Use these operation names in `PolicyRule.operation`:
 | `supply`, `withdraw`, `borrow`, `repay` | Lending protocol writes |
 | `buy`, `sell` | Fiat protocol writes |
 | `swidge` | Combined swap and bridge route execution |
+| `createDepositAddress`, `renewDepositAddress`, `recoverDepositAddress`, `disableDepositAddress` | Smart Deposit Address writes |
 | `*` | Wildcard rule for all wrapped write operations |
 
 Use `sign` for message-style signing in this release. `signMessage` and `signHash` are not valid `PolicyOperation` values.
@@ -10389,7 +10477,7 @@ const result = await (account as any).simulate.sendTransaction({
 console.log(result.decision, result.reason, result.trace)
 ```
 
-Simulation results include `decision`, `policy_id`, `matched_rule`, `reason`, and `trace`. Protocol write methods are also mirrored, for example `account.simulate.getSwapProtocol(label).swap(...)`.
+Simulation results include `decision`, `policy_id`, `matched_rule`, `reason`, and `trace`. Protocol write methods are also mirrored, for example `account.simulate.getSwapProtocol(label).swap(...)` or `account.simulate.getSdaProtocol(label).createDepositAddress(...)`.
 
 <Callout type="info">
 In this beta, `simulate` is added at runtime but is not typed on the account return type. Use a local helper interface or a narrow `as any` cast at the call site.
@@ -10403,8 +10491,9 @@ In this beta, `simulate` is added at runtime but is not typed on the account ret
 
 ## Runtime Caveats
 
-- Policies wrap the WDK account/protocol proxy surface. Private fields, underscore methods, protocol internals, or nested calls made inside a module can bypass local policy evaluation.
-- Quote and read methods are not wrapped. Policies apply to write methods such as sends, signs, swaps, bridges, lending writes, fiat writes, and swidge execution.
+- Policies wrap the WDK account/protocol proxy surface. On governed proxies, beta.15 treats `keyPair` and string members beginning with `_` as absent from direct property access, membership checks, own-property descriptors, and own-key enumeration. The proxy also refuses `Object.preventExtensions()` and `Object.freeze()` with `TypeError` so those hiding rules remain valid.
+- This is not a complete sandbox. Prototype inspection, separately retained raw account or protocol references, and nested calls made inside a module remain outside the proxy interception path.
+- Quote and read methods are not wrapped. Policies apply to write methods such as sends, signs, swaps, bridges, lending writes, fiat writes, swidge execution, and SDA address creation, renewal, recovery, or disablement.
 - Policy conditions receive local method arguments. WDK does not decode calldata, fetch prices, validate token metadata, or calculate fiat value unless your condition function does that work.
 - Wallet accounts must expose a read-only account view when a policy applies, otherwise `getAccount()` fails with `PolicyConfigurationError`.
 - Governed write-call arguments must be structured-cloneable, such as primitives, plain objects, arrays, `bigint`, and typed arrays. Functions, live class instances, and other non-cloneable values fail closed with `PolicyConfigurationError` instead of being forwarded unsafely.
@@ -10414,7 +10503,7 @@ In this beta, `simulate` is added at runtime but is not typed on the account ret
 
 - Review [`registerPolicy()`](/sdk/core-module/api-reference#registerpolicypolicies-options) in the API reference.
 - Use [Send Transactions](/sdk/core-module/guides/transactions) for base account send flows.
-- Use [Protocol Integration](/sdk/core-module/guides/protocol-integration) for swap, bridge, lending, fiat, and swidge method setup.
+- Use [Protocol Integration](/sdk/core-module/guides/protocol-integration) for protocol registration and method setup.
 
 ***
 
@@ -10649,7 +10738,7 @@ Transfer native tokens.
 Allow, deny, and simulate writes before execution.
 </Card>
 <Card title="Integrate Protocols" href="/sdk/core-module/guides/protocol-integration">
-Use Swidge, Swap, Bridge, and Lending protocols.
+Register and access protocol providers from wallet accounts.
 </Card>
 <Card title="Configure Middleware" href="/sdk/core-module/guides/middleware">
 Add logging and failover protection.
@@ -20511,7 +20600,7 @@ This guide explains how to [install the package](#1-install-the-package), [creat
 
 ### Prerequisites
 
-*   **[Node.js](https://nodejs.org/)**: version 20.19.0 or higher. Wallet BTC beta.11 depends on `@bitcoinerlab/descriptors` 3.1.7, which sets this minimum.
+*   **[Node.js](https://nodejs.org/)**: version 20.19.0 or higher. Since Wallet BTC beta.11, `@bitcoinerlab/descriptors` 3.1.7 sets this minimum; the requirement remains unchanged in beta.12.
 *   **[npm](https://www.npmjs.com/)**: usually comes with Node.js.
 
 ```bash title="Install @tetherto/wdk-wallet-btc"
@@ -22194,6 +22283,7 @@ Use the ERC-4337 wallet module when your app needs EVM smart accounts, UserOpera
 - **ERC-4337 Support**: Full implementation of ERC-4337 account abstraction standard
 - **UserOperation Management**: Create and send UserOperations through bundlers
 - **Separated Submission Flow**: Sign one UserOperation, review or quote it, then submit the same operation
+- **Parallel Nonce Lanes**: Opt into independent ERC-4337 nonce keys for concurrent UserOperations
 - **Message Signing**: Sign and verify messages using EVM cryptography
 - **ERC20 Support**: Query native token and ERC20 token balances using smart contract interactions
 - **TypeScript Support**: Full TypeScript definitions included
@@ -22277,7 +22367,11 @@ new WalletManagerEvmErc4337(seed, config)
   - `chainId` (number): The blockchain's ID (e.g., 1 for Ethereum mainnet)
   - `provider` (string | Eip1193Provider | Array\<string | Eip1193Provider\>): RPC endpoint URL, EIP-1193 provider instance, or ordered failover list
   - `bundlerUrl` (string): The URL of the bundler service
-  - `safeModulesVersion` (string): The Safe modules version (e.g., `'0.3.0'`)
+  - `safeModulesVersion` (string): Must be `'0.3.0'`, the only Safe modules version supported by beta.14
+
+**Optional common config fields:**
+  - `parallel` (boolean): Put each send, sign, or transfer in a fresh random 192-bit nonce-key lane
+  - `nonceKey` (number | bigint | string): Reuse a raw uint192 key or a deterministic named lane; takes precedence over `parallel`
 
 **Gas payment mode** (one of the following):
 
@@ -22505,7 +22599,7 @@ const account = new WalletAccountEvmErc4337(seedPhrase, "0'/0/0", {
 | `signTransaction(tx, config?)` | Builds and signs one UserOperation without submitting it | `Promise\<UserOperationV7\>` | If a non-sponsored fee exceeds max |
 | `sendTransaction(tx, config?)` | Builds and sends transactions, or submits a signed UserOperation | `Promise\<{hash: string, fee: bigint}\>` | If a newly built operation exceeds max |
 | `quoteSendTransaction(tx, config?)` | Estimates the fee for transactions or a signed UserOperation | `Promise\<{fee: bigint}\>` | - |
-| `transfer(options, config?, txOverrides?)` | Transfers ERC20 tokens via UserOperation | `Promise\<{hash: string, fee: bigint}\>` | If fee exceeds max |
+| `transfer(options, config?, txOverrides?)` | Transfers ERC20 tokens via UserOperation | `Promise\<{hash: string, fee: bigint}\>` | If fee meets or exceeds max |
 | `quoteTransfer(options, config?, txOverrides?)` | Estimates the fee for an ERC20 transfer | `Promise\<{fee: bigint}\>` | - |
 | `approve(options, txOverrides?)` | Approves a spender to spend ERC20 tokens | `Promise\<{hash: string, fee: bigint}\>` | - |
 | `getBalance()` | Returns the native token balance (in wei) | `Promise\<bigint\>` | - |
@@ -22570,7 +22664,7 @@ Builds and signs one ERC-4337 v0.7 UserOperation without submitting it to the bu
 
 **Returns:** `Promise\<UserOperationV7\>` - A signed UserOperation that can be quoted or submitted later
 
-**Throws:** Error if a non-sponsored operation exceeds `transactionMaxFee`
+**Throws:** Error if a non-sponsored operation exceeds `transactionMaxFee`, or a raw `nonceKey` is outside `0..2^192-1`
 
 ```javascript title="Sign a UserOperation"
 const signedUserOperation = await account.signTransaction({
@@ -22580,7 +22674,7 @@ const signedUserOperation = await account.signTransaction({
 ```
 
 <Callout type="warning">
-The returned operation contains the current nonce and the fee-mode configuration used while building it. Submit it promptly through the same account and do not mutate it.
+The returned operation contains the selected nonce lane and fee-mode configuration used while building it. Submit it promptly through the same account and do not mutate it.
 </Callout>
 
 ##### `sendTransaction(tx, config?)`
@@ -22593,11 +22687,11 @@ Sends a transaction via UserOperation through the bundler.
   - `data` (string, optional): Transaction data in hex format
   - `callGasLimit`, `verificationGasLimit`, `preVerificationGas` (number | bigint, optional): Per-call overrides for the UserOperation gas limits
   - `maxFeePerGas`, `maxPriorityFeePerGas` (number | bigint, optional): Per-call overrides for the EIP-1559 fee pair; set both together. In a batch, only the first transaction's gas overrides apply (see [EvmErc4337Transaction](#evmerc4337transaction))
-- `config` (optional): Per-call configuration override. Accepts a partial version of the gas payment mode fields (see [Config Override](#config-override)).
+- `config` (optional): Per-call configuration override. Beta.14 runtime also reads `parallel` and `nonceKey`, subject to the [published typing limitation](#config-override).
 
 **Returns:** `Promise\<{hash: string, fee: bigint}\>` - UserOperation hash and fee
 
-**Throws:** Error if a non-sponsored, newly built operation exceeds `transactionMaxFee`
+**Throws:** Error if a non-sponsored, newly built operation exceeds `transactionMaxFee`, or a raw `nonceKey` is outside `0..2^192-1`
 
 When `tx` is a signed `UserOperationV7`, WDK forwards that exact operation to the bundler. It does not rebuild or re-sign it, and it does not apply the current `transactionMaxFee` again. Only submit an operation produced by the same account with the intended fee-mode configuration, and submit it before its nonce becomes stale.
 
@@ -22635,12 +22729,14 @@ const fastResult = await account.sendTransaction({
 })
 ```
 
-The account reserves a local nonce for each pending `sendTransaction()` or `transfer()` from the same account instance. Pre-acceptance failures release the reserved nonce; ambiguous transport failures keep it reserved to avoid nonce reuse.
+Beta.14 does not reserve sequential nonces locally. With no lane option, sends use the default key-0 lane and must not overlap. `parallel: true` creates a new random lane; `nonceKey` selects a reusable named or raw lane and takes precedence. Operations sharing a lane remain sequential, so wait for inclusion before reusing it. Distinct lanes are unordered; batch dependent transactions into one UserOperation.
 
 ##### `quoteSendTransaction(tx, config?)`
 Estimates the fee for a UserOperation without sending it.
 
-UserOperations built while quoting transaction inputs are cached internally for up to 2 minutes. When a later `sendTransaction()` or `signTransaction()` matches the quoted transaction, the account performs a lightweight on-chain nonce check before reuse and re-quotes if the nonce has moved. A supplied signed UserOperation is evaluated directly rather than rebuilt.
+Default-lane, non-sponsored UserOperations built while quoting transaction inputs can be cached internally for up to 2 minutes. When a later default-lane `sendTransaction()` or `signTransaction()` matches, the account performs a lightweight on-chain nonce check before reuse and rebuilds if the nonce has moved. Sponsored quotes do not cache a built operation. A supplied signed UserOperation is evaluated directly rather than rebuilt.
+
+This quote method does not resolve or reserve a nonce lane. A later send or sign using `parallel` or `nonceKey` rebuilds in that lane instead of reusing the quote.
 
 <Callout type="warning">
 The cache key contains the transaction but not the per-call fee-mode configuration. Use the same fee-mode and paymaster settings for a quote and its matching send, sign, or transfer. Do not quote under one mode, token, paymaster, or sponsorship policy and execute the same transaction under another while the quote is cached.
@@ -22677,8 +22773,9 @@ Transfers ERC20 tokens via UserOperation.
 **Returns:** `Promise\<{hash: string, fee: bigint}\>` - UserOperation hash and fee
 
 **Throws:**
-- Error if fee exceeds `transferMaxFee`
+- Error if fee meets or exceeds `transferMaxFee`
 - Error if insufficient token balance
+- Error if a raw `nonceKey` is outside `0..2^192-1`
 
 **Example:**
 ```javascript
@@ -22692,12 +22789,14 @@ const result = await account.transfer({
   maxFeePerGas: 30000000000n,
   maxPriorityFeePerGas: 2000000000n
 })
-console.log('Transfer hash:', result.hash)
+console.log('Transfer UserOperation hash:', result.hash)
 console.log('Transfer fee:', result.fee)
 ```
 
 ##### `quoteTransfer(options, config?, txOverrides?)`
 Estimates the fee for an ERC20 token transfer.
+
+This method does not resolve or reserve a nonce lane. A later transfer using `parallel` or `nonceKey` rebuilds in that lane.
 
 **Parameters:**
 - `options` (TransferOptions): Transfer options (same as transfer)
@@ -23273,7 +23372,9 @@ interface EvmErc4337WalletCommonConfig {
   chainId: number;                          // Blockchain ID
   provider: string | Eip1193Provider | Array<string | Eip1193Provider>; // RPC provider or failover list
   bundlerUrl: string;                       // Bundler service URL
-  safeModulesVersion: string;               // Safe modules version (e.g., '0.3.0')
+  safeModulesVersion: string;               // Must be '0.3.0' in beta.14
+  parallel?: boolean;                       // Fresh random nonce-key lane per operation
+  nonceKey?: number | bigint | string;      // Reusable raw or named uint192 lane key
 }
 
 // Mode 1: Paymaster Token
@@ -23312,7 +23413,7 @@ type EvmErc4337WalletConfig = EvmErc4337WalletCommonConfig &
 
 ### Config Override
 
-The `config` parameter on `sendTransaction`, `signTransaction`, `quoteSendTransaction`, `transfer`, and `quoteTransfer` allows per-call overrides of gas payment settings:
+The published beta.14 `config` parameter type on `sendTransaction`, `signTransaction`, `quoteSendTransaction`, `transfer`, and `quoteTransfer` allows per-call overrides of gas payment settings:
 
 ```typescript
 type ConfigOverride = Partial<
@@ -23334,7 +23435,9 @@ type ConfigOverride = Partial<
 
 Overrides are shallow-merged with the account configuration, then validated. When switching modes, explicitly clear an inherited opposing flag: sponsorship requires `isSponsored: true` and `useNativeCoins: false`; native-coin mode requires `isSponsored: false` and `useNativeCoins: true`; paymaster-token mode requires both flags to be `false`. The merged configuration must also contain the URL, address, token, or policy fields required by the selected mode.
 
-The quote cache does not include these override fields in its key. Pass the same fee-mode and paymaster settings to a quote and its matching send, sign, or transfer.
+At runtime, beta.14 additionally honors `parallel` and `nonceKey` per call for `signTransaction()`, `sendTransaction()`, and `transfer()`. Those two fields are missing from the published per-call declarations, so object literals containing them fail TypeScript excess-property checks even though JavaScript calls work. Construction-level `EvmErc4337WalletCommonConfig` includes both fields and is the typed path in this release. `quoteSendTransaction()` and `quoteTransfer()` do not select a lane.
+
+The quote cache does not include fee-mode override fields in its key. Pass the same fee-mode and paymaster settings to a quote and its matching send, sign, or transfer. Lane sends, signs, and transfers bypass cached UserOperations and rebuild in the selected lane.
 
 ### EvmErc4337Transaction
 
@@ -23543,7 +23646,7 @@ const config = {
   // Required parameters
   chainId: 1,
   provider: 'https://rpc.mevblocker.io/fast',
-  safeModulesVersion: '0.3.0', // '0.2.0' and '0.3.0' are valid
+  safeModulesVersion: '0.3.0',
   bundlerUrl: `https://api.pimlico.io/v1/ethereum/rpc?apikey=${PIMLICO_API_KEY}`,
   paymasterUrl: `https://api.pimlico.io/v2/ethereum/rpc?apikey=${PIMLICO_API_KEY}`,
   paymasterAddress: '0x777777777777AeC03fd955926DbF81597e66834C',
@@ -23573,7 +23676,7 @@ const account = new WalletAccountEvmErc4337(
 
 // Read-only account (fee caps for sending are not needed)
 const readOnlyAccount = new WalletAccountReadOnlyEvmErc4337(
-  '0x...', // Smart contract wallet address
+  '0x...', // Owner EOA address; the module predicts the Safe address
   {
     chainId: 1,
     provider: 'https://rpc.mevblocker.io/fast',
@@ -23739,9 +23842,37 @@ const config = {
 }
 ```
 
+### Parallel Nonce Lanes
+
+ERC-4337 supports two-dimensional nonces: a 192-bit key selects a lane, and each lane has its own sequence. By default this module uses key `0`, so do not fire another default-lane operation until the previous one has been included.
+
+Use these optional common configuration fields when the account needs independent lanes:
+
+- `parallel` (`boolean`, default `false`): Give each send, sign, or transfer operation a fresh random lane at sequence `0`. Ordering across those lanes is not guaranteed. Each successfully included UserOperation in a fresh lane creates or advances a distinct EntryPoint nonce slot; signing alone and unincluded submissions do not advance on-chain nonce state.
+- `nonceKey` (`number | bigint | string`): Reuse an explicit lane. A string is hashed into a deterministic named lane. A number or `bigint` is used as the raw uint192 key and must be in `0..2^192-1`; use `bigint` for raw keys above `Number.MAX_SAFE_INTEGER`.
+
+`nonceKey` takes precedence over `parallel`; when neither is set, the module uses the default key-0 lane.
+
+Before enabling either option, configure the account without a lane, submit one default-lane operation, and wait for its receipt so the Safe is deployed. Confirm that the configured bundler accepts nonzero nonce keys, then create the account with the lane setting.
+
+```javascript title="Configure A Named Lane After Safe Deployment"
+const config = {
+  // ...required network and gas-payment fields
+  nonceKey: 'scheduled-payments'
+}
+
+const wallet = new WalletManagerEvmErc4337(seedPhrase, config)
+```
+
+Reusing one named lane remains sequential: wait for inclusion before submitting its next operation, or batch dependent calls into one UserOperation.
+
+<Callout type="warning">
+The beta.14 runtime also honors `parallel` and `nonceKey` in the per-call config for `signTransaction()`, `sendTransaction()`, and `transfer()`, but the published per-call TypeScript declarations omit both fields. Construction-level configuration is typed; JavaScript per-call usage works at runtime.
+</Callout>
+
 ### Safe Modules Version
 
-The `safeModulesVersion` option specifies the Safe modules version for smart contract wallet implementation. **Required** for smart account initialization.
+The `safeModulesVersion` option specifies the Safe modules version for smart contract wallet implementation. Beta.14 supports only `0.3.0`; other values, including `0.2.0`, throw `ConfigurationError`. **Required** for smart account initialization.
 
 **Type:** `string`
 **Required:** Yes
@@ -24192,7 +24323,7 @@ With your wallet ready, learn how to [manage multiple accounts](/sdk/wallet-modu
 URL: https://docs.wdk.tether.io/sdk/wallet-modules/wallet-evm-erc-4337/guides/handle-errors
 Description: Handle errors, manage fees, and dispose of sensitive data.
 
-This guide explains how to [handle transaction errors](#transaction-errors), [handle transfer errors](#transfer-errors), and follow [best practices](#best-practices) for fee management and memory cleanup.
+This guide explains how to [handle transaction errors](#transaction-errors), [handle transfer errors](#transfer-errors), [diagnose nonce-lane failures](#nonce-lane-failures), and follow [best practices](#best-practices) for fee management and memory cleanup.
 
 ## Transaction Errors
 
@@ -24204,7 +24335,7 @@ try {
     to: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
     value: 1000000000000000n
   })
-  console.log('Transaction hash:', result.hash)
+  console.log('UserOperation hash:', result.hash)
 } catch (error) {
   if (error.message.includes('not enough funds')) {
     console.error('Insufficient paymaster token balance')
@@ -24216,7 +24347,7 @@ try {
 
 ## Transfer Errors
 
-Token transfers via [`account.transfer()`](/sdk/wallet-modules/wallet-evm-erc-4337/api-reference) can fail due to insufficient balance or exceeding the maximum fee limit:
+Token transfers via [`account.transfer()`](/sdk/wallet-modules/wallet-evm-erc-4337/api-reference) can fail due to insufficient balance or a fee at or above the maximum limit:
 
 ```javascript title="Handle Transfer Errors"
 try {
@@ -24225,10 +24356,10 @@ try {
     recipient: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
     amount: 1000000
   })
-  console.log('Transfer hash:', result.hash)
+  console.log('Transfer UserOperation hash:', result.hash)
 } catch (error) {
   if (error.message.includes('Exceeded maximum fee')) {
-    console.error('Transfer cancelled: fee exceeds the configured limit')
+    console.error('Transfer cancelled: fee meets or exceeds the configured limit')
   } else if (error.message.includes('not enough funds')) {
     console.error('Insufficient paymaster token balance')
   } else {
@@ -24236,6 +24367,16 @@ try {
   }
 }
 ```
+
+## Nonce-Lane Failures
+
+Lane configuration and bundler behavior can fail in several ways:
+
+- A raw `nonceKey` below `0` or above `2^192 - 1` throws `nonceKey must be within the uint192 range (0 to 2^192 - 1).`
+- Parallel sends from an undeployed Safe or a bundler that does not support nonzero keys can be rejected by the RPC or bundler. Deploy the account with one completed operation first and verify bundler support.
+- Two operations submitted concurrently in the same named or default lane can select the same sequence. Both calls can return a UserOperation hash even though one never receives a receipt.
+
+Treat a returned hash as submission evidence, not inclusion. Poll `getUserOperationReceipt(hash)` with an application timeout. If one same-lane hash never resolves, inspect the bundler response and on-chain lane sequence before retrying; use a fresh lane for independent work or batch dependent calls rather than blindly resubmitting the same operation.
 
 ## Best Practices
 
@@ -24259,7 +24400,7 @@ try {
     to: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
     value: 1000000000000000n
   })
-  console.log('Transaction hash:', result.hash)
+  console.log('UserOperation hash:', result.hash)
 } finally {
   account.dispose()
   wallet.dispose()
@@ -24312,7 +24453,7 @@ With accounts set up, learn how to [check balances](/sdk/wallet-modules/wallet-e
 URL: https://docs.wdk.tether.io/sdk/wallet-modules/wallet-evm-erc-4337/guides/send-transactions
 Description: Send gasless transactions and estimate fees.
 
-This guide explains how to [send a gasless transaction](#send-a-gasless-transaction), [estimate fees](#estimate-fees), [sign, quote, and submit a UserOperation](#sign-quote-and-submit-a-useroperation), [cap transaction fees](#cap-transaction-fees), [reuse a recent quote](#reuse-a-recent-quote), and [use a custom paymaster token](#send-with-custom-paymaster-token).
+This guide explains how to [send a gasless transaction](#send-a-gasless-transaction), [estimate fees](#estimate-fees), [sign, quote, and submit a UserOperation](#sign-quote-and-submit-a-useroperation), [cap transaction fees](#cap-transaction-fees), [reuse a recent quote](#reuse-a-recent-quote), [use parallel nonce lanes](#use-parallel-nonce-lanes), and [use a custom paymaster token](#send-with-custom-paymaster-token).
 
 ## Send a Gasless Transaction
 
@@ -24323,7 +24464,7 @@ const result = await account.sendTransaction({
   to: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
   value: 1000000000000000n // 0.001 ETH in wei
 })
-console.log('Transaction hash:', result.hash)
+console.log('UserOperation hash:', result.hash)
 console.log('Fee paid in paymaster token:', result.fee)
 ```
 
@@ -24386,7 +24527,9 @@ const result = await account.sendTransaction({
 
 ## Reuse a Recent Quote
 
-Quotes are cached for up to 2 minutes. If you call `sendTransaction()` with the same transaction during that window, the account checks the current on-chain nonce before reusing the cached UserOperation. If the nonce has moved, it builds a fresh quote before sending.
+Default-lane, non-sponsored UserOperations built while quoting can be cached for up to 2 minutes. If you call `sendTransaction()` with the same transaction during that window, the account checks the current on-chain nonce before reusing a cached UserOperation. If the nonce has moved, it rebuilds before sending. Sponsored quotes do not cache a built UserOperation.
+
+Quote methods do not resolve or reserve a nonce lane. A later send or sign using `parallel` or `nonceKey` rebuilds in that selected lane instead of reusing the quoted UserOperation.
 
 <Callout type="warning">
 Cache identity does not include per-call fee-mode configuration. Use the same fee-mode and paymaster settings for `quoteSendTransaction()` and the matching `sendTransaction()` or `signTransaction()`. Do not quote with one mode, paymaster token, or sponsorship policy and execute the same transaction with another while the quote is cached.
@@ -24402,16 +24545,40 @@ const quote = await account.quoteSendTransaction(tx)
 console.log('Estimated fee:', quote.fee)
 
 const result = await account.sendTransaction(tx)
-console.log('Transaction hash:', result.hash)
+console.log('UserOperation hash:', result.hash)
 ```
 
-## Send Rapid Transactions
+## Use Parallel Nonce Lanes
 
-When you call `sendTransaction()` or `transfer()` rapidly from the same account instance, the wallet reserves local nonces so concurrent UserOperations use sequential nonces. If submission fails before bundler acceptance, the reserved nonce is released. If the failure is ambiguous, such as a transport error after submission, the wallet keeps the nonce reserved to avoid accidental reuse.
+Beta.14 no longer reserves sequential nonces locally. By default, operations use ERC-4337 nonce key `0`; two default-lane sends started before the first is included can select the same sequence and collide.
 
-<Callout type="info">
-The wallet reads the on-chain nonce before reserving locally. If that read does not complete within 30 seconds, the operation fails instead of guessing the next nonce.
+Before using nonzero lanes, deploy the Safe with one operation and wait for its UserOperation receipt. Your bundler must support parallel nonce keys, and its per-sender mempool limits still apply.
+
+Use `parallel: true` to give each independent operation a fresh random lane:
+
+```javascript title="Send Independent Operations Concurrently"
+const [first, second] = await Promise.all([
+  account.sendTransaction({ to: recipientA, value: 0n }, { parallel: true }),
+  account.sendTransaction({ to: recipientB, value: 0n }, { parallel: true })
+])
+
+console.log(first.hash, second.hash) // UserOperation hashes
+```
+
+Use distinct named lanes for stable independent work streams. Strings are hashed as labels; they are not parsed as numeric keys.
+
+```javascript title="Use Named Nonce Lanes"
+const payroll = await account.sendTransaction(txA, { nonceKey: 'payroll' })
+const refunds = await account.sendTransaction(txB, { nonceKey: 'refunds' })
+```
+
+`nonceKey` takes precedence over `parallel`. A raw numeric key must fit uint192; use a `bigint` above `Number.MAX_SAFE_INTEGER`.
+
+<Callout type="warning">
+One lane is still sequential. Two concurrent sends using the same named or default lane can return UserOperation hashes even though one never receives a receipt. Wait for inclusion before reusing a lane. If calls depend on one another, batch them with `sendTransaction([tx1, tx2])` so they execute in order under one nonce. Different lanes are independent and can be included in either order.
 </Callout>
+
+`signTransaction()` preserves the lane chosen by the same configuration rules. In beta.14, per-call `parallel` and `nonceKey` work at runtime but are missing from the published per-call TypeScript declarations; construction-level lane configuration is typed.
 
 ## Send with Custom Paymaster Token
 
@@ -24509,7 +24676,7 @@ Learn how to [handle errors and manage resources](/sdk/wallet-modules/wallet-evm
 URL: https://docs.wdk.tether.io/sdk/wallet-modules/wallet-evm-erc-4337/guides/transfer-tokens
 Description: Transfer ERC-20 tokens with gasless transactions.
 
-This guide explains how to [transfer ERC-20 tokens](#transfer-erc-20-tokens), [estimate transfer fees](#estimate-transfer-fees), [set a maximum fee limit](#transfer-with-maximum-fee-limit), and [apply UserOperation gas overrides](#transfer-with-useroperation-gas-overrides).
+This guide explains how to [transfer ERC-20 tokens](#transfer-erc-20-tokens), [estimate transfer fees](#estimate-transfer-fees), [set a maximum fee limit](#transfer-with-maximum-fee-limit), [select a nonce lane](#transfer-in-a-nonce-lane), and [apply UserOperation gas overrides](#transfer-with-useroperation-gas-overrides).
 
 ## Transfer ERC-20 Tokens
 
@@ -24521,7 +24688,7 @@ const result = await account.transfer({
   recipient: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
   amount: 1000000 // 1 USDT (6 decimals)
 })
-console.log('Transfer hash:', result.hash)
+console.log('Transfer UserOperation hash:', result.hash)
 console.log('Transfer fee:', result.fee)
 ```
 
@@ -24553,8 +24720,24 @@ const result = await account.transfer({
 ```
 
 <Callout type="warn">
-If the estimated fee exceeds `transferMaxFee`, the transfer is cancelled with an "Exceeded maximum fee" error.
+If the estimated fee meets or exceeds `transferMaxFee`, the transfer is cancelled with an "Exceeded maximum fee" error.
 </Callout>
+
+## Transfer in a Nonce Lane
+
+`transfer()` follows the same beta.14 nonce-lane rules as sends. Use a stable named lane for an independent transfer stream, and wait for inclusion before reusing that lane:
+
+```javascript title="Transfer In A Named Lane"
+const result = await account.transfer({
+  token: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+  recipient: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+  amount: 1000000
+}, {
+  nonceKey: 'token-payouts'
+})
+```
+
+`quoteTransfer()` estimates the transfer but does not select or reserve a lane. A lane transfer rebuilds its UserOperation. The beta.14 runtime accepts lane fields per call, while the published per-call TypeScript declaration omits them; see [Use Parallel Nonce Lanes](/sdk/wallet-modules/wallet-evm-erc-4337/guides/send-transactions#use-parallel-nonce-lanes).
 
 ## Transfer with UserOperation Gas Overrides
 
@@ -32058,7 +32241,7 @@ const account = await wallet.getAccountByPath("1'")
 ```
 
 ##### `getFeeRates()`
-Returns fee rates from the mainnet TON API configuration. In `1.0.0-beta.7`, this method always requests `https://tonapi.io/v2`, does not follow the configured client network, and returns the same calculated value for both fields.
+Returns fee rates from the mainnet TON API configuration. Through `1.0.0-beta.8`, this method always requests `https://tonapi.io/v2`, does not follow the configured client network, and returns the same calculated value for both fields.
 
 **Returns:** `Promise\<{normal: bigint, fast: bigint}\>` - Object containing fee rates
 
@@ -32448,7 +32631,7 @@ console.log('Signature valid:', isValid)
 ##### `getTransactionReceipt(hash)`
 Returns a transaction's receipt.
 
-In `1.0.0-beta.7`, the inherited initial receipt lookup always queries mainnet TON Center v3. Do not rely on this method for testnet receipts; see [Network Selection](/sdk/wallet-modules/wallet-ton-gasless/configuration#network-selection).
+Through `1.0.0-beta.8`, the inherited initial receipt lookup always queries mainnet TON Center v3. Do not rely on this method for testnet receipts; see [Network Selection](/sdk/wallet-modules/wallet-ton-gasless/configuration#network-selection).
 
 **Parameters:**
 - `hash` (string): The signed transfer body hash returned by `transfer()`
@@ -32840,7 +33023,7 @@ Use TON Center and TON API endpoints for the same network:
 Do not mix mainnet and testnet clients in one wallet configuration or failover list.
 
 <Callout type="warning">
-In `@tetherto/wdk-wallet-ton-gasless` `1.0.0-beta.7`, the inherited `getTransactionReceipt()` implementation starts its lookup against a hard-coded mainnet TON Center v3 endpoint. `getFeeRates()` likewise always reads mainnet TON API configuration. Do not rely on these methods for testnet-specific receipts or fee rates.
+Through `@tetherto/wdk-wallet-ton-gasless` `1.0.0-beta.8`, the inherited `getTransactionReceipt()` implementation starts its lookup against a hard-coded mainnet TON Center v3 endpoint. `getFeeRates()` likewise always reads mainnet TON API configuration. Do not rely on these methods for testnet-specific receipts or fee rates.
 </Callout>
 
 <Callout type="warning">
@@ -33082,7 +33265,7 @@ try {
 
 ### Manage Fee Limits
 
-Set `transferMaxFee` when creating the wallet to prevent gasless transfers from exceeding a maximum cost. Fee caps reject estimates greater than the configured limit, so an estimate equal to the cap is allowed. Native `sendTransaction()`, `quoteSendTransaction()`, and `signTransaction()` are unsupported on this module, so `transactionMaxFee` does not cap gasless transfers. You can retrieve mainnet TON API rates using [`wallet.getFeeRates()`](/sdk/wallet-modules/wallet-ton-gasless/api-reference#getfeerates). In `1.0.0-beta.7`, this method does not follow configured testnet clients and returns the same calculated value for `normal` and `fast`:
+Set `transferMaxFee` when creating the wallet to prevent gasless transfers from exceeding a maximum cost. Fee caps reject estimates greater than the configured limit, so an estimate equal to the cap is allowed. Native `sendTransaction()`, `quoteSendTransaction()`, and `signTransaction()` are unsupported on this module, so `transactionMaxFee` does not cap gasless transfers. You can retrieve mainnet TON API rates using [`wallet.getFeeRates()`](/sdk/wallet-modules/wallet-ton-gasless/api-reference#getfeerates). Through `1.0.0-beta.8`, this method does not follow configured testnet clients and returns the same calculated value for `normal` and `fast`:
 
 ```javascript title="Fee Management"
 const feeRates = await wallet.getFeeRates()
@@ -33191,7 +33374,7 @@ To send native TON, use the standard `@tetherto/wdk-wallet-ton` module. For gasl
 
 ## Check Mainnet Fee Rates
 
-You can retrieve mainnet TON API fee rates from the wallet manager using [`wallet.getFeeRates()`](/sdk/wallet-modules/wallet-ton-gasless/api-reference#getfeerates). In `1.0.0-beta.7`, this method does not follow configured testnet clients and returns the same calculated value for `normal` and `fast`:
+You can retrieve mainnet TON API fee rates from the wallet manager using [`wallet.getFeeRates()`](/sdk/wallet-modules/wallet-ton-gasless/api-reference#getfeerates). Through `1.0.0-beta.8`, this method does not follow configured testnet clients and returns the same calculated value for `normal` and `fast`:
 
 ```javascript title="Get Fee Rates"
 const feeRates = await wallet.getFeeRates()
@@ -33529,7 +33712,7 @@ const account = await wallet.getAccountByPath("0'/0/1")
 ```
 
 ##### `getFeeRates()`
-Returns normal and fast fee rates from the mainnet TON API configuration. In `1.0.0-beta.10`, this method always requests `https://tonapi.io/v2`, does not follow the configured `tonClient` network, and returns the same calculated value for both fields.
+Returns normal and fast fee rates from the mainnet TON API configuration. Through `1.0.0-beta.12`, this method always requests `https://tonapi.io/v2`, does not follow the configured `tonClient` network, and returns the same calculated value for both fields.
 
 **Returns:** `Promise\<FeeRates\>` - Object containing normal and fast fee rates
 
@@ -33791,7 +33974,7 @@ console.log('Token balance:', tokenBalance, 'Jetton base units');
 ##### `getTransactionReceipt(hash)`
 Returns a transaction's receipt if it has been mined.
 
-In `1.0.0-beta.10`, the initial receipt lookup always queries mainnet TON Center v3. Do not rely on this method for testnet receipts; see [Network Selection](/sdk/wallet-modules/wallet-ton/configuration#network-selection).
+Through `1.0.0-beta.12`, the initial receipt lookup always queries mainnet TON Center v3. Do not rely on this method for testnet receipts; see [Network Selection](/sdk/wallet-modules/wallet-ton/configuration#network-selection).
 
 **Parameters:**
 - `hash` (string): The signed transfer body hash returned by `sendTransaction()` or `transfer()`
@@ -33909,7 +34092,7 @@ console.log('Signature valid:', isValid)
 ##### `getTransactionReceipt(hash)`
 Returns a transaction's receipt if it has been mined.
 
-In `1.0.0-beta.10`, the initial receipt lookup always queries mainnet TON Center v3. Do not rely on this method for testnet receipts; see [Network Selection](/sdk/wallet-modules/wallet-ton/configuration#network-selection).
+Through `1.0.0-beta.12`, the initial receipt lookup always queries mainnet TON Center v3. Do not rely on this method for testnet receipts; see [Network Selection](/sdk/wallet-modules/wallet-ton/configuration#network-selection).
 
 **Parameters:**
 - `hash` (string): The signed transfer body hash returned by `sendTransaction()` or `transfer()`
@@ -34022,7 +34205,7 @@ interface FeeRates {
   normal: bigint;
 
   /**
-   * Same mainnet-derived fee rate as `normal` in v1.0.0-beta.10
+   * Same mainnet-derived fee rate as `normal` through v1.0.0-beta.12
    * @example 100000000n // 0.1 TON
    */
   fast: bigint;
@@ -34294,7 +34477,7 @@ For client-backed balance and transaction operations, the TON network is determi
 - Testnet: `https://testnet.toncenter.com/api/v2/jsonRPC`
 
 <Callout type="warning">
-In `@tetherto/wdk-wallet-ton` `1.0.0-beta.10`, `getTransactionReceipt()` starts its lookup against a hard-coded mainnet TON Center v3 endpoint, even when `tonClient` points to testnet. `getFeeRates()` likewise always reads mainnet TON API configuration. Do not rely on these methods for testnet-specific receipts or fee rates.
+Through `@tetherto/wdk-wallet-ton` `1.0.0-beta.12`, `getTransactionReceipt()` starts its lookup against a hard-coded mainnet TON Center v3 endpoint, even when `tonClient` points to testnet. `getFeeRates()` likewise always reads mainnet TON API configuration. Do not rely on these methods for testnet-specific receipts or fee rates.
 </Callout>
 
 ## Derivation Paths
@@ -34530,7 +34713,7 @@ try {
 
 ### Manage Fee Limits
 
-Set `transactionMaxFee` when creating the wallet to cap native `sendTransaction()` and `signTransaction()` costs. Set `transferMaxFee` separately for Jetton `transfer()` costs. You can retrieve mainnet TON API rates using [`wallet.getFeeRates()`](/sdk/wallet-modules/wallet-ton/api-reference). In `1.0.0-beta.10`, this method does not follow a configured testnet client and returns the same calculated value for `normal` and `fast`:
+Set `transactionMaxFee` when creating the wallet to cap native `sendTransaction()` and `signTransaction()` costs. Set `transferMaxFee` separately for Jetton `transfer()` costs. You can retrieve mainnet TON API rates using [`wallet.getFeeRates()`](/sdk/wallet-modules/wallet-ton/api-reference). Through `1.0.0-beta.12`, this method does not follow a configured testnet client and returns the same calculated value for `normal` and `fast`:
 
 ```javascript title="Fee Management"
 const feeRates = await wallet.getFeeRates()
@@ -34660,7 +34843,7 @@ const wallet = new WalletManagerTon(seedPhrase, {
 
 ## Read Mainnet Fee Rates
 
-You can retrieve mainnet TON API fee rates from the wallet manager using [`wallet.getFeeRates()`](/sdk/wallet-modules/wallet-ton/api-reference#getfeerates). In `1.0.0-beta.10`, this method does not follow a configured testnet client and returns the same calculated value for `normal` and `fast`:
+You can retrieve mainnet TON API fee rates from the wallet manager using [`wallet.getFeeRates()`](/sdk/wallet-modules/wallet-ton/api-reference#getfeerates). Through `1.0.0-beta.12`, this method does not follow a configured testnet client and returns the same calculated value for `normal` and `fast`:
 
 ```javascript title="Get Fee Rates"
 const feeRates = await wallet.getFeeRates()
@@ -39286,7 +39469,7 @@ npm test
 
 ## Module Types
 
-The CLI supports all six WDK module categories. The generated package name follows WDK naming conventions automatically.
+The CLI supports seven WDK module categories. The generated package name follows WDK naming conventions automatically.
 
 | Type | Description | Generated Package Example |
 |------|-------------|---------------------------|
@@ -39296,6 +39479,7 @@ The CLI supports all six WDK module categories. The generated package name follo
 | `lending` | DeFi lending protocol | `wdk-protocol-lending-compound-evm` |
 | `fiat` | Fiat on/off-ramp provider | `wdk-protocol-fiat-moonpay` |
 | `swidge` | Cross-chain swap (swap + bridge combined) | `wdk-protocol-swidge-lifi` |
+| `sda` | Smart Deposit Address provider | `wdk-protocol-sda-rhino` |
 
 ---
 
@@ -39303,15 +39487,19 @@ The CLI supports all six WDK module categories. The generated package name follo
 
 | Option | Alias | Description | Default |
 |--------|-------|-------------|---------|
-| `[type]` | | Module type (wallet, swap, bridge, lending, fiat, swidge) | (interactive prompt) |
+| `[type]` | | Module type (wallet, swap, bridge, lending, fiat, swidge, sda) | (interactive prompt) |
 | `[name]` | | Module or protocol name | (interactive prompt) |
 | `[blockchain]` | | Target blockchain | (interactive prompt) |
 | `--scope \<scope\>` | `-s` | npm scope (e.g., `@myorg`) | none |
 | `--git` | | Initialize a git repository | `true` |
 | `--no-git` | | Skip git initialization | |
 | `--yes` | `-y` | Skip prompts, use defaults | `false` |
-| `--version` | `-v` | Show version | |
+| `--version` | `-V` | Show version | |
 | `--help` | `-h` | Show help | |
+
+<Callout type="warn">
+In `1.0.0-beta.3`, `--version` still prints the hard-coded beta.1 value. Use npm or the installed package metadata when you need the actual installed version.
+</Callout>
 
 ### Examples
 
@@ -39321,6 +39509,9 @@ npx @tetherto/create-wdk-module@latest wallet stellar --scope @myorg
 
 # Create a swap protocol module
 npx @tetherto/create-wdk-module@latest swap jupiter solana
+
+# Create an SDA provider module (provider name only; no blockchain argument)
+npx @tetherto/create-wdk-module@latest sda rhino
 
 # Create with all defaults, no prompts
 npx @tetherto/create-wdk-module@latest wallet stellar --yes
@@ -39344,6 +39535,7 @@ $ npx @tetherto/create-wdk-module@latest
     Lending Module (DeFi lending protocol)
     Fiat Module (fiat on/off-ramp)
     Swidge Module (cross-chain swap (swidge = swap + bridge))
+    SDA Module (smart deposit address)
 
 ? What is the blockchain name? (e.g., "stellar", "solana")
   > stellar
@@ -39422,7 +39614,7 @@ Wallet modules generate three core files that correspond to the WDK wallet archi
 </Accordions>
 
 <Accordions>
-<Accordion title="Protocol Module structure (swap, bridge, lending, fiat, swidge)">
+<Accordion title="Protocol Module structure (swap, bridge, lending, fiat, swidge, sda)">
 
 ```text title="Protocol module project tree"
 wdk-protocol-swap-jupiter-solana/
@@ -39452,7 +39644,11 @@ wdk-protocol-swap-jupiter-solana/
 └── tsconfig.json
 ```
 
-Protocol modules (swap, bridge, lending, fiat, swidge) generate a single provider file rather than the three-file wallet pattern, since protocols interact with external services through a unified interface.
+Protocol modules (swap, bridge, lending, fiat, swidge, sda) generate a single provider file rather than the three-file wallet pattern, since protocols interact with external services through a unified interface. An SDA invocation such as `sda rhino` generates `wdk-protocol-sda-rhino` with `src/rhino-protocol.js`; it asks for a provider name rather than a blockchain.
+
+<Callout type="warn">
+The beta.3 SDA scaffold is a starting point, not an operational provider. Implement the required `getSupportedRoutes()` and `createDepositAddress()` methods, replace the generated `test.todo` cases, and either implement or delete every optional method stub before publishing. Empty optional stubs override the base class and return `undefined`; deleting an unsupported optional override restores the base `UnsupportedOperationError` behavior. The generated `apiUrl` and `apiKey` fields are placeholders, so replace them with the provider's actual configuration and document custody, authentication, routes, output assets, expiry, and recovery behavior.
+</Callout>
 
 </Accordion>
 </Accordions>
@@ -43133,12 +43329,13 @@ sm.dispose()
 
 ## WDK Utils
 URL: https://docs.wdk.tether.io/tools/wdk-utils
-Description: Address validation, mnemonic sharing, seed encryption, deterministic key derivation, and payment-request helpers for @tetherto/wdk-utils
+Description: Chain-aware address validation, mnemonic sharing, seed encryption, deterministic key derivation, and payment-request helpers for @tetherto/wdk-utils
 
-WDK Utils provides validation helpers for Bitcoin, EVM, Lightning, Solana, Spark, Tron, and UMA identifiers, Shamir-based mnemonic sharing, passphrase-based seed encryption, deterministic HKDF-SHA256 and Ed25519 key derivation, BIP-21 Bitcoin payment URI helpers, BOLT11 invoice helpers, and EIP-681 request parsing for token transfer deep links. Powered by [`@tetherto/wdk-utils`](https://github.com/tetherto/wdk-utils).
+WDK Utils provides CAIP-2-aware and chain-specific validation helpers for Bitcoin, EVM, Lightning, Solana, Spark, Tron, and UMA identifiers, Shamir-based mnemonic sharing, passphrase-based seed encryption, deterministic HKDF-SHA256 and Ed25519 key derivation, BIP-21 Bitcoin payment URI helpers, BOLT11 invoice helpers, and EIP-681 request parsing for token transfer deep links. Powered by [`@tetherto/wdk-utils`](https://github.com/tetherto/wdk-utils).
 
 ## Features
 
+- **Chain-aware address validation**: Dispatch to Bitcoin, EVM, Solana, Spark, or Tron validation with a CAIP-2 chain ID, including network checks for Bitcoin and Spark.
 - **Address validation helpers**: Validate Bitcoin, EVM, Lightning invoice, LNURL, Lightning address, Solana, Spark, Tron, and UMA inputs before you hand them to a wallet flow.
 - **Mnemonic sharing helpers**: Split an English BIP-39 mnemonic into threshold-based Shamir shares and combine enough shares to recover it.
 - **BIP-21 payment URI helpers**: Detect, parse, and encode `bitcoin:` payment URIs with optional amount, label, and message fields.
@@ -43153,7 +43350,7 @@ WDK Utils provides validation helpers for Bitcoin, EVM, Lightning, Solana, Spark
 
 ## Why this matters
 
-- Validate user input early and return machine-readable failure reasons before you attempt a transaction or resolution flow.
+- Validate user input early, optionally against its CAIP-2 chain, and return machine-readable failure reasons before you attempt a transaction or resolution flow.
 - Split a mnemonic across separate storage or recovery locations without making every share sufficient on its own.
 - Pair these helpers with the [P2P Address Book](/tools/p2p-address-book/) when a wallet stores user-selected destinations for later use.
 - Protect seed phrases or other local strings with passphrase-based encryption before storing them in app-managed persistence.
@@ -43190,6 +43387,7 @@ Description: Validation, encryption, mnemonic sharing, BIP-21, BOLT11, and EIP-6
 
 | Function | Description | Returns |
 | --- | --- | --- |
+| `validateAddress(chainId, address)` | Dispatch address validation by CAIP-2 chain ID; Bitcoin and Spark references also enforce network compatibility. | Chain-specific result or a validation failure. |
 | `validateBase58(address)` | Validate a Base58Check Bitcoin address payload and version byte. | See details below. |
 | `validateBech32(address)` | Validate a SegWit v0 Bitcoin address. | `BtcAddressValidationResult` |
 | `validateBech32m(address)` | Validate a SegWit v1+ Bitcoin address. | `BtcAddressValidationResult` |
@@ -43210,11 +43408,33 @@ Description: Validation, encryption, mnemonic sharing, BIP-21, BOLT11, and EIP-6
 | `validateUmaAddress(address)` | Validate a Universal Money Address. | `UmaAddressValidationResult` |
 | `resolveUmaUsername(uma)` | Split a valid UMA string into `localPart`, `domain`, and `lightningAddress`. | Parsed UMA details or `null`. |
 
+#### `validateAddress(chainId, address)`
+
+Validate an address with the chain-specific validator selected by a CAIP-2 chain ID. The supported namespaces are `bip122`, `eip155`, `solana`, `spark`, and `tron`.
+
+```javascript title="Validate An Address For A CAIP-2 Chain"
+import { validateAddress } from '@tetherto/wdk-utils'
+
+const result = validateAddress(
+  'bip122:000000000019d6689c085ae165831e93',
+  '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
+)
+// { success: true, type: 'p2pkh', compatibleNetworks: ['bitcoin'] }
+```
+
+The function returns the selected chain validator's result. Failures specific to dispatch are:
+
+- `INVALID_CHAIN_ID`: `chainId` is not a string or does not match the accepted CAIP-2 shape: a 3–8 character lowercase namespace with an optional 1–32 character reference.
+- `UNSUPPORTED_CHAIN`: the namespace has no validator.
+- `NETWORK_MISMATCH`: a `bip122` or `spark` reference is missing, unknown, or incompatible with the address.
+
+For `bip122` and `spark`, the reference selects the expected network. Other supported namespaces validate the address but do not enforce their reference value. This is structural validation; it does not confirm that an account exists, belongs to the intended recipient, or can receive a particular asset.
+
 #### `validateBase58(address)`
 
 Validate a Base58Check Bitcoin address and identify whether it matches a supported P2PKH or P2SH network version byte.
 
-The published `beta.2` type declaration currently includes an internal `{ decoded: Uint8Array }` branch in this return type. The shipped runtime returns validation results rather than exposing that intermediate decode object.
+The current beta.11 type declaration includes an internal `{ decoded: Uint8Array }` branch in this return type. The shipped runtime returns validation results rather than exposing that intermediate decode object.
 
 ```javascript title="Validate A Base58 Bitcoin Address"
 import { validateBase58 } from '@tetherto/wdk-utils'
@@ -43252,10 +43472,12 @@ import { validateBitcoinAddress } from '@tetherto/wdk-utils'
 const result = validateBitcoinAddress('tb1pu9yqnhc6wjj6s62s9x0shnl5l2r7gq5cudm94r7mvwv0uw4s7acqjg9r2f')
 ```
 
-`BtcAddressValidationResult` is one of these shapes:
+`BtcAddressValidationResult` is one of these shapes. Beta.11 replaces the earlier singular `network` field with `compatibleNetworks` and names mainnet `bitcoin`:
 
-- `{ success: true, type: 'p2pkh' | 'p2sh' | 'bech32' | 'bech32m', network: 'mainnet' | 'testnet' | 'regtest' }`
+- `{ success: true, type: 'p2pkh' | 'p2sh' | 'bech32' | 'bech32m', compatibleNetworks: Array<'bitcoin' | 'testnet' | 'regtest'> }`
 - `{ success: false, reason: string }`
+
+Legacy Base58 testnet formats are also valid on regtest, so those results contain both `testnet` and `regtest`.
 
 #### `validateEVMAddress(address)`
 
@@ -43452,8 +43674,10 @@ const l1Deposit = validateSparkAddress(
 
 `SparkAddressValidationResult` is one of these shapes:
 
-- `{ success: true, type: 'spark' | 'btc' }`
+- `{ success: true, type: 'spark' | 'btc', compatibleNetworks: Array<'mainnet' | 'testnet' | 'regtest' | 'signet' | 'local'> }`
 - `{ success: false, reason: string }`
+
+Bitcoin L1 deposit-address formats can be shared by Spark testnet/signet or regtest/local, so the compatibility array can contain two networks.
 
 #### `validateTronAddress(address)`
 
@@ -43803,6 +44027,7 @@ You can import only the validators your flow needs from the package entrypoint:
 
 ```javascript title="Import Address Validators"
 import {
+  validateAddress,
   validateBitcoinAddress,
   validateEVMAddress,
   validateLightningInvoice,
@@ -43893,6 +44118,9 @@ import {
 
 - `@tetherto/wdk-utils` exports plain functions. There is no client object to initialize.
 - The package publishes a default module entrypoint through `index.js` and a bare runtime entrypoint through `bare.js`.
+- `validateAddress()` dispatches the CAIP-2 namespaces `bip122`, `eip155`, `solana`, `spark`, and `tron` to their chain validators. Unsupported namespaces return `UNSUPPORTED_CHAIN`, and malformed chain IDs return `INVALID_CHAIN_ID`.
+- For `bip122` and `spark`, the chain reference selects the expected network. A missing, unknown, or incompatible reference returns `NETWORK_MISMATCH`. Other supported namespaces validate the address format but do not enforce the reference value.
+- Successful Bitcoin and Spark validators return `compatibleNetworks`, because some address formats are valid on more than one network. WDK Utils validates structure and network compatibility, not account existence, ownership, or recipient intent.
 - `validateSolanaAddress()` accepts base58-encoded 32-byte public keys, including off-curve program-derived addresses. Solana has no address checksum, so the helper cannot detect every mistyped address.
 - `splitMnemonic()` accepts valid 12-, 15-, 18-, 21-, or 24-word English BIP-39 phrases. It returns hex-encoded Shamir shares and supports threshold schemes from 2-of-2 through 255-of-255.
 - `combineMnemonic()` verifies an embedded integrity checksum before returning the reconstructed phrase. The checksum detects corruption but does not authenticate shares.
@@ -43918,6 +44146,7 @@ You can validate common wallet inputs before handing them to a module:
 
 ```javascript title="Validate Common Inputs"
 import {
+  validateAddress,
   validateBitcoinAddress,
   validateLightningAddress,
   validateSolanaAddress,
@@ -43925,6 +44154,10 @@ import {
   validateUmaAddress
 } from '@tetherto/wdk-utils'
 
+const chainAware = validateAddress(
+  'bip122:000000000019d6689c085ae165831e93',
+  '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
+)
 const btc = validateBitcoinAddress('bc1qu9yqnhc6wjj6s62s9x0shnl5l2r7gq5cudm94r7mvwv0uw4s7acq0hn9g6')
 const lightning = validateLightningAddress('sprycomfort92@waletofsatoshi.com')
 const solana = validateSolanaAddress('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
@@ -44043,7 +44276,7 @@ Worklet Bundler packages selected WDK wallet, protocol, and optional generic mod
 - **Bare suspend and resume handling**: Generated HRPC entrypoints suspend and resume both the `bare-http1` and `bare-https` global agents when the Bare thread lifecycle changes.
 
 <Callout type="info">
-`v1.0.0-beta.6` includes the built CLI and API files for the JSON-RPC, generic-module, and addon-linking surface published in beta.5. It also defers missing optional peers during bundling by default and links `bare-posix` automatically for supported native platforms.
+`v1.0.0-beta.7` includes the built CLI and API files for the JSON-RPC, generic-module, and addon-linking surface, defers genuinely missing optional peers during bundling by default, and links `bare-posix` automatically for supported native platforms. It also detects optional peers installed anywhere in nested, scoped, or symlinked `node_modules` trees so present dependencies are not incorrectly deferred and omitted from the bundle.
 </Callout>
 
 ## Why this matters
@@ -44053,7 +44286,7 @@ Worklet Bundler packages selected WDK wallet, protocol, and optional generic mod
 - Transport-specific defaults produce a JavaScript HRPC bundle for React Native Core or native addon artifacts for JSON-RPC hosts.
 
 <Callout type="warn">
-Generic `modules` are generated only for HRPC in beta.6. A JSON-RPC config can currently accept a `modules` field but silently omits those modules from the generated entrypoint.
+Generic `modules` are generated only for HRPC through beta.7. A JSON-RPC config can currently accept a `modules` field but silently omits those modules from the generated entrypoint.
 </Callout>
 
 <Cards>
@@ -44120,10 +44353,10 @@ interface WdkBundleConfig {
 }
 ```
 
-`modules` is generated only for HRPC in beta.6. JSON-RPC entry generation ignores that map. JSON-RPC otherwise defaults addon linking and ESM-to-CJS conversion to `true`; HRPC defaults both to `false`.
+`modules` is generated only for HRPC through beta.7. JSON-RPC entry generation ignores that map. JSON-RPC otherwise defaults addon linking and ESM-to-CJS conversion to `true`; HRPC defaults both to `false`.
 
 <Callout type="warn">
-Beta.6 declares `output.types`, `options.minify`, and `options.sourceMaps`, but its bundle generator does not honor those fields. Declarations are always written to `./.wdk/index.d.ts`; `minify` and `sourceMaps` do not control `bare-pack` output. JSON-RPC ESM-to-CJS conversion minifies independently.
+Beta.7 declares `output.types`, `options.minify`, and `options.sourceMaps`, but its bundle generator does not honor those fields. Declarations are always written to `./.wdk/index.d.ts`; `minify` and `sourceMaps` do not control `bare-pack` output. JSON-RPC ESM-to-CJS conversion minifies independently.
 </Callout>
 
 #### `ResolvedConfig`
@@ -44246,7 +44479,7 @@ Use `generateBundle()` when you want the same bundle workflow that powers the CL
 - `silent`
 - `skipTypes`
 - `skipGeneration`
-- `deferOptionalPeers?` (`boolean`): When omitted or `true`, pass missing peers marked optional through `bare-pack --defer`. Set it to `false` to require those imports at build time.
+- `deferOptionalPeers?` (`boolean`): When omitted or `true`, pass missing peers marked optional through `bare-pack --defer`. Beta.7 checks root, nested, scoped, and symlinked package trees before treating an optional peer as missing. Set this option to `false` to require absent optional imports at build time.
 
 `deferOptionalPeers` is a per-run API option. It is not a `WdkBundleConfig` field and cannot be set in `wdk.config.js`.
 
@@ -44260,7 +44493,7 @@ Use `generateBundle()` when you want the same bundle workflow that powers the CL
 - `error?`
 - `missingModule?`
 
-In beta.6, `typesPath` can reflect a configured `output.types` path even though the declaration file is still written to `./.wdk/index.d.ts`.
+In beta.7, `typesPath` can reflect a configured `output.types` path even though the declaration file is still written to `./.wdk/index.d.ts`.
 
 ```typescript title="Generate A Bundle Programmatically"
 import { generateBundle, loadConfig } from '@tetherto/wdk-worklet-bundler'
@@ -44281,7 +44514,7 @@ In `beta.3`, the generated entrypoint suspends and resumes both the `bare-http1`
 
 #### `generateJsonRpcEntryPoint(config, outputDir)`
 
-Generate the framed JSON-RPC entrypoint used by native hosts. In beta.6 this path includes wallet and protocol managers but not generic `modules`.
+Generate the framed JSON-RPC entrypoint used by native hosts. Through beta.7 this path includes wallet and protocol managers but not generic `modules`.
 
 #### `linkAddons(config, options?)`
 
@@ -44312,7 +44545,7 @@ The published CLI exposes these commands through `wdk-worklet-bundler`:
 For the end-to-end config workflow and transport defaults, see the [Worklet Bundler configuration guide](/tools/worklet-bundler/configuration).
 
 <Callout type="warn">
-Beta.6 applies `--transport` after `loadConfig()` resolves output paths. The flag changes entrypoint generation but does not recompute the default bundle filename. Set `transport` in `wdk.config.js`, or configure `output.bundle` explicitly when using the flag.
+Beta.7 applies `--transport` after `loadConfig()` resolves output paths. The flag changes entrypoint generation but does not recompute the default bundle filename. Set `transport` in `wdk.config.js`, or configure `output.bundle` explicitly when using the flag.
 </Callout>
 
 ***
@@ -44335,10 +44568,10 @@ Install the bundler as a development dependency and Pear Worklet as a runtime de
 
 ```bash title="Install The Bundler And Runtime"
 npm install @tetherto/pear-wrk-wdk@1.0.0-beta.10
-npm install --save-dev @tetherto/wdk-worklet-bundler@1.0.0-beta.6
+npm install --save-dev @tetherto/wdk-worklet-bundler@1.0.0-beta.7
 ```
 
-Worklet Bundler beta.6 generates entrypoints that import Pear Worklet, but `generate --install` does not add that package. Pear Worklet beta.10 provides the JSON-RPC, HRPC generic-module, and Swidge protocol behavior documented here.
+Worklet Bundler beta.7 generates entrypoints that import Pear Worklet, but `generate --install` does not add that package. Pear Worklet beta.10 provides the JSON-RPC, HRPC generic-module, and Swidge protocol behavior documented here.
 
 ## Create `wdk.config.js`
 
@@ -44426,7 +44659,7 @@ Use `modules` for named generic packages that expose a module factory. Each entr
 The factory receives `{ seed, config, capabilities, emit }` and can return the module instance or a promise for it. A module that needs the seed must consume it synchronously rather than retain it. The build-time name, such as `preferences`, must match the key in the host's runtime module config.
 
 <Callout type="warn">
-Beta.6 generic modules are included only in generated HRPC entrypoints. Do not configure `modules` with `transport: 'jsonrpc'`; the current schema accepts the field, but JSON-RPC generation ignores it.
+Through beta.7, generic modules are included only in generated HRPC entrypoints. Do not configure `modules` with `transport: 'jsonrpc'`; the current schema accepts the field, but JSON-RPC generation ignores it.
 </Callout>
 
 ### `transport` (optional)
@@ -44442,7 +44675,7 @@ Use `preloadModules` for native addons or other modules that must be required be
 Supported output fields are:
 
 - `bundle`: Bundle path. Defaults to `./.wdk-bundle/wdk-worklet.bundle.js` for HRPC and `./.wdk-bundle/wdk-worklet.bundle` for JSON-RPC.
-- `types`: Declared in the beta.6 config type, but the generator does not honor a custom value and always writes declarations to `./.wdk/index.d.ts`.
+- `types`: Declared in the beta.7 config type, but the generator does not honor a custom value and always writes declarations to `./.wdk/index.d.ts`.
 - `addons.ios`, `addons.macos`, `addons.android`: Platform addon directories. Defaults are `./ios-addons`, `./mac-addons`, and `./android-addons`.
 - `addonsYml`: BareKit Swift dependency file. Defaults to `./ios-addons/addons.yml` and is generated when iOS addons are linked.
 
@@ -44450,8 +44683,8 @@ Supported output fields are:
 
 The published config type supports these build options:
 
-- `minify` (`boolean`): Declared in the beta.6 config type but not read by the bundle path. JSON-RPC ESM-to-CJS conversion minifies independently of this field.
-- `sourceMaps` (`boolean`): Declared in the beta.6 config type but not read by the bundle path, so it does not produce source maps.
+- `minify` (`boolean`): Declared in the beta.7 config type but not read by the bundle path. JSON-RPC ESM-to-CJS conversion minifies independently of this field.
+- `sourceMaps` (`boolean`): Declared in the beta.7 config type but not read by the bundle path, so it does not produce source maps.
 - `targets` (`string[]`): Override the default Bare build hosts. The shipped defaults cover iOS arm64 and simulator targets plus Android arm, arm64, ia32, and x64 hosts.
 - `linkAddons` (`boolean`): Link native addons with `bare-link`. Defaults to `true` for JSON-RPC and `false` for HRPC.
 - `platforms` (`('ios' | 'macos' | 'android')[]`): Addon platforms. Defaults to all three when addon linking is active.
@@ -44497,11 +44730,11 @@ npx wdk-worklet-bundler validate
 
 ## Handle peer dependencies
 
-Worklet Bundler beta.6 separates required peers from peers explicitly marked optional through `peerDependenciesMeta`:
+Worklet Bundler beta.7 separates required peers from peers explicitly marked optional through `peerDependenciesMeta`:
 
 - During bundle generation, missing required peers are offered for installation. In a non-interactive environment without `--install`, the CLI prints the exact manual install command and continues; `bare-pack` can still fail if the bundle needs that peer. The peer scan is skipped by `--source-only`.
 - Missing optional peers are not prompted for or installed. By default, the bundler passes each one to `bare-pack --defer`, so an unused optional feature does not block the build.
-- Installed optional peers are bundled normally. A peer that is required anywhere else in the scanned dependency tree is treated as required and is not deferred.
+- Installed optional peers are bundled normally. Beta.7 searches root, nested, scoped, and symlinked package trees before classifying a peer as missing; this prevents an installed nested dependency from being deferred and then failing with `MODULE_NOT_FOUND` at runtime. A peer that is required anywhere else in the scanned dependency tree is treated as required and is not deferred.
 
 Use `--no-defer-optional-peers` when the app uses an optional feature and you want a missing peer to fail during the build:
 
@@ -44523,9 +44756,9 @@ Use `generate` to build the worklet artifact:
 npx wdk-worklet-bundler generate --install
 ```
 
-`generate --install` can auto-install missing configured wallet, protocol, generic, and preload modules after the package manager is detected from the project root. In beta.6 it does not install the Pear Worklet runtime imported by generated entrypoints; install Pear explicitly as shown above. Use `--source-only` when you want the generated `.wdk/wdk-worklet.generated.js` entrypoint and related artifacts without running `bare-pack`.
+`generate --install` can auto-install missing configured wallet, protocol, generic, and preload modules after the package manager is detected from the project root. In beta.7 it does not install the Pear Worklet runtime imported by generated entrypoints; install Pear explicitly as shown above. Use `--source-only` when you want the generated `.wdk/wdk-worklet.generated.js` entrypoint and related artifacts without running `bare-pack`.
 
-The `generate` command also accepts `--transport hrpc|jsonrpc`, `--link-addons`, `--skip-link-addons`, `--platforms ios,macos,android`, `--no-esm-to-cjs`, and `--no-defer-optional-peers`. Set `transport` in `wdk.config.js` when you rely on its transport-specific default bundle path. In beta.6, `--transport` changes the generated transport after output paths have already been resolved, so it does not switch `.js` HRPC output to the extensionless JSON-RPC default, or vice versa. If you use the flag, set `output.bundle` explicitly to the intended path.
+The `generate` command also accepts `--transport hrpc|jsonrpc`, `--link-addons`, `--skip-link-addons`, `--platforms ios,macos,android`, `--no-esm-to-cjs`, and `--no-defer-optional-peers`. Set `transport` in `wdk.config.js` when you rely on its transport-specific default bundle path. In beta.7, `--transport` changes the generated transport after output paths have already been resolved, so it does not switch `.js` HRPC output to the extensionless JSON-RPC default, or vice versa. If you use the flag, set `output.bundle` explicitly to the intended path.
 
 ## Suspend and resume behavior
 

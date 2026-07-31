@@ -51,7 +51,7 @@ const wallet = new WalletManagerTon(seedPhrase, {
 
 ## Read Mainnet Fee Rates
 
-You can retrieve mainnet TON API fee rates from the wallet manager using [`wallet.getFeeRates()`](/sdk/wallet-modules/wallet-ton/api-reference#getfeerates). In `1.0.0-beta.10`, this method does not follow a configured testnet client and returns the same calculated value for `normal` and `fast`:
+You can retrieve mainnet TON API fee rates from the wallet manager using [`wallet.getFeeRates()`](/sdk/wallet-modules/wallet-ton/api-reference#getfeerates). Through `1.0.0-beta.12`, this method does not follow a configured testnet client and returns the same calculated value for `normal` and `fast`:
 
 ```javascript title="Get Fee Rates"
 const feeRates = await wallet.getFeeRates()

@@ -42,7 +42,11 @@ new WalletManagerEvmErc4337(seed, config)
   - `chainId` (number): The blockchain's ID (e.g., 1 for Ethereum mainnet)
   - `provider` (string | Eip1193Provider | Array\<string | Eip1193Provider\>): RPC endpoint URL, EIP-1193 provider instance, or ordered failover list
   - `bundlerUrl` (string): The URL of the bundler service
-  - `safeModulesVersion` (string): The Safe modules version (e.g., `'0.3.0'`)
+  - `safeModulesVersion` (string): Must be `'0.3.0'`, the only Safe modules version supported by beta.14
+
+**Optional common config fields:**
+  - `parallel` (boolean): Put each send, sign, or transfer in a fresh random 192-bit nonce-key lane
+  - `nonceKey` (number | bigint | string): Reuse a raw uint192 key or a deterministic named lane; takes precedence over `parallel`
 
 **Gas payment mode** (one of the following):
 
@@ -270,7 +274,7 @@ const account = new WalletAccountEvmErc4337(seedPhrase, "0'/0/0", {
 | `signTransaction(tx, config?)` | Builds and signs one UserOperation without submitting it | `Promise\<UserOperationV7\>` | If a non-sponsored fee exceeds max |
 | `sendTransaction(tx, config?)` | Builds and sends transactions, or submits a signed UserOperation | `Promise\<{hash: string, fee: bigint}\>` | If a newly built operation exceeds max |
 | `quoteSendTransaction(tx, config?)` | Estimates the fee for transactions or a signed UserOperation | `Promise\<{fee: bigint}\>` | - |
-| `transfer(options, config?, txOverrides?)` | Transfers ERC20 tokens via UserOperation | `Promise\<{hash: string, fee: bigint}\>` | If fee exceeds max |
+| `transfer(options, config?, txOverrides?)` | Transfers ERC20 tokens via UserOperation | `Promise\<{hash: string, fee: bigint}\>` | If fee meets or exceeds max |
 | `quoteTransfer(options, config?, txOverrides?)` | Estimates the fee for an ERC20 transfer | `Promise\<{fee: bigint}\>` | - |
 | `approve(options, txOverrides?)` | Approves a spender to spend ERC20 tokens | `Promise\<{hash: string, fee: bigint}\>` | - |
 | `getBalance()` | Returns the native token balance (in wei) | `Promise\<bigint\>` | - |
@@ -335,7 +339,7 @@ Builds and signs one ERC-4337 v0.7 UserOperation without submitting it to the bu
 
 **Returns:** `Promise\<UserOperationV7\>` - A signed UserOperation that can be quoted or submitted later
 
-**Throws:** Error if a non-sponsored operation exceeds `transactionMaxFee`
+**Throws:** Error if a non-sponsored operation exceeds `transactionMaxFee`, or a raw `nonceKey` is outside `0..2^192-1`
 
 ```javascript title="Sign a UserOperation"
 const signedUserOperation = await account.signTransaction({
@@ -345,7 +349,7 @@ const signedUserOperation = await account.signTransaction({
 ```
 
 <Callout type="warning">
-The returned operation contains the current nonce and the fee-mode configuration used while building it. Submit it promptly through the same account and do not mutate it.
+The returned operation contains the selected nonce lane and fee-mode configuration used while building it. Submit it promptly through the same account and do not mutate it.
 </Callout>
 
 ##### `sendTransaction(tx, config?)`
@@ -358,11 +362,11 @@ Sends a transaction via UserOperation through the bundler.
   - `data` (string, optional): Transaction data in hex format
   - `callGasLimit`, `verificationGasLimit`, `preVerificationGas` (number | bigint, optional): Per-call overrides for the UserOperation gas limits
   - `maxFeePerGas`, `maxPriorityFeePerGas` (number | bigint, optional): Per-call overrides for the EIP-1559 fee pair; set both together. In a batch, only the first transaction's gas overrides apply (see [EvmErc4337Transaction](#evmerc4337transaction))
-- `config` (optional): Per-call configuration override. Accepts a partial version of the gas payment mode fields (see [Config Override](#config-override)).
+- `config` (optional): Per-call configuration override. Beta.14 runtime also reads `parallel` and `nonceKey`, subject to the [published typing limitation](#config-override).
 
 **Returns:** `Promise\<{hash: string, fee: bigint}\>` - UserOperation hash and fee
 
-**Throws:** Error if a non-sponsored, newly built operation exceeds `transactionMaxFee`
+**Throws:** Error if a non-sponsored, newly built operation exceeds `transactionMaxFee`, or a raw `nonceKey` is outside `0..2^192-1`
 
 When `tx` is a signed `UserOperationV7`, WDK forwards that exact operation to the bundler. It does not rebuild or re-sign it, and it does not apply the current `transactionMaxFee` again. Only submit an operation produced by the same account with the intended fee-mode configuration, and submit it before its nonce becomes stale.
 
@@ -400,12 +404,14 @@ const fastResult = await account.sendTransaction({
 })
 ```
 
-The account reserves a local nonce for each pending `sendTransaction()` or `transfer()` from the same account instance. Pre-acceptance failures release the reserved nonce; ambiguous transport failures keep it reserved to avoid nonce reuse.
+Beta.14 does not reserve sequential nonces locally. With no lane option, sends use the default key-0 lane and must not overlap. `parallel: true` creates a new random lane; `nonceKey` selects a reusable named or raw lane and takes precedence. Operations sharing a lane remain sequential, so wait for inclusion before reusing it. Distinct lanes are unordered; batch dependent transactions into one UserOperation.
 
 ##### `quoteSendTransaction(tx, config?)`
 Estimates the fee for a UserOperation without sending it.
 
-UserOperations built while quoting transaction inputs are cached internally for up to 2 minutes. When a later `sendTransaction()` or `signTransaction()` matches the quoted transaction, the account performs a lightweight on-chain nonce check before reuse and re-quotes if the nonce has moved. A supplied signed UserOperation is evaluated directly rather than rebuilt.
+Default-lane, non-sponsored UserOperations built while quoting transaction inputs can be cached internally for up to 2 minutes. When a later default-lane `sendTransaction()` or `signTransaction()` matches, the account performs a lightweight on-chain nonce check before reuse and rebuilds if the nonce has moved. Sponsored quotes do not cache a built operation. A supplied signed UserOperation is evaluated directly rather than rebuilt.
+
+This quote method does not resolve or reserve a nonce lane. A later send or sign using `parallel` or `nonceKey` rebuilds in that lane instead of reusing the quote.
 
 <Callout type="warning">
 The cache key contains the transaction but not the per-call fee-mode configuration. Use the same fee-mode and paymaster settings for a quote and its matching send, sign, or transfer. Do not quote under one mode, token, paymaster, or sponsorship policy and execute the same transaction under another while the quote is cached.
@@ -442,8 +448,9 @@ Transfers ERC20 tokens via UserOperation.
 **Returns:** `Promise\<{hash: string, fee: bigint}\>` - UserOperation hash and fee
 
 **Throws:** 
-- Error if fee exceeds `transferMaxFee`
+- Error if fee meets or exceeds `transferMaxFee`
 - Error if insufficient token balance
+- Error if a raw `nonceKey` is outside `0..2^192-1`
 
 **Example:**
 ```javascript
@@ -457,12 +464,14 @@ const result = await account.transfer({
   maxFeePerGas: 30000000000n,
   maxPriorityFeePerGas: 2000000000n
 })
-console.log('Transfer hash:', result.hash)
+console.log('Transfer UserOperation hash:', result.hash)
 console.log('Transfer fee:', result.fee)
 ```
 
 ##### `quoteTransfer(options, config?, txOverrides?)`
 Estimates the fee for an ERC20 token transfer.
+
+This method does not resolve or reserve a nonce lane. A later transfer using `parallel` or `nonceKey` rebuilds in that lane.
 
 **Parameters:**
 - `options` (TransferOptions): Transfer options (same as transfer)
@@ -1038,7 +1047,9 @@ interface EvmErc4337WalletCommonConfig {
   chainId: number;                          // Blockchain ID
   provider: string | Eip1193Provider | Array<string | Eip1193Provider>; // RPC provider or failover list
   bundlerUrl: string;                       // Bundler service URL
-  safeModulesVersion: string;               // Safe modules version (e.g., '0.3.0')
+  safeModulesVersion: string;               // Must be '0.3.0' in beta.14
+  parallel?: boolean;                       // Fresh random nonce-key lane per operation
+  nonceKey?: number | bigint | string;      // Reusable raw or named uint192 lane key
 }
 
 // Mode 1: Paymaster Token
@@ -1077,7 +1088,7 @@ type EvmErc4337WalletConfig = EvmErc4337WalletCommonConfig &
 
 ### Config Override
 
-The `config` parameter on `sendTransaction`, `signTransaction`, `quoteSendTransaction`, `transfer`, and `quoteTransfer` allows per-call overrides of gas payment settings:
+The published beta.14 `config` parameter type on `sendTransaction`, `signTransaction`, `quoteSendTransaction`, `transfer`, and `quoteTransfer` allows per-call overrides of gas payment settings:
 
 ```typescript
 type ConfigOverride = Partial<
@@ -1099,7 +1110,9 @@ type ConfigOverride = Partial<
 
 Overrides are shallow-merged with the account configuration, then validated. When switching modes, explicitly clear an inherited opposing flag: sponsorship requires `isSponsored: true` and `useNativeCoins: false`; native-coin mode requires `isSponsored: false` and `useNativeCoins: true`; paymaster-token mode requires both flags to be `false`. The merged configuration must also contain the URL, address, token, or policy fields required by the selected mode.
 
-The quote cache does not include these override fields in its key. Pass the same fee-mode and paymaster settings to a quote and its matching send, sign, or transfer.
+At runtime, beta.14 additionally honors `parallel` and `nonceKey` per call for `signTransaction()`, `sendTransaction()`, and `transfer()`. Those two fields are missing from the published per-call declarations, so object literals containing them fail TypeScript excess-property checks even though JavaScript calls work. Construction-level `EvmErc4337WalletCommonConfig` includes both fields and is the typed path in this release. `quoteSendTransaction()` and `quoteTransfer()` do not select a lane.
+
+The quote cache does not include fee-mode override fields in its key. Pass the same fee-mode and paymaster settings to a quote and its matching send, sign, or transfer. Lane sends, signs, and transfers bypass cached UserOperations and rebuild in the selected lane.
 
 ### EvmErc4337Transaction
 

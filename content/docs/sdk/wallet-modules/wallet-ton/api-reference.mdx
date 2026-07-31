@@ -89,7 +89,7 @@ const account = await wallet.getAccountByPath("0'/0/1")
 ```
 
 ##### `getFeeRates()`
-Returns normal and fast fee rates from the mainnet TON API configuration. In `1.0.0-beta.10`, this method always requests `https://tonapi.io/v2`, does not follow the configured `tonClient` network, and returns the same calculated value for both fields.
+Returns normal and fast fee rates from the mainnet TON API configuration. Through `1.0.0-beta.12`, this method always requests `https://tonapi.io/v2`, does not follow the configured `tonClient` network, and returns the same calculated value for both fields.
 
 **Returns:** `Promise\<FeeRates\>` - Object containing normal and fast fee rates
 
@@ -351,7 +351,7 @@ console.log('Token balance:', tokenBalance, 'Jetton base units');
 ##### `getTransactionReceipt(hash)`
 Returns a transaction's receipt if it has been mined.
 
-In `1.0.0-beta.10`, the initial receipt lookup always queries mainnet TON Center v3. Do not rely on this method for testnet receipts; see [Network Selection](/sdk/wallet-modules/wallet-ton/configuration#network-selection).
+Through `1.0.0-beta.12`, the initial receipt lookup always queries mainnet TON Center v3. Do not rely on this method for testnet receipts; see [Network Selection](/sdk/wallet-modules/wallet-ton/configuration#network-selection).
 
 **Parameters:**
 - `hash` (string): The signed transfer body hash returned by `sendTransaction()` or `transfer()`
@@ -469,7 +469,7 @@ console.log('Signature valid:', isValid)
 ##### `getTransactionReceipt(hash)`
 Returns a transaction's receipt if it has been mined.
 
-In `1.0.0-beta.10`, the initial receipt lookup always queries mainnet TON Center v3. Do not rely on this method for testnet receipts; see [Network Selection](/sdk/wallet-modules/wallet-ton/configuration#network-selection).
+Through `1.0.0-beta.12`, the initial receipt lookup always queries mainnet TON Center v3. Do not rely on this method for testnet receipts; see [Network Selection](/sdk/wallet-modules/wallet-ton/configuration#network-selection).
 
 **Parameters:**
 - `hash` (string): The signed transfer body hash returned by `sendTransaction()` or `transfer()`
@@ -582,7 +582,7 @@ interface FeeRates {
   normal: bigint;
 
   /**
-   * Same mainnet-derived fee rate as `normal` in v1.0.0-beta.10
+   * Same mainnet-derived fee rate as `normal` through v1.0.0-beta.12
    * @example 100000000n // 0.1 TON
    */
   fast: bigint;

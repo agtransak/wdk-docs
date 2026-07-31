@@ -11,6 +11,7 @@ schemaType: APIReference
 
 | Function | Description | Returns |
 | --- | --- | --- |
+| `validateAddress(chainId, address)` | Dispatch address validation by CAIP-2 chain ID; Bitcoin and Spark references also enforce network compatibility. | Chain-specific result or a validation failure. |
 | `validateBase58(address)` | Validate a Base58Check Bitcoin address payload and version byte. | See details below. |
 | `validateBech32(address)` | Validate a SegWit v0 Bitcoin address. | `BtcAddressValidationResult` |
 | `validateBech32m(address)` | Validate a SegWit v1+ Bitcoin address. | `BtcAddressValidationResult` |
@@ -31,11 +32,33 @@ schemaType: APIReference
 | `validateUmaAddress(address)` | Validate a Universal Money Address. | `UmaAddressValidationResult` |
 | `resolveUmaUsername(uma)` | Split a valid UMA string into `localPart`, `domain`, and `lightningAddress`. | Parsed UMA details or `null`. |
 
+#### `validateAddress(chainId, address)`
+
+Validate an address with the chain-specific validator selected by a CAIP-2 chain ID. The supported namespaces are `bip122`, `eip155`, `solana`, `spark`, and `tron`.
+
+```javascript title="Validate An Address For A CAIP-2 Chain"
+import { validateAddress } from '@tetherto/wdk-utils'
+
+const result = validateAddress(
+  'bip122:000000000019d6689c085ae165831e93',
+  '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
+)
+// { success: true, type: 'p2pkh', compatibleNetworks: ['bitcoin'] }
+```
+
+The function returns the selected chain validator's result. Failures specific to dispatch are:
+
+- `INVALID_CHAIN_ID`: `chainId` is not a string or does not match the accepted CAIP-2 shape: a 3–8 character lowercase namespace with an optional 1–32 character reference.
+- `UNSUPPORTED_CHAIN`: the namespace has no validator.
+- `NETWORK_MISMATCH`: a `bip122` or `spark` reference is missing, unknown, or incompatible with the address.
+
+For `bip122` and `spark`, the reference selects the expected network. Other supported namespaces validate the address but do not enforce their reference value. This is structural validation; it does not confirm that an account exists, belongs to the intended recipient, or can receive a particular asset.
+
 #### `validateBase58(address)`
 
 Validate a Base58Check Bitcoin address and identify whether it matches a supported P2PKH or P2SH network version byte.
 
-The published `beta.2` type declaration currently includes an internal `{ decoded: Uint8Array }` branch in this return type. The shipped runtime returns validation results rather than exposing that intermediate decode object.
+The current beta.11 type declaration includes an internal `{ decoded: Uint8Array }` branch in this return type. The shipped runtime returns validation results rather than exposing that intermediate decode object.
 
 ```javascript title="Validate A Base58 Bitcoin Address"
 import { validateBase58 } from '@tetherto/wdk-utils'
@@ -73,10 +96,12 @@ import { validateBitcoinAddress } from '@tetherto/wdk-utils'
 const result = validateBitcoinAddress('tb1pu9yqnhc6wjj6s62s9x0shnl5l2r7gq5cudm94r7mvwv0uw4s7acqjg9r2f')
 ```
 
-`BtcAddressValidationResult` is one of these shapes:
+`BtcAddressValidationResult` is one of these shapes. Beta.11 replaces the earlier singular `network` field with `compatibleNetworks` and names mainnet `bitcoin`:
 
-- `{ success: true, type: 'p2pkh' | 'p2sh' | 'bech32' | 'bech32m', network: 'mainnet' | 'testnet' | 'regtest' }`
+- `{ success: true, type: 'p2pkh' | 'p2sh' | 'bech32' | 'bech32m', compatibleNetworks: Array<'bitcoin' | 'testnet' | 'regtest'> }`
 - `{ success: false, reason: string }`
+
+Legacy Base58 testnet formats are also valid on regtest, so those results contain both `testnet` and `regtest`.
 
 #### `validateEVMAddress(address)`
 
@@ -273,8 +298,10 @@ const l1Deposit = validateSparkAddress(
 
 `SparkAddressValidationResult` is one of these shapes:
 
-- `{ success: true, type: 'spark' | 'btc' }`
+- `{ success: true, type: 'spark' | 'btc', compatibleNetworks: Array<'mainnet' | 'testnet' | 'regtest' | 'signet' | 'local'> }`
 - `{ success: false, reason: string }`
+
+Bitcoin L1 deposit-address formats can be shared by Spark testnet/signet or regtest/local, so the compatibility array can contain two networks.
 
 #### `validateTronAddress(address)`
 

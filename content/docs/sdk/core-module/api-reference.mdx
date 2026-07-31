@@ -96,18 +96,20 @@ const wdk2 = new WDK(seedPhrase)
 ##### `registerProtocol(blockchain, label, protocol, config)`
 Registers a protocol globally for all accounts of a specific blockchain.
 
-For swidge integrations, pass a concrete provider class that extends `SwidgeProtocol` from `@tetherto/wdk-wallet/protocols`.
+For swidge or Smart Deposit Address (SDA) integrations, pass a concrete provider class that extends the corresponding base class from `@tetherto/wdk-wallet/protocols`.
 
 **Type Parameters:**
-- `P`: `typeof SwapProtocol | typeof BridgeProtocol | typeof LendingProtocol | typeof FiatProtocol | typeof SwidgeProtocol` - A class that extends one of the `@tetherto/wdk-wallet/protocols` classes
+- `P`: `typeof SwapProtocol | typeof BridgeProtocol | typeof LendingProtocol | typeof FiatProtocol | typeof SwidgeProtocol | typeof SdaProtocol` - A class that extends one of the `@tetherto/wdk-wallet/protocols` classes
 
 **Parameters:**
 - `blockchain` (string): The name of the blockchain
-- `label` (string): Unique label for the protocol (must be unique per blockchain and protocol type)
+- `label` (string): Registry label for the protocol. Registering the same blockchain, protocol type, and label again replaces the previous global registration.
 - `protocol` (P): The protocol class
 - `config` (`ConstructorParameters<P>[1]`): The protocol configuration
 
 **Returns:** `WDK` - The WDK instance (supports method chaining)
+
+Global registration stores the provider class and config without constructing or validating the provider. Provider-constructor errors therefore surface when an account retrieves the protocol. A global registration takes precedence over an account-scoped registration with the same type and label.
 
 **Example:**
 ```javascript title="Register Protocols"
@@ -124,6 +126,9 @@ wdk.registerProtocol('ethereum', 'usdt0', Usdt0ProtocolEvm)
 
 // Register a concrete swidge provider for Ethereum
 wdk.registerProtocol('ethereum', 'swidge', MySwidgeProtocol, swidgeProtocolConfig)
+
+// Register an illustrative SDA provider for Ethereum
+wdk.registerProtocol('ethereum', 'deposits', MySdaProtocol, sdaProtocolConfig)
 
 // Method chaining
 const wdk2 = new WDK(seedPhrase)
@@ -247,7 +252,7 @@ try {
 }
 ```
 
-Supported `PolicyOperation` values are `sendTransaction`, `signTransaction`, `transfer`, `approve`, `sign`, `signTypedData`, `signAuthorization`, `delegate`, `revokeDelegation`, `swap`, `bridge`, `supply`, `withdraw`, `borrow`, `repay`, `buy`, `sell`, `swidge`, and `*`.
+Supported `PolicyOperation` values are `sendTransaction`, `signTransaction`, `transfer`, `approve`, `sign`, `signTypedData`, `signAuthorization`, `delegate`, `revokeDelegation`, `swap`, `bridge`, `supply`, `withdraw`, `borrow`, `repay`, `buy`, `sell`, `swidge`, `createDepositAddress`, `renewDepositAddress`, `recoverDepositAddress`, `disableDepositAddress`, and `*`.
 
 Use `sign` for message-style signing in this release. `signMessage` and `signHash` are not valid policy operation names.
 
@@ -432,15 +437,16 @@ Protocol registration and access surface that WDK adds to a wallet account. The 
 | `getLendingProtocol(label)` | Returns the lending protocol with the given label | `ILendingProtocol` | If protocol not found |
 | `getFiatProtocol(label)` | Returns the fiat protocol with the given label | `IFiatProtocol` | If protocol not found |
 | `getSwidgeProtocol(label)` | Returns the swidge protocol with the given label | `ISwidgeProtocol` | If protocol not found |
+| `getSdaProtocol(label)` | Returns the SDA protocol with the given label | `ISdaProtocol` | If protocol not found |
 
 ##### `registerProtocol(label, protocol, config)`
 Registers a new protocol for this specific account.
 
 **Type Parameters:**
-- `P`: `typeof SwapProtocol | typeof BridgeProtocol | typeof LendingProtocol | typeof FiatProtocol | typeof SwidgeProtocol` - A class that extends one of the `@tetherto/wdk-wallet/protocols` classes
+- `P`: `typeof SwapProtocol | typeof BridgeProtocol | typeof LendingProtocol | typeof FiatProtocol | typeof SwidgeProtocol | typeof SdaProtocol` - A class that extends one of the `@tetherto/wdk-wallet/protocols` classes
 
 **Parameters:**
-- `label` (string): Unique label for the protocol (must be unique per account and protocol type)
+- `label` (string): Registry label for the protocol. Registering the same protocol type and label again replaces the account-scoped instance.
 - `protocol` (P): The protocol class
 - `config` (`ConstructorParameters<P>[1]`): The protocol configuration
 
@@ -457,8 +463,8 @@ account.registerProtocol('usdt0', Usdt0ProtocolEvm, {
   apiKey: 'YOUR_API_KEY'
 })
 
-// Method chaining
-const account2 = await wdk.getAccount('ethereum', 1)
+// Method chaining on the resolved account
+const account2 = (await wdk.getAccount('ethereum', 1))
   .registerProtocol('usdt0', Usdt0ProtocolEvm, usdt0ProtocolConfig)
 ```
 
@@ -615,6 +621,30 @@ const quote = await swidge.quoteSwidge({
 })
 ```
 
+##### `getSdaProtocol(label)`
+Returns the Smart Deposit Address protocol with the given label.
+
+The example uses `MySdaProtocol` as an illustrative provider class extending `SdaProtocol`; it does not imply that a provider package is available in the WDK documentation catalog.
+
+**Parameters:**
+- `label` (string): The protocol label
+
+**Returns:** `ISdaProtocol` - The SDA protocol instance
+
+**Throws:** `Error` with `No sda protocol registered for label: <label>.` if no SDA protocol has been registered under that label
+
+**Example:**
+```javascript title="Register And Retrieve An SDA Protocol"
+const account = await wdk.getAccount('ethereum', 0)
+
+account.registerProtocol('deposits', MySdaProtocol, sdaProtocolConfig)
+
+const deposits = account.getSdaProtocol('deposits')
+const routes = await deposits.getSupportedRoutes({ outputAsset: 'USDT' })
+```
+
+Global SDA registrations are constructed when retrieved. Account-scoped SDA registrations are constructed when registered. If both scopes use the same label, the global provider is returned.
+
 ## Complete Example
 
 ```javascript title="Complete WDK Flow"
@@ -725,6 +755,10 @@ type PolicyOperation =
   | 'buy'
   | 'sell'
   | 'swidge'
+  | 'createDepositAddress'
+  | 'renewDepositAddress'
+  | 'recoverDepositAddress'
+  | 'disableDepositAddress'
   | '*'
 
 type PolicyCondition = (context: PolicyContext) => boolean | Promise<boolean>
@@ -816,7 +850,24 @@ interface ISwidgeProtocol extends ISwapProtocol, IBridgeProtocol {
   getSupportedChains(): Promise<SwidgeSupportedChain[]>;
   getSupportedTokens(options?: SwidgeSupportedTokensOptions): Promise<SwidgeSupportedToken[]>;
 }
+
+// Smart Deposit Address Protocol
+interface ISdaProtocol {
+  getSupportedRoutes(options?: SdaRoutesOptions): Promise<SdaRoute[]>;
+  createDepositAddress(options: SdaCreateDepositAddressOptions): Promise<SdaDepositAddress[]>;
+  quoteDeposit(options: SdaDepositOptions): Promise<SdaDepositQuote>;
+  deriveDepositAddress(options: SdaCreateDepositAddressOptions): Promise<string>;
+  getDepositAddress(id: string): Promise<SdaDepositAddress>;
+  renewDepositAddress(id: string): Promise<SdaDepositAddress>;
+  getTransfers(address: string, options?: SdaTransfersOptions): Promise<SdaTransfer[]>;
+  getTransfersByRecipient(destinationChain: string | number, recipient: string, options?: SdaTransfersOptions): Promise<SdaTransfer[]>;
+  getTransfer(id: string): Promise<SdaTransfer>;
+  recoverDepositAddress(options: SdaRecoveryOptions): Promise<SdaRecoveryResult>;
+  disableDepositAddress(id: string): Promise<void>;
+}
 ```
+
+`SdaProtocol` requires provider subclasses to implement `getSupportedRoutes()` and `createDepositAddress()`. The remaining methods are optional in the base class and throw `UnsupportedOperationError` unless the provider implements them. Output assets are provider- and route-specific; USDT is a common example, not a base-interface guarantee.
 
 ### Swidge Protocol
 

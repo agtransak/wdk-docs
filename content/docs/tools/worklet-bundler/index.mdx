@@ -17,7 +17,7 @@ Worklet Bundler packages selected WDK wallet, protocol, and optional generic mod
 - **Bare suspend and resume handling**: Generated HRPC entrypoints suspend and resume both the `bare-http1` and `bare-https` global agents when the Bare thread lifecycle changes.
 
 <Callout type="info">
-`v1.0.0-beta.6` includes the built CLI and API files for the JSON-RPC, generic-module, and addon-linking surface published in beta.5. It also defers missing optional peers during bundling by default and links `bare-posix` automatically for supported native platforms.
+`v1.0.0-beta.7` includes the built CLI and API files for the JSON-RPC, generic-module, and addon-linking surface, defers genuinely missing optional peers during bundling by default, and links `bare-posix` automatically for supported native platforms. It also detects optional peers installed anywhere in nested, scoped, or symlinked `node_modules` trees so present dependencies are not incorrectly deferred and omitted from the bundle.
 </Callout>
 
 ## Why this matters
@@ -27,7 +27,7 @@ Worklet Bundler packages selected WDK wallet, protocol, and optional generic mod
 - Transport-specific defaults produce a JavaScript HRPC bundle for React Native Core or native addon artifacts for JSON-RPC hosts.
 
 <Callout type="warn">
-Generic `modules` are generated only for HRPC in beta.6. A JSON-RPC config can currently accept a `modules` field but silently omits those modules from the generated entrypoint.
+Generic `modules` are generated only for HRPC through beta.7. A JSON-RPC config can currently accept a `modules` field but silently omits those modules from the generated entrypoint.
 </Callout>
 
 <Cards>

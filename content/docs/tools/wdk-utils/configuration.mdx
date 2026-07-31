@@ -27,6 +27,7 @@ You can import only the validators your flow needs from the package entrypoint:
 
 ```javascript title="Import Address Validators"
 import {
+  validateAddress,
   validateBitcoinAddress,
   validateEVMAddress,
   validateLightningInvoice,
@@ -117,6 +118,9 @@ import {
 
 - `@tetherto/wdk-utils` exports plain functions. There is no client object to initialize.
 - The package publishes a default module entrypoint through `index.js` and a bare runtime entrypoint through `bare.js`.
+- `validateAddress()` dispatches the CAIP-2 namespaces `bip122`, `eip155`, `solana`, `spark`, and `tron` to their chain validators. Unsupported namespaces return `UNSUPPORTED_CHAIN`, and malformed chain IDs return `INVALID_CHAIN_ID`.
+- For `bip122` and `spark`, the chain reference selects the expected network. A missing, unknown, or incompatible reference returns `NETWORK_MISMATCH`. Other supported namespaces validate the address format but do not enforce the reference value.
+- Successful Bitcoin and Spark validators return `compatibleNetworks`, because some address formats are valid on more than one network. WDK Utils validates structure and network compatibility, not account existence, ownership, or recipient intent.
 - `validateSolanaAddress()` accepts base58-encoded 32-byte public keys, including off-curve program-derived addresses. Solana has no address checksum, so the helper cannot detect every mistyped address.
 - `splitMnemonic()` accepts valid 12-, 15-, 18-, 21-, or 24-word English BIP-39 phrases. It returns hex-encoded Shamir shares and supports threshold schemes from 2-of-2 through 255-of-255.
 - `combineMnemonic()` verifies an embedded integrity checksum before returning the reconstructed phrase. The checksum detects corruption but does not authenticate shares.
@@ -142,6 +146,7 @@ You can validate common wallet inputs before handing them to a module:
 
 ```javascript title="Validate Common Inputs"
 import {
+  validateAddress,
   validateBitcoinAddress,
   validateLightningAddress,
   validateSolanaAddress,
@@ -149,6 +154,10 @@ import {
   validateUmaAddress
 } from '@tetherto/wdk-utils'
 
+const chainAware = validateAddress(
+  'bip122:000000000019d6689c085ae165831e93',
+  '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
+)
 const btc = validateBitcoinAddress('bc1qu9yqnhc6wjj6s62s9x0shnl5l2r7gq5cudm94r7mvwv0uw4s7acq0hn9g6')
 const lightning = validateLightningAddress('sprycomfort92@waletofsatoshi.com')
 const solana = validateSolanaAddress('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')

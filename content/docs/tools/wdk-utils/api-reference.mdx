@@ -34,7 +34,7 @@ schemaType: APIReference
 
 #### `validateAddress(chainId, address)`
 
-Validate an address with the chain-specific validator selected by a CAIP-2 chain ID. The supported namespaces are `bip122`, `eip155`, `solana`, `spark`, and `tron`.
+Validate an address with the chain-specific validator selected by a CAIP-2 chain ID or a bare namespace accepted by WDK Utils. The supported namespaces are `bip122`, `eip155`, `solana`, `spark`, and `tron`.
 
 ```javascript title="Validate An Address For A CAIP-2 Chain"
 import { validateAddress } from '@tetherto/wdk-utils'
@@ -48,7 +48,7 @@ const result = validateAddress(
 
 The function returns the selected chain validator's result. Failures specific to dispatch are:
 
-- `INVALID_CHAIN_ID`: `chainId` is not a string or does not match the accepted CAIP-2 shape: a 3–8 character lowercase namespace with an optional 1–32 character reference.
+- `INVALID_CHAIN_ID`: `chainId` is not a string or does not match the accepted input shape: a 3–8 character lowercase namespace, optionally followed by a 1–32 character reference. A bare namespace is a WDK Utils extension; standard CAIP-2 identifiers require `<namespace>:<reference>`.
 - `UNSUPPORTED_CHAIN`: the namespace has no validator.
 - `NETWORK_MISMATCH`: a `bip122` or `spark` reference is missing, unknown, or incompatible with the address.
 

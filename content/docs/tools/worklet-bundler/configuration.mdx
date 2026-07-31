@@ -177,7 +177,7 @@ Worklet Bundler beta.7 separates required peers from peers explicitly marked opt
 
 - During bundle generation, missing required peers are offered for installation. In a non-interactive environment without `--install`, the CLI prints the exact manual install command and continues; `bare-pack` can still fail if the bundle needs that peer. The peer scan is skipped by `--source-only`.
 - Missing optional peers are not prompted for or installed. By default, the bundler passes each one to `bare-pack --defer`, so an unused optional feature does not block the build.
-- Installed optional peers are bundled normally. Beta.7 searches root, nested, scoped, and symlinked package trees before classifying a peer as missing; this prevents an installed nested dependency from being deferred and then failing with `MODULE_NOT_FOUND` at runtime. A peer that is required anywhere else in the scanned dependency tree is treated as required and is not deferred.
+- Optional peers detected anywhere in the scanned package tree are not deferred. Beta.7 matches package names across root, nested, scoped, and symlinked package trees; install a peer in an ancestor `node_modules` visible to the package that imports it, because the same package name elsewhere in the tree can suppress deferral without making that import resolvable. A peer that is required anywhere else in the scanned dependency tree is treated as required and is not deferred.
 
 Use `--no-defer-optional-peers` when the app uses an optional feature and you want a missing peer to fail during the build:
 

@@ -22,10 +22,10 @@ Every package-specific error extends `SymbiosisError`, so one `instanceof` check
 | `ValidationError` | A locally checked option is invalid, for example a missing or non-positive `fromTokenAmount`. | — |
 | `ExactOutNotSupportedError` | `toTokenAmount` requests exact output. | — |
 | `UnsupportedChainError`, `UnsupportedTokenError` | An identifier is not in provider discovery. | `identifier` |
-| `UnsupportedRouteError` | The provider returns a source transaction type the module cannot execute in this release (TON, Tron, and Solana sources). | `type` |
+| `UnsupportedRouteError` | The bound account lacks a capability the source route requires (TON, Tron, and Solana routes are probed at execution time), or a TON route needs more than one message. | `type` |
 | `FeeLimitExceededError` | A mapped fee total exceeds its configured cap, before any wallet write. | `feeType`, `bps`, `cap` |
 | `TransactionError` | Approval receipt polling detects a revert or times out. | `hash` |
-| `ApiError` | The REST API returns a non-2xx response, times out, or fails before a response. | `status`, `response`, `cause` |
+| `ApiError` | The REST API returns a non-2xx response, times out, or fails before a response. | `status`, `response`; `cause` for failures before a response |
 
 The full list, including `ConfigurationError` and `ReadOnlyAccountError`, is in the [API reference](/sdk/swidge-modules/swidge-symbiosis/api-reference#error-classes).
 
@@ -48,7 +48,7 @@ try {
     // No wallet write happened. Show the fresh fee level and let the user re-confirm.
     console.error(`Fee ${error.bps} bps exceeds cap ${error.cap} bps`)
   } else if (error instanceof UnsupportedRouteError) {
-    // Keep this route quote-only or execute from a supported source chain.
+    // Keep this route quote-only or bind a wallet account that supports it.
     console.error(`Source route type not executable: ${error.type}`)
   } else if (error instanceof ValidationError) {
     // Fix the request options; nothing was sent.

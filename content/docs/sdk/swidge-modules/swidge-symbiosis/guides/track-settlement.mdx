@@ -37,7 +37,7 @@ Poll [`getSwidgeStatus()`](/sdk/swidge-modules/swidge-symbiosis/api-reference#ge
 const deadline = Date.now() + 60 * 60 * 1000
 
 for (;;) {
-  const { status, transactions } = await symbiosis.getSwidgeStatus(result.id)
+  const { status, transactions } = await symbiosis.getSwidgeStatus(storedId)
 
   if (status !== 'pending') {
     console.log('Final status:', status)

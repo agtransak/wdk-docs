@@ -15,7 +15,7 @@ This guide covers [the typed error family](#the-typed-error-family), [branching 
 
 ## The typed error family
 
-Every package-specific error extends `SymbiosisError`, so one `instanceof` check separates provider errors from wallet errors. The classes most flows branch on:
+Every package-specific error extends `SymbiosisError`, so one `instanceof` check separates provider errors from wallet errors. The classes most flows branch on are:
 
 | Error | Thrown when | Useful fields |
 |---|---|---|
@@ -93,6 +93,6 @@ try {
 
 Dispose only when no further signing is needed from that instance; status polling needs no account and works after disposal.
 
-## Next Steps
+## Next steps
 
 Return to [Quote and Execute](/sdk/swidge-modules/swidge-symbiosis/guides/quote-and-execute), or review provider-behavior boundaries in [Configuration](/sdk/swidge-modules/swidge-symbiosis/configuration).

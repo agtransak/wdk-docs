@@ -142,6 +142,11 @@ Raw markdown is available by appending `.md` to any documentation page URL.
 - Symbiosis Swidge Overview: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-symbiosis
 - Symbiosis Swidge API Reference: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-symbiosis/api-reference
 - Symbiosis Swidge Configuration: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-symbiosis/configuration
+- Bridge from Bitcoin with Symbiosis: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-symbiosis/guides/bridge-from-bitcoin
+- Get Started with Symbiosis Swidge: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-symbiosis/guides/get-started
+- Handle Symbiosis Errors: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-symbiosis/guides/handle-errors
+- Quote and Execute Symbiosis Routes: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-symbiosis/guides/quote-and-execute
+- Track Symbiosis Settlement: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-symbiosis/guides/track-settlement
 - Symbiosis Swidge Usage: https://docs.wdk.tether.io/sdk/swidge-modules/swidge-symbiosis/usage
 - Wallet Modules Overview: https://docs.wdk.tether.io/sdk/wallet-modules
 - Wallet Aptos Overview: https://docs.wdk.tether.io/sdk/wallet-modules/wallet-aptos

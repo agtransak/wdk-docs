@@ -217,7 +217,7 @@ The provider does not map a quote expiry into `SwidgeQuote`.
 | `id` | `string` | `<sourceChainId>:<sourceTransactionHash>` |
 | `hash` | `string \| undefined` | Source transaction hash |
 | `fees` | `SwidgeFee[]` | Fees from the fresh execution response |
-| `transactions` | `SwidgeTransaction[] \| undefined` | Zero, one, or two EVM approval hashes followed by the source hash; a later status response returns its own source, destination, or refund transaction list |
+| `transactions` | `SwidgeTransaction[] \| undefined` | Zero, one, or two EVM or Tron approval hashes followed by the source hash; a later status response returns its own source, destination, or refund transaction list |
 | `fromTokenAmount` | `bigint` | Submitted exact input |
 | `toTokenAmount` | `bigint` | Fresh provider-estimated output |
 | `toTokenAmountMin` | `bigint \| undefined` | Fresh provider minimum output |
@@ -261,7 +261,7 @@ Every package-specific error extends `SymbiosisError`.
 | `ExactOutNotSupportedError` | `toTokenAmount` requests exact-output execution | — |
 | `UnsupportedChainError` | A chain ID or name is not in provider discovery | `identifier` |
 | `UnsupportedTokenError` | A token is not in the selected chain's token catalog | `identifier` |
-| `ReadOnlyAccountError` | Execution lacks a writable account, or an approval is required and the account does not support approvals | — |
+| `ReadOnlyAccountError` | Execution lacks a writable account, or an EVM approval is required and the account does not support approvals | — |
 | `UnsupportedRouteError` | The route's source transaction cannot be executed through the bound account: a missing wallet capability for `ton`, `tron`, or `solana`, or a multi-message `ton` route | `type` |
 | `FeeLimitExceededError` | A mapped `network` or `protocol` total exceeds its configured cap | `feeType`, `bps`, `cap` |
 | `TransactionError` | Approval receipt polling detects a revert (including a failed Tron approval receipt) or reaches its 180-second timeout | `hash` |

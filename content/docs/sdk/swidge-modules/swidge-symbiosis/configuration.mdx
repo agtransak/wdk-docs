@@ -47,7 +47,7 @@ const symbiosis = new SymbiosisProtocol(account, {
 | `defaultSlippage` | `number` | `0.02` | Decimal slippage tolerance used when `options.slippage` is absent. `0.02` means 2%. |
 | `partnerAddress` | `string` | None | Registered Symbiosis partner EVM address sent with quote and execution requests. |
 | `refundAddress` | `string` | None | Default refund address for deposit-address routes. `options.refundAddress` overrides it. |
-| `skipApproval` | `boolean` | `false` | Suppresses the module's automatic ERC-20 approval step. |
+| `skipApproval` | `boolean` | `false` | Suppresses the module's automatic ERC-20 or TRC-20 approval step. |
 | `maxNetworkFeeBps` | `number \| bigint` | None | Shared network-fee cap. This release maps no provider fee to `network`, so the cap does not constrain a separate network cost. |
 | `maxProtocolFeeBps` | `number \| bigint` | None | Rejects execution when fees mapped as `protocol` exceed this many basis points of the input amount. It does not constrain fees mapped as `affiliate`. |
 
@@ -139,7 +139,7 @@ The module forwards `recipient`, `partnerAddress`, and `refundAddress` without v
 
 ## Approval behavior
 
-For a non-native EVM input token, the module uses the spender returned by the fresh execution response.
+For a non-native EVM or Tron input token, the module uses the spender returned by the fresh execution response.
 
 By default it:
 
@@ -151,6 +151,8 @@ By default it:
 
 When allowance lookup succeeds and the account returns transaction hashes, both approval hashes are included in `result.transactions` when a reset is required. This supports tokens such as USDT on Ethereum that reject a direct non-zero-to-non-zero allowance change. If allowance lookup fails while such a token already has a non-zero allowance, the fallback direct approval can still fail.
 
+For Tron token routes, the module converts the provider's EVM-style token address to Tron hex form, requires the wallet's smart-contract-call and approval capabilities, and checks each returned approval receipt before broadcasting the route transaction. A Tron account without the required capability throws `UnsupportedRouteError`; a writable EVM account that cannot approve throws `ReadOnlyAccountError`.
+
 Disable the automatic step only when the host application manages allowance:
 
 ```javascript
@@ -160,7 +162,7 @@ const symbiosis = new SymbiosisProtocol(account, {
 })
 ```
 
-`skipApproval` does not verify allowance. Insufficient allowance can cause the subsequent transaction to fail.
+`skipApproval` does not verify ERC-20 or TRC-20 allowance. Insufficient allowance can cause the subsequent transaction to fail.
 
 ## Fee caps
 

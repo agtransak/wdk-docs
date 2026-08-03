@@ -173,6 +173,8 @@ const result = await symbiosis.swidge({
 
 `swidge()` requests a deposit address and sends the input amount to it without returning the deposit address for a separate confirmation. Confirm the refund address, recipient, amount, selected slippage, and indicative quote before calling the method.
 
+## Execute TON, Tron, and Solana source routes
+
 TON, Tron, and Solana source routes execute in `1.3.0` when the bound wallet account supports the transaction format the route requires: raw BoC message bodies for TON (single-message routes only), smart contract calls plus TRC-20 approvals for Tron, and base64-serialized transactions for Solana. The module probes the account at execution time and throws `UnsupportedRouteError` when the capability is missing, so older wallet versions keep the previous quote-only behavior. Tron approval receipts are checked for on-chain failure before the swap is sent.
 
 ## Track settlement

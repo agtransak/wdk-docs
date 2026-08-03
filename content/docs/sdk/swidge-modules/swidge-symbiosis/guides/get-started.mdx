@@ -17,8 +17,8 @@ This guide shows how to [install the package](#install-the-package), [create a s
 
 ### Prerequisites
 
-* **[Node.js](https://nodejs.org/)**: version 18 or higher for a global `fetch`. The package is ESM-only and also ships a `bare` entrypoint for the Bare runtime.
-* **[npm](https://www.npmjs.com/)**: usually bundled with Node.js.
+- **[Node.js](https://nodejs.org/)**: version 18 or higher for a global `fetch`. The package is ESM-only and also ships a `bare` entrypoint for the Bare runtime.
+- **[npm](https://www.npmjs.com/)**: usually bundled with Node.js.
 
 Install the released package together with the WDK wallet module for the source chain you execute from. The EVM example uses the wallet version installed by the release's tests:
 
@@ -33,16 +33,20 @@ You can construct a signing account using [`new WalletAccountEvm(seed, path, con
 ```javascript title="Create WalletAccountEvm"
 import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm'
 
-const seedPhrase = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
+const seedPhrase = process.env.WDK_SEED_PHRASE
+if (!seedPhrase) throw new Error('WDK_SEED_PHRASE is required')
 
 const account = new WalletAccountEvm(seedPhrase, "0'/0/0", {
-  provider: 'https://eth.drpc.org'
+  provider: 'https://eth.drpc.org',
+  transactionMaxFee: 100_000_000_000_000n
 })
 ```
 
 <Callout type="error">
-**Seed phrase:** Store the mnemonic securely. Anyone with the phrase controls the funds on derived accounts.
+**Seed phrase:** Load the mnemonic from secure storage; never hard-code or log it. Anyone with the phrase controls the funds on derived accounts.
 </Callout>
+
+`transactionMaxFee` caps the EVM wallet transaction fee in wei. Choose a limit appropriate for the source network and your application; Symbiosis provider fee caps do not constrain this chain fee.
 
 Dispose the account in a `finally` block when the flow ends so key material is cleared from memory.
 
@@ -99,6 +103,6 @@ const quote = await quoteOnly.quoteSwidge({
 
 Without an account, `recipient` supplies both the source sender and the destination recipient in the request. Bind an account when those addresses differ.
 
-## Next Steps
+## Next steps
 
 Quote and execute a route in [Quote and Execute](/sdk/swidge-modules/swidge-symbiosis/guides/quote-and-execute), or start from a Bitcoin source in [Bridge from Bitcoin](/sdk/swidge-modules/swidge-symbiosis/guides/bridge-from-bitcoin).

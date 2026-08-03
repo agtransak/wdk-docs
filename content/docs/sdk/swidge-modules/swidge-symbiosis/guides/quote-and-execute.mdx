@@ -59,7 +59,7 @@ Quoted fees are already reflected in `toTokenAmount`; do not subtract them again
 Show the user the source token and amount, the destination token and chain, the recipient, the expected and minimum output, the itemized fees, and the selected slippage.
 
 <Callout type="warn">
-`swidge()` does not consume the earlier quote. It requests a fresh execution response and proceeds internally to fee checks, approvals, and the source broadcast without exposing that response for a second confirmation. Configure fee caps to bound the difference.
+`swidge()` does not consume the earlier quote. It requests a fresh execution response and proceeds internally to fee checks, approvals, and the source broadcast without exposing that response for a second confirmation. Fee caps limit only the mapped provider fees in that fresh response; they do not bind its output amount, spender, payload, deposit address, or wallet chain fee.
 </Callout>
 
 ## Execute an EVM route
@@ -104,6 +104,6 @@ await symbiosis.swidge(options, { maxProtocolFeeBps: 75 })
 
 A fee whose description is exactly `Partner fee` maps to `affiliate` and is not constrained by either cap. No fee maps to `network` in this release, so `maxNetworkFeeBps` does not bound the wallet transaction's own chain fee. When the cap is exceeded, `swidge()` throws `FeeLimitExceededError` before touching the wallet.
 
-## Next Steps
+## Next steps
 
 Poll the operation in [Track Settlement](/sdk/swidge-modules/swidge-symbiosis/guides/track-settlement), or branch on the typed error family in [Handle Errors](/sdk/swidge-modules/swidge-symbiosis/guides/handle-errors).

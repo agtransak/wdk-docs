@@ -28,20 +28,26 @@ The package documents the swap endpoint as rate-limited to one request per secon
 Create a Bitcoin account with [`WalletManagerBtc`](/sdk/wallet-modules/wallet-btc/api-reference) from `@tetherto/wdk-wallet-btc` and an Electrum client:
 
 ```javascript title="Create a Bitcoin account"
-import WalletManagerBtc, { ElectrumTcp } from '@tetherto/wdk-wallet-btc'
+import WalletManagerBtc, { ElectrumTls } from '@tetherto/wdk-wallet-btc'
 
-const client = new ElectrumTcp({
+const seedPhrase = process.env.WDK_SEED_PHRASE
+if (!seedPhrase) throw new Error('WDK_SEED_PHRASE is required')
+
+const client = new ElectrumTls({
   host: 'electrum.blockstream.info',
-  port: 50001
+  port: 50002
 })
 
 const wallet = new WalletManagerBtc(seedPhrase, {
   client,
-  network: 'bitcoin'
+  network: 'bitcoin',
+  transactionMaxFee: 10_000n
 })
 
 const bitcoinAccount = await wallet.getAccount(0)
 ```
+
+The public TLS endpoint is suitable for development and testing. For production, use your own Fulcrum server as described in [Electrum server configuration](/sdk/wallet-modules/wallet-btc/configuration#electrum-server-configuration). Choose an application-specific `transactionMaxFee` in satoshis; Symbiosis provider fee caps do not constrain this Bitcoin network fee.
 
 ## Configure a refund address
 
@@ -73,22 +79,26 @@ const quote = await symbiosis.quoteSwidge({
 
 // Show the quote, recipient, and refund address to the user, then:
 
-const result = await symbiosis.swidge({
-  fromToken: 'BTC',
-  toToken: 'USDC',
-  toChain: 'Arbitrum One',
-  recipient: '0xRecipient...',
-  fromTokenAmount: 50_000n
-})
+try {
+  const result = await symbiosis.swidge({
+    fromToken: 'BTC',
+    toToken: 'USDC',
+    toChain: 'Arbitrum One',
+    recipient: '0xRecipient...',
+    fromTokenAmount: 50_000n
+  })
 
-console.log('Operation ID:', result.id)
-console.log('Deposit transfer hash:', result.hash)
+  console.log('Operation ID:', result.id)
+  console.log('Deposit transfer hash:', result.hash)
+} finally {
+  wallet.dispose()
+}
 ```
 
-`fromTokenAmount` is in satoshi: `50_000n` is 0.0005 BTC. The returned ID embeds the Bitcoin transaction hash and works with [`getSwidgeStatus()`](/sdk/swidge-modules/swidge-symbiosis/api-reference#getswidgestatusid-options) like any other route; a route the provider cannot complete resolves to `refunded` at the configured refund address.
+`fromTokenAmount` is in satoshis: `50_000n` is 0.0005 BTC. The returned ID embeds the Bitcoin transaction hash and works with [`getSwidgeStatus()`](/sdk/swidge-modules/swidge-symbiosis/api-reference#getswidgestatusid-options) like any other route; a route the provider cannot complete resolves to `refunded` at the configured refund address. `wallet.dispose()` clears derived keys and closes the Electrum connection after the source broadcast attempt.
 
 Bridging **to** Bitcoin needs no special handling: execute from the source chain's account as usual and pass a Bitcoin `recipient`.
 
-## Next Steps
+## Next steps
 
 Poll the operation in [Track Settlement](/sdk/swidge-modules/swidge-symbiosis/guides/track-settlement), or review refund-related failure modes in [Handle Errors](/sdk/swidge-modules/swidge-symbiosis/guides/handle-errors).

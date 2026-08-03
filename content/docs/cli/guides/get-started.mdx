@@ -15,19 +15,15 @@ npm install -g --allow-scripts=@tetherto/wdk-cli @tetherto/wdk-cli@1.0.0-beta.1
 The current release is `1.0.0-beta.1`. Beta releases can change before the stable release.
 
 <Callout type="warn">
-This guide uses Ethereum mainnet and can spend real funds. Create a dedicated wallet, fund it with only the amount you intend to use, and verify every address and amount before approving a purchase or transfer.
+This guide uses Ethereum mainnet and can spend real funds. Create a dedicated wallet, fund it with only enough ETH for this example and network fees, and verify the network, address, and amount before sending funds.
 </Callout>
 
 ## Prerequisites
 
 - Node.js `22.18.0` or later
 - npm
-- A MoonPay integration with production access and a `pk_live_...` publishable key
-- A deployed, reachable endpoint that follows the [MoonPay signing contract](/cli/configuration#sign-widget-urls)
-- A payment method supported by MoonPay
-- An Ethereum address you control to receive the example transfer
-
-Creating and deploying the signing service is outside this guide. Complete that prerequisite before step 1; the service must keep the MoonPay secret key on the server and return the signed URL expected by WDK CLI.
+- Enough ETH on Ethereum mainnet to fund the new wallet and pay the example transaction fee
+- A second Ethereum mainnet address you control to receive the example transfer
 
 Verify the installation:
 
@@ -56,21 +52,7 @@ Store the seed phrase and passphrase separately. Do not put either value in a te
 
 If this is your first wallet, it becomes the default automatically. You do not need to change an existing default wallet because the wallet-dependent commands below select `quickstart` explicitly.
 
-## 2. Configure The On-Ramp
-
-WDK CLI uses MoonPay to create a signed purchase URL for the wallet. Configure the production environment with your MoonPay publishable key and signing endpoint:
-
-```bash title="Terminal"
-wdk config set \
-  --key ramp.moonpay \
-  --value '{"apiKey":"pk_live_...","signUrl":"https://YOUR_SIGNING_SERVICE.example/moonpay/sign","environment":"production"}'
-```
-
-Because at least one wallet exists, the command asks for the current default wallet's passphrase before changing the configuration. Run `wdk wallet list` if you are unsure which wallet is the default. Enter the `quickstart` passphrase if it is the default; otherwise enter the existing default wallet's passphrase. This confirmation does not unlock either wallet.
-
-`apiKey` is the publishable key, not the MoonPay secret key. Keep the secret key in the signing service; WDK CLI does not store it. See [MoonPay configuration](/cli/configuration#moonpay) for the required signing request and response.
-
-## 3. Unlock The Wallet
+## 2. Unlock The Wallet
 
 Unlock the wallet for five minutes:
 
@@ -90,7 +72,7 @@ wdk wallet unlock --name quickstart --ttl 0
 
 An unlimited session remains unlocked until you explicitly lock it, the daemon stops, its process fails, or the machine restarts. Any process running as the same operating-system user that can connect to the daemon can use an unlocked wallet without entering the passphrase again. Prefer a finite TTL and use `--ttl 0` only in a controlled local environment.
 
-## 4. Get The Ethereum Address
+## 3. Get The Ethereum Address
 
 Derive the wallet's Ethereum mainnet address:
 
@@ -98,27 +80,25 @@ Derive the wallet's Ethereum mainnet address:
 wdk get address --network ethereum --wallet quickstart
 ```
 
-The on-ramp uses this address as the purchase recipient. Keep it available so you can verify the destination shown by MoonPay.
+Copy the returned address and verify every character before using it as the funding destination.
 
-## 5. Fund The Wallet
+## 4. Fund The Wallet
 
-Create a MoonPay URL to buy `50 USD` of ETH for the wallet:
+From another wallet or exchange you trust:
 
-```bash title="Terminal"
-wdk buy \
-  --network ethereum \
-  --token eth \
-  --fiat-amount 50 \
-  --wallet quickstart
-```
+1. Select Ethereum mainnet.
+2. Paste the address from step 3 as the destination.
+3. Send more than `0.0001 ETH` so the new wallet can send `0.0001 ETH` and pay the Ethereum gas fee in step 6.
+4. Account for any separate withdrawal or network fee charged by the sending wallet or exchange.
+5. Verify the network, destination, and amount, then submit the transfer.
 
-The CLI prints the selected address, quote details when available, and a signed MoonPay URL. Open that URL in a browser, verify that the recipient matches the address from step 4, and complete the payment and any verification requested by MoonPay. The purchase occurs through MoonPay, not inside WDK CLI.
+<Callout type="info">
+Receiving funds is an on-chain operation outside WDK CLI. The wallet does not need to remain unlocked while you wait for the transfer to confirm.
+</Callout>
 
-Availability, supported payment methods, limits, fees, and verification requirements depend on MoonPay and your location. If the command reports that the wallet is locked, unlock it again and repeat the command.
+Wait for the funding transaction to confirm before checking the balance. The five-minute session may expire while you wait.
 
-Wait for the purchase transaction to confirm before checking the balance.
-
-## 6. Check The Balance
+## 5. Check The Balance
 
 Read the wallet's native Ethereum balance:
 
@@ -128,7 +108,7 @@ wdk get balance --network ethereum --wallet quickstart
 
 If the command reports that the wallet is locked, unlock it again and repeat the balance check.
 
-## 7. Send ETH
+## 6. Send ETH
 
 Use an Ethereum address you control as the recipient.
 
@@ -159,7 +139,7 @@ wdk send \
   --dry-run
 ```
 
-## 8. Lock The Wallet
+## 7. Lock The Wallet
 
 End the wallet session when you finish:
 

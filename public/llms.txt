@@ -44,6 +44,21 @@ Raw markdown is available by appending `.md` to any documentation page URL.
 - Handle Errors: https://docs.wdk.tether.io/sdk/bridge-modules/bridge-usdt0-evm/guides/handle-errors
 - Bridge USD₮0 EVM Usage: https://docs.wdk.tether.io/sdk/bridge-modules/bridge-usdt0-evm/usage
 - Community Modules: https://docs.wdk.tether.io/sdk/community-modules
+- RGB Lightning wallet: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning
+- RGB Lightning wallet API reference: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/api-reference
+- RGB Lightning wallet configuration: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/configuration
+- Read RGB Lightning balances and history: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/guides/balances-history
+- Get started with RGB Lightning: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/guides/get-started
+- Handle errors and clean up the node: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/guides/handle-errors-cleanup
+- Create and send Lightning payments: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/guides/lightning-payments
+- Use an LSP, Lightning Address, and APay: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/guides/lsp-lightning-address-apay
+- Manage the RGB Lightning node account: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/guides/manage-node-account
+- Connect peers and manage channels: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/guides/peers-channels
+- Receive and send RGB assets: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/guides/rgb-assets
+- Send Bitcoin and manage UTXOs: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/guides/send-btc-utxos
+- Sign and verify Lightning messages: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/guides/sign-verify-messages
+- Back up and recover with VSS: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/guides/vss-backup-recovery
+- RGB Lightning wallet usage: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/usage
 - Cosmos wallet: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-cosmos
 - Cosmos wallet API reference: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-cosmos/api-reference
 - Configuration: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-cosmos/configuration

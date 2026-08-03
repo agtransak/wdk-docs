@@ -96,7 +96,7 @@ try {
 }
 ```
 
-`manager.dispose()` is terminal. It owns binding shutdown, VLS signer destruction, retained-seed cleanup, and account invalidation. `account.dispose()` is a no-op in this release.
+`manager.dispose()` is terminal for the RGB Lightning node session. It shuts down the binding, destroys the VLS signer, and wipes seed buffers retained by the RGB Lightning binding. Do not reuse the manager, account, read-only adapter, or LSP object after disposal. `account.dispose()` is a no-op in this release.
 
 ## Next steps
 

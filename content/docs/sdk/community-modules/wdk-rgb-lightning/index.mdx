@@ -49,7 +49,7 @@ Each native peer downloads a prebuilt artifact during installation. Validate art
 - `keyPair.privateKey` is always `null`; the account does not expose signer private bytes.
 - RLN persists public node identity plus LDK and RGB state under `dataDir`.
 - Optional VSS payloads are encrypted client-side and still require the original seed for recovery.
-- `manager.dispose()` owns node shutdown, signer destruction, and retained-seed cleanup.
+- `manager.dispose()` shuts down the binding, destroys the VLS signer, and wipes seed buffers retained by the RGB Lightning binding. Treat disposal as terminal for the node session, and do not reuse the manager, account, read-only adapter, or LSP object afterward.
 
 The account is single-node and single-account: index `0`, path `m`.
 

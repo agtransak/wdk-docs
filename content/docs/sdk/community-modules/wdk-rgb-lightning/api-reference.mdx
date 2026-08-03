@@ -37,7 +37,7 @@ Install the matching optional native peer. The manager, account, error, and LSP 
 | LNURL / address | `isUmaAddress`, `normalizeLightningAddress`, `parseLightningAddress`, `fetchDiscovery`, `resolveAddressToInvoice`, `LnurlPayError` |
 | Account-bound helpers | `payLightningAddress`, `requestLspRgbDeposit`, `payRgbViaLsp` |
 
-Low-level binding classes are advanced escape hatches. Prefer the manager because it owns external-signer attachment, fallback identity handling, shutdown, and secret cleanup.
+Low-level binding classes are advanced escape hatches. Prefer the manager because it owns external-signer attachment, fallback identity handling, shutdown, and cleanup of secrets retained by the RGB Lightning binding.
 
 ## `WalletManagerRgbLightning`
 
@@ -47,7 +47,7 @@ Low-level binding classes are advanced escape hatches. Prefer the manager becaus
 | `getAccount(index = 0)` | `Promise<WalletAccountRgbLightning>` | Returns the only account. Nonzero indexes and registered WDK signer names are rejected. |
 | `getAccountByPath(path)` | `Promise<WalletAccountRgbLightning>` | Accepts only `m`. |
 | `getFeeRates()` | `Promise<FeeRates>` | Fetches mempool.space recommendations without selecting the configured network. |
-| `dispose()` | `void` | Terminal manager-owned binding shutdown, signer destruction, seed cleanup, and account invalidation. |
+| `dispose()` | `void` | Terminal for the RGB Lightning node session: shuts down the binding, destroys the VLS signer, and wipes seed buffers retained by the RGB Lightning binding. Do not reuse manager-derived objects after disposal. |
 | `static Binding` | Binding constructor | Runtime-selected Node or Bare binding. |
 
 ## `WalletAccountReadOnlyRgbLightning`

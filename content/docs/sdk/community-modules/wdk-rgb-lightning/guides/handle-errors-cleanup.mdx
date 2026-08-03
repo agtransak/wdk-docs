@@ -109,9 +109,7 @@ try {
 }
 ```
 
-`account.shutdown()` is idempotent, but `manager.dispose()` is the terminal owner-level cleanup. It shuts down the binding, destroys the VLS signer, wipes retained seed buffers, and invalidates read-only adapters. `account.dispose()` is a no-op.
-
-Do not reuse a manager, account, read-only adapter, or LSP object after manager disposal.
+`account.shutdown()` is idempotent, but `manager.dispose()` is terminal for the RGB Lightning node session. It shuts down the binding, destroys the VLS signer, and wipes seed buffers retained by the RGB Lightning binding. Do not reuse the manager, account, read-only adapter, or LSP object after disposal. `account.dispose()` is a no-op.
 
 ## Investigate common failures
 

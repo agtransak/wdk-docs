@@ -12,6 +12,18 @@ Raw markdown is available by appending `.md` to any documentation page URL.
 - LangChain Integration: https://docs.wdk.tether.io/ai/mcp-toolkit/langchain
 - OpenClaw (Community Skill): https://docs.wdk.tether.io/ai/openclaw
 - x402: https://docs.wdk.tether.io/ai/x402
+- WDK CLI: https://docs.wdk.tether.io/cli
+- API Reference: https://docs.wdk.tether.io/cli/api-reference
+- Configuration: https://docs.wdk.tether.io/cli/configuration
+- Custom Networks: https://docs.wdk.tether.io/cli/guides/custom-networks
+- Get Started: https://docs.wdk.tether.io/cli/guides/get-started
+- Handle Errors: https://docs.wdk.tether.io/cli/guides/handle-errors
+- Manage Tokens: https://docs.wdk.tether.io/cli/guides/manage-tokens
+- Manage Wallets: https://docs.wdk.tether.io/cli/guides/manage-wallets
+- Use the MCP Server: https://docs.wdk.tether.io/cli/guides/use-mcp-server
+- Architecture: https://docs.wdk.tether.io/cli/reference/architecture
+- Security Model: https://docs.wdk.tether.io/cli/reference/security-model
+- Storage Format: https://docs.wdk.tether.io/cli/reference/storage-format
 - React Native Starter (Alpha): https://docs.wdk.tether.io/examples-and-starters/react-native-starter
 - About WDK: https://docs.wdk.tether.io/overview/about
 - Changelog: https://docs.wdk.tether.io/overview/changelog

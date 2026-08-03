@@ -48,6 +48,7 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 **What's New**
 - **wallet-solana-gasless** ([v1.0.0-beta.2](https://github.com/tetherto/wdk-wallet-solana-gasless/releases/tag/v1.0.0-beta.2)): Let owned accounts quote and submit the fully signed transaction returned by `signTransaction()`. Quoting decodes the embedded paymaster-token fee without broadcasting; sending applies `transactionMaxFee` and submits the exact base64 wire transaction through Solana RPC without contacting the paymaster again. The signed payload keeps its existing blockhash or durable-nonce lifetime and is not refreshed or re-signed.
+- **WDK CLI** ([v1.0.0-beta.1](https://github.com/tetherto/wdk-cli/releases/tag/v1.0.0-beta.1)): Introduce the public `@tetherto/wdk-cli` beta with the `wdk` command-line interface, a local wallet daemon, and a bundled MCP server. The release supports encrypted named wallets, multi-network reads and sends, custom networks and tokens, indexer history, MoonPay buy/sell links, and MCP setup for supported AI tools.
 
 ---
 

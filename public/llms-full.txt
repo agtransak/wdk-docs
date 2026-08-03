@@ -78,7 +78,7 @@ Description: Give any AI agent self-custodial wallet capabilities with WDK agent
 WDK provides agent skills: structured instruction sets that teach AI agents how to create wallets, send transactions, swap tokens, bridge assets, and interact with DeFi protocols across 20+ blockchains. All operations are self-custodial. Keys stay on your machine, with no third-party custody dependency.
 
 <Callout type="info">
-**Skill vs MCP Toolkit**: Use an **agent skill** when your agent platform works with file-based instructions (e.g., OpenClaw, Cursor). Use the [MCP Toolkit](/ai/mcp-toolkit/) when your agent supports the Model Context Protocol natively (e.g., Claude, Cursor). Use both for maximum coverage.
+**Skill vs MCP Toolkit vs WDK CLI**: Use an **agent skill** when your agent platform works with file-based instructions (e.g., OpenClaw, Cursor). Use the [MCP Toolkit](/ai/mcp-toolkit/) when you are building a custom MCP server in code. Use [WDK CLI](/cli/) when you want a ready-made local wallet CLI, daemon, and MCP server.
 </Callout>
 
 ## What Are Agent Skills?
@@ -135,7 +135,8 @@ WDK's agent skills use a self-custodial model where your agent controls its own 
 | **OpenClaw** | Install from [ClawHub](/ai/openclaw/) or clone to workspace. See [OpenClaw Integration](/ai/openclaw/) |
 | **Claude** | Upload `SKILL.md` as project knowledge, or paste into conversation |
 | **Cursor / Windsurf** | Clone to `.cursor/skills/wdk` or `.windsurf/skills/wdk` |
-| **Any MCP-compatible agent** | Use the [MCP Toolkit](/ai/mcp-toolkit/) for structured tool calling |
+| **Any MCP-compatible agent** | Use [WDK CLI](/cli/guides/use-mcp-server/) for a ready-made local daemon, or the [MCP Toolkit](/ai/mcp-toolkit/) for a custom MCP server |
+| **Any local CLI-capable agent** | Use [WDK CLI](/cli/) with `--json` output |
 | **Any other agent** | Copy `SKILL.md` into system prompt or conversation context |
 
 ## Community Projects
@@ -153,6 +154,7 @@ Community-built projects using WDK's agentic capabilities:
 - [WDK SKILL.md on GitHub](https://github.com/tetherto/wdk-docs/blob/main/skills/wdk/SKILL.md) - The full skill file agents consume
 - [WDK Skill on ClawHub](https://clawhub.ai/HumanRupert/tether-wallet-development-kit) - Install the skill
 - [AgentSkills Specification](https://agentskills.io/specification) - The skill format standard
+- [WDK CLI](/cli/) - Local CLI, daemon, and MCP server for AI agents
 - [WDK MCP Toolkit](https://github.com/tetherto/wdk-mcp-toolkit) - MCP server for structured tool calling
 - [WDK Core](https://github.com/tetherto/wdk-core) - The core SDK
 
@@ -221,6 +223,9 @@ All 35 built-in MCP tools and the WdkMcpServer class
 </Card>
 <Card title="LangChain Integration" href="/ai/mcp-toolkit/langchain">
 Use WDK tools in LangChain agents via the serve CLI
+</Card>
+<Card title="WDK CLI" href="/cli">
+Use a ready-made local wallet CLI, daemon, and MCP server when you do not need to build a custom MCP server
 </Card>
 </Cards>
 
@@ -2013,6 +2018,10 @@ Tether and the WDK Team do not endorse or assume responsibility for its code, se
 The WDK community skill follows the [AgentSkills specification](https://agentskills.io/specification), so it works with any compatible agent platform. This page covers the OpenClaw-specific setup.
 </Callout>
 
+<Callout type="info">
+If you want OpenClaw to call a ready-made local wallet daemon through MCP instead of loading a file-based skill, see [WDK CLI MCP setup](/cli/guides/use-mcp-server/).
+</Callout>
+
 ## Install the WDK Community Skill
 
 Install from [ClawHub](https://clawhub.ai/HumanRupert/tether-wallet-development-kit):
@@ -2108,6 +2117,7 @@ OpenClaw makes use of artificial intelligence and machine learning technologies.
 ## Next Steps
 
 - [Agent Skills](/ai/agent-skills/) - Full capabilities, how skills work, and a comparison with other agentic wallet solutions
+- [WDK CLI MCP](/cli/guides/use-mcp-server/) - Configure OpenClaw with the bundled WDK CLI MCP server
 - [MCP Toolkit](/ai/mcp-toolkit/) - Programmatic wallet access for MCP-compatible agents
 - [OpenClaw Skills Documentation](https://docs.openclaw.ai/tools/skills) - How OpenClaw discovers and loads skills
 
@@ -2692,6 +2702,2365 @@ app.use(
 
 ***
 
+## WDK CLI
+URL: https://docs.wdk.tether.io/cli
+Description: Install and use the local WDK wallet CLI, daemon, and MCP server
+
+WDK CLI provides a local command-line wallet built with WDK. Use it to manage named wallets, derive addresses, read balances and history, send registered assets, and connect an MCP-compatible AI client to the same local wallet daemon.
+
+<Callout type="warn">
+**Beta** - This documentation describes `@tetherto/wdk-cli@1.0.0-beta.1`. Test integrations with a dedicated wallet and limited funds before relying on them.
+</Callout>
+
+## Install
+
+WDK CLI requires Node.js 22.18.0 or later.
+
+```bash title="Terminal"
+npm install -g --allow-scripts=@tetherto/wdk-cli @tetherto/wdk-cli@1.0.0-beta.1
+```
+
+The allowlist permits the CLI package's postinstall script, which installs the version-pinned wallet modules in its bundled network configuration.
+
+Verify the installation:
+
+```bash title="Terminal"
+wdk --version
+```
+
+Install the scoped `@tetherto/wdk-cli` package. The unscoped `wdk-cli` package is not this CLI.
+
+## Installed Binaries
+
+| Binary | Purpose |
+| --- | --- |
+| `wdk` | Runs wallet, read, send, configuration, network, token, fiat-ramp, and MCP setup commands |
+| `wdk-daemon` | Holds unlocked wallet instances and serves local wallet requests; `wdk` starts it when needed |
+| `wdk-mcp` | Exposes WDK CLI wallet operations to MCP-compatible clients |
+
+Most users invoke `wdk`. The CLI and MCP integrations manage the other two binaries.
+
+## Command Map
+
+| Command | What it does |
+| --- | --- |
+| `wdk wallet` | Create, import, export, list, rename, delete, unlock, lock, and select wallets |
+| `wdk get` | Derive addresses and read balances or transfer history |
+| `wdk send` | Preview or broadcast native and registered-token transfers |
+| `wdk buy`, `wdk sell` | Create MoonPay on-ramp or off-ramp URLs |
+| `wdk config` | Read, update, reset, or locate local configuration |
+| `wdk network` | Inspect built-in networks and manage custom networks |
+| `wdk token` | Inspect built-in tokens and manage custom token entries |
+| `wdk mcp` | Configure the bundled MCP server for Claude Desktop, Claude Code, or OpenClaw |
+
+Run `wdk --help` for the command map or append `--help` to a command:
+
+```bash title="Terminal"
+wdk wallet create --help
+wdk get balance --help
+```
+
+## Choose an Interface
+
+| Interface | Use it when |
+| --- | --- |
+| WDK CLI | A person, shell script, or local agent can run `wdk` commands |
+| Bundled MCP server | An MCP-compatible client should call the CLI's structured wallet tools; automated setup supports Claude Desktop, Claude Code, and OpenClaw |
+| [MCP Toolkit](/ai/mcp-toolkit/) | You are building and customizing an MCP server in code |
+
+The CLI and bundled MCP server use the same local wallet store and daemon. Review the [security model](/cli/reference/security-model) before unlocking a funded wallet or giving another local process access to the MCP server.
+
+## Next Steps
+
+<Cards>
+<Card title="Get Started" href="/cli/guides/get-started">
+Create an Ethereum mainnet wallet, fund it, and send ETH
+</Card>
+<Card title="Configuration" href="/cli/configuration">
+Configure paths, defaults, indexer access, wallet modules, and MoonPay
+</Card>
+<Card title="API Reference" href="/cli/api-reference">
+Review all commands, required parameters, options, and defaults
+</Card>
+<Card title="Manage Wallets" href="/cli/guides/manage-wallets">
+Create, import, unlock, lock, rename, export, and delete wallets
+</Card>
+<Card title="Use the MCP Server" href="/cli/guides/use-mcp-server">
+Connect the bundled MCP server to an MCP-compatible client
+</Card>
+<Card title="Handle Errors" href="/cli/guides/handle-errors">
+Use exit statuses and understand the current `--json` contract
+</Card>
+</Cards>
+
+***
+
+## Need Help?
+
+<SupportCards />
+
+***
+
+## API Reference
+URL: https://docs.wdk.tether.io/cli/api-reference
+Description: Complete WDK CLI beta.1 command and option reference
+
+This page documents the 31 leaf commands in `@tetherto/wdk-cli@1.0.0-beta.1`. Run `wdk COMMAND --help` to inspect the installed command surface.
+
+## Root Options
+
+| Option | Behavior |
+| --- | --- |
+| `--json` | Requests machine-readable output from the selected command; see [JSON and exit behavior](#json-and-exit-behavior) for exceptions |
+| `--verbose` | Adds a stack trace to handled errors; it does not enable general debug logging |
+| `-V`, `--version` | Prints the CLI version followed by the installed WDK dependency versions |
+| `-h`, `--help` | Prints help for the selected command |
+
+The WDK-specific global flags are `--json` and `--verbose`; version and help are also root options. Options such as `--wallet` and `--index` belong to individual commands.
+
+## Shared Wallet Selection
+
+Wallet-dependent read, send, buy, and sell commands use:
+
+| Option | Behavior |
+| --- | --- |
+| `--wallet <name>` | Uses the named wallet; otherwise uses `defaultWallet` |
+| `--index <n>` | Uses a non-negative account index; otherwise uses `defaultIndex`, initially `0` |
+
+The selected wallet must be unlocked before daemon-backed operations. See [Manage Wallets](/cli/guides/manage-wallets).
+
+## Wallet Commands
+
+### `wdk wallet create`
+
+Creates a named wallet from a newly generated BIP-39 seed phrase.
+
+| Option | Required | Default | Description |
+| --- | --- | --- | --- |
+| `--name <name>` | Yes | — | Wallet name |
+| `--words <count>` | No | `12` | Seed length; accepts `12` or `24` |
+
+The first created wallet becomes the default. The command prompts for a passphrase and prints the seed phrase. With `--json`, the success object also contains `seedPhrase`.
+
+### `wdk wallet import`
+
+Imports an existing 12-word or 24-word BIP-39 seed phrase.
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--name <name>` | Yes | Wallet name |
+
+The command prompts for the seed phrase and a new storage passphrase. `WDK_PASSPHRASE` supplies only the passphrase; it does not supply the seed phrase.
+
+### `wdk wallet export`
+
+Decrypts and prints a wallet's seed phrase.
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--name <name>` | Yes | Wallet name |
+
+With `--json`, the success object contains `seedPhrase`.
+
+<Callout type="warn">
+The output from `wallet create` and `wallet export` is secret material in both text and JSON modes. Do not log it, paste it into an agent transcript, or store it in CI output.
+</Callout>
+
+### `wdk wallet list`
+
+Lists local wallets with their default, lock, and TTL state. This command has no command-specific options.
+
+### `wdk wallet delete`
+
+Deletes a named wallet after verifying its passphrase.
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--name <name>` | Yes | Wallet name |
+
+If the deleted wallet was the default, the CLI selects the first remaining wallet as the new default. See [Manage Wallets](/cli/guides/manage-wallets) for the deletion and backup implications.
+
+### `wdk wallet unlock`
+
+Unlocks a wallet and starts the daemon when needed.
+
+| Option | Required | Default | Description |
+| --- | --- | --- | --- |
+| `--name <name>` | Yes | — | Wallet name |
+| `--ttl <minutes>` | No | `5` | Non-negative session duration in minutes; `0` disables automatic expiry |
+
+Unlocking an already unlocked wallet resets that wallet's timer. The timer is absolute from unlock or reset; wallet activity does not extend it.
+
+### `wdk wallet lock`
+
+Locks one wallet or every wallet.
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--name <name>` | One selector required | Wallet to lock |
+| `--all` | One selector required | Lock every wallet |
+
+If both selectors are present, beta.1 applies `--all`.
+
+### `wdk wallet default`
+
+Sets the default wallet after passphrase confirmation.
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--name <name>` | Yes | Existing wallet name |
+
+### `wdk wallet rename`
+
+Renames a wallet after verifying its passphrase. An unlocked source wallet is locked first.
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--name <name>` | Yes | Current wallet name |
+| `--new-name <name>` | Yes | New wallet name |
+
+## Read Commands
+
+### `wdk get address`
+
+Derives an address for one network or for a network group.
+
+| Option | Required | Default | Description |
+| --- | --- | --- | --- |
+| `--network <network>` | One selector required | — | Derive one network address |
+| `--all` | One selector required | — | Derive addresses for all mainnets by default |
+| `--wallet <name>` | No | Default wallet | Wallet selection |
+| `--index <n>` | No | Configured index, initially `0` | Non-negative account index |
+| `--testnet` | No | Off | With `--all`, select testnets instead of mainnets |
+
+When both `--network` and `--all` are supplied, beta.1 runs the single-network path. In aggregate mode, networks that fail address derivation are omitted from the result.
+
+### `wdk get balance`
+
+Reads one registered asset balance or native balances across a network group.
+
+| Option | Required | Default | Description |
+| --- | --- | --- | --- |
+| `--network <network>` | One selector required | — | Query one network |
+| `--all` | One selector required | — | Query native balances on all mainnets by default |
+| `--token <token>` | No | Native asset | Registered ticker for a single-network query |
+| `--wallet <name>` | No | Default wallet | Wallet selection |
+| `--index <n>` | No | Configured index, initially `0` | Non-negative account index |
+| `--testnet` | No | Off | With `--all`, select testnets instead of mainnets |
+
+`--token` is ignored by the aggregate path, which queries native assets. Networks that fail in aggregate mode are omitted. A missing price produces a USD value of `0` rather than failing the balance lookup.
+
+### `wdk get history`
+
+Reads token-transfer history through the configured indexer.
+
+| Option | Required | Default | Description |
+| --- | --- | --- | --- |
+| `--network <network>` | Yes | — | Network to query |
+| `--token <token>` | No | All indexer-supported tokens | Exact `metadata.indexerSlug` code; the installed registry yields `btc`, `usdt`, and `xaut`, while custom entries can add other codes |
+| `--limit <n>` | No | `30` | Positive maximum number of transfers |
+| `--from-date <date>` | No | — | ISO 8601 start date |
+| `--to-date <date>` | No | — | ISO 8601 end date |
+| `--wallet <name>` | No | Default wallet | Wallet selection |
+| `--index <n>` | No | Configured index, initially `0` | Non-negative account index |
+
+When `--token` is omitted, beta.1 batches the network's supported token requests, ignores failed batch items, merges successful transfers by timestamp, and then applies `--limit`.
+
+## Send Command
+
+### `wdk send`
+
+Previews or broadcasts a native or registered-token transfer.
+
+| Option | Required | Default | Description |
+| --- | --- | --- | --- |
+| `--network <network>` | Yes | — | Network to send on |
+| `--to <address>` | Yes | — | Recipient address |
+| `--amount <value>` | Yes | — | Positive decimal amount, or an integer when `--base-units` is set |
+| `--token <token>` | No | Native asset | Registered token ticker |
+| `--wallet <name>` | No | Default wallet | Wallet selection |
+| `--index <n>` | No | Configured index, initially `0` | Non-negative account index |
+| `--base-units` | No | Off | Treat `--amount` as raw base units |
+| `--dry-run` | No | Off | Estimate fees and return a preview without broadcasting |
+
+Use `--dry-run` before broadcasting:
+
+```bash title="Terminal"
+wdk send \
+  --network ethereum \
+  --to 0x000000000000000000000000000000000000dEaD \
+  --amount 0.001 \
+  --dry-run
+```
+
+Without `--dry-run`, the command broadcasts immediately. There is no additional interactive confirmation.
+
+## Fiat Ramp Commands
+
+`wdk buy` and `wdk sell` derive the selected wallet address and print a signed provider URL to open in a browser. Both require an unlocked wallet and valid [MoonPay configuration](/cli/configuration#moonpay).
+
+### `wdk buy`
+
+| Option | Required | Default | Description |
+| --- | --- | --- | --- |
+| `--network <network>` | Yes | — | Network to receive the asset on |
+| `--token <token>` | Yes | — | Registered asset code |
+| `--fiat-amount <value>` | One amount required | — | Fiat amount to spend |
+| `--crypto-amount <value>` | One amount required | — | Crypto amount to buy |
+| `--fiat-currency <currency>` | No | `usd` | Fiat currency code |
+| `--module <module>` | No | `moonpay` | Fiat provider module |
+| `--wallet <name>` | No | Default wallet | Wallet selection |
+| `--index <n>` | No | Configured index, initially `0` | Non-negative account index |
+
+### `wdk sell`
+
+| Option | Required | Default | Description |
+| --- | --- | --- | --- |
+| `--network <network>` | Yes | — | Network holding the asset |
+| `--token <token>` | Yes | — | Registered asset code |
+| `--fiat-amount <value>` | One amount required | — | Target fiat amount |
+| `--crypto-amount <value>` | One amount required | — | Crypto amount to sell |
+| `--fiat-currency <currency>` | No | `usd` | Fiat currency code |
+| `--module <module>` | No | `moonpay` | Fiat provider module |
+| `--wallet <name>` | No | Default wallet | Wallet selection |
+| `--index <n>` | No | Configured index, initially `0` | Non-negative account index |
+
+For each command, provide exactly one of `--fiat-amount` and `--crypto-amount`. Beta.1 supports only the `moonpay` module.
+
+## Configuration Commands
+
+See [Configuration](/cli/configuration) for keys, types, precedence, and storage considerations.
+
+### `wdk config get`
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--key <key>` | One selector required | Read one dot-separated key |
+| `--network <network>` | One selector required | Read a network object, or scope `--key` to a network |
+| `--all` | One selector required | Read the configuration view |
+
+`--all` cannot be combined with `--key` or `--network`. `--network` and `--key` can be combined.
+
+### `wdk config set`
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--value <value>` | Yes | JSON value when parseable; otherwise a string |
+| `--key <key>` | Without `--network` | Dot-separated key |
+| `--network <network>` | No | Scope `--key`, or replace the network's entire configuration object |
+
+### `wdk config reset`
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--key <key>` | One selector required | Reset or remove one key |
+| `--network <network>` | No | Scope `--key` to a network |
+| `--all` | One selector required | Reset configuration while preserving the default wallet and custom network/token records |
+
+`--key` and `--all` are mutually exclusive. `--network` can be combined only with `--key`.
+
+### `wdk config path`
+
+Prints the resolved `config.json` path. This command has no command-specific options.
+
+## Network Commands
+
+### `wdk network list`
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `--testnet` | Off | Show only testnets |
+| `--mainnet` | Off | Show only mainnets |
+
+With neither option, the command shows every registered network. If both are provided, beta.1 applies `--testnet`.
+
+### `wdk network create <data>`
+
+Creates a custom network from an inline JSON object or a JSON file path. The `<data>` positional argument is required.
+
+See [Custom Networks](/cli/guides/custom-networks) for the network schema and validation rules.
+
+### `wdk network delete`
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--name <name>` | Yes | Custom network to delete |
+
+Built-in networks cannot be deleted. Deleting a custom network also removes its network configuration and custom token entries.
+
+### `wdk network info`
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--network <network>` | Yes | Registered network to inspect |
+
+## Token Commands
+
+### `wdk token list`
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `--network <network>` | All networks | Filter to one registered network |
+
+### `wdk token info`
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--network <network>` | Yes | Registered network |
+| `--token <token>` | Yes | Registered token ticker |
+
+### `wdk token add <data>`
+
+Adds or overrides a token from an inline JSON object or a JSON file path. The `<data>` positional argument is required.
+
+See [Manage Tokens](/cli/guides/manage-tokens) for the token schema and built-in override behavior.
+
+### `wdk token delete`
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `--network <network>` | Yes | Registered network |
+| `--token <token>` | Yes | Custom token ticker to delete |
+
+The command removes only a custom entry. If that entry overrides a built-in token, the built-in entry becomes effective again.
+
+## MCP Setup Commands
+
+The accepted `--ai-tool` values are `claude-desktop`, `claude-code`, and `openclaw`.
+
+### `wdk mcp setup`
+
+Adds the bundled MCP server to the selected client. `--ai-tool <name>` is required.
+
+### `wdk mcp remove`
+
+Removes the bundled MCP server from the selected client. `--ai-tool <name>` is required.
+
+### `wdk mcp verify-setup`
+
+Checks the selected client's configuration and tests the MCP server. `--ai-tool <name>` is required.
+
+### `wdk mcp list`
+
+Shows setup status for all supported clients. This command has no command-specific options.
+
+See [Use the MCP Server](/cli/guides/use-mcp-server) for client-specific setup and the exposed tool surface.
+
+## JSON and Exit Behavior
+
+Most command handlers print one JSON value to stdout when `--json` is set. The current contract has exceptions:
+
+- `wdk mcp setup`, `remove`, `verify-setup`, and `list` print human-readable success output even with `--json`.
+- Help, version, unknown-command, unknown-option, and missing-required-option output remains text.
+- Interactive wallet prompts render on stdout. If a wallet command opens a prompt, prompt text and terminal-control bytes can precede any JSON result; `wallet import` always prompts for the seed phrase.
+- `wdk send` can write spinner or completion text to stderr while emitting JSON on stdout.
+- A non-empty `WDK_PASSPHRASE` produces a notice on stderr.
+
+Parse stdout separately from stderr and always check the exit status. See [Handle Errors](/cli/guides/handle-errors) for the error envelope and exit-status contract.
+
+***
+
+## Need Help?
+
+<SupportCards />
+
+***
+
+## Configuration
+URL: https://docs.wdk.tether.io/cli/configuration
+Description: Configure WDK CLI paths, defaults, indexer access, wallet modules, and fiat ramps
+
+WDK CLI stores its configuration and wallet data under one local configuration directory. Use `wdk config` for supported changes instead of editing `config.json` directly.
+
+## Local Paths
+
+The default configuration directory is `~/.config/wdk-cli`. If `XDG_CONFIG_HOME` is a non-empty environment variable, WDK CLI uses `$XDG_CONFIG_HOME/wdk-cli` instead.
+
+| Data | Path |
+| --- | --- |
+| User configuration | `CONFIG_DIR/config.json` |
+| Wallet seed | `CONFIG_DIR/wallets/NAME/seed.enc` |
+| Daemon PID | `CONFIG_DIR/daemon.pid` |
+| Daemon socket on Unix-like systems | `CONFIG_DIR/daemon.sock` |
+| Daemon endpoint on Windows | `\\.\pipe\wdk-cli-daemon` |
+
+Print the resolved `config.json` path:
+
+```bash title="Terminal"
+wdk config path
+```
+
+With JSON output:
+
+```bash title="Terminal"
+wdk config path --json
+```
+
+```json
+{"path":"/home/user/.config/wdk-cli/config.json"}
+```
+
+See [Storage Format](/cli/reference/storage-format) for seed-file and daemon-file permissions.
+
+## Configuration Precedence
+
+WDK CLI resolves runtime values in this order:
+
+| Value | Highest to lowest precedence |
+| --- | --- |
+| Configuration directory | Non-empty `XDG_CONFIG_HOME`, then `~/.config` |
+| Wallet | Command `--wallet`, then `defaultWallet` |
+| Account index | Command `--index`, then `defaultIndex`, then `0` |
+| Indexer API key | Non-empty `WDK_INDEXER_API_KEY`, then stored `indexer.apiKey`, then an empty value |
+| Wallet passphrase | Non-empty `WDK_PASSPHRASE`, then a hidden interactive prompt |
+
+`--wallet` and `--index` are options on wallet-dependent commands; they are not root flags.
+
+An empty `WDK_PASSPHRASE` value does not override the prompt. To use an empty passphrase, enter it interactively. See [Manage Wallets](/cli/guides/manage-wallets) before choosing an empty passphrase.
+
+## Environment Variables
+
+| Variable | Effect |
+| --- | --- |
+| `XDG_CONFIG_HOME` | Changes the parent directory used for WDK CLI data |
+| `WDK_INDEXER_API_KEY` | Overrides `indexer.apiKey` for the current process |
+| `WDK_PASSPHRASE` | Supplies a non-empty passphrase instead of opening a prompt |
+
+There are no beta.1 environment-variable mappings for `indexer.baseUrl`, wallet defaults, account defaults, network configuration, or MoonPay configuration.
+
+<Callout type="warn">
+Environment variables can be inherited by child processes and may be visible to other processes running as the same OS user. Limit their lifetime and do not print them in shell history, CI logs, or agent transcripts.
+</Callout>
+
+## Supported Keys
+
+| Key | Expected value | Default or behavior |
+| --- | --- | --- |
+| `defaultWallet` | Wallet name | The first created or imported wallet becomes the default; use `wdk wallet default` to change it |
+| `defaultIndex` | Non-negative integer | `0` |
+| `indexer.baseUrl` | Indexer base URL | `https://wdk-api.tether.io` |
+| `indexer.apiKey` | Indexer API key | Empty; `WDK_INDEXER_API_KEY` overrides it |
+| `ramp.moonpay.apiKey` | MoonPay publishable key (`pk_test_...` or `pk_live_...`) | Empty; do not use a MoonPay secret key |
+| `ramp.moonpay.signUrl` | URL of an HTTP service that signs MoonPay widget URLs | Empty; the service must return a `signedUrl` |
+| `ramp.moonpay.environment` | `sandbox` or `production` | Empty; required by `wdk buy` and `wdk sell` |
+| `networks.NETWORK` | Wallet-module configuration object | Defaults come from the installed `wdk.config.json` |
+| `networks.NETWORK.KEY` | One wallet-module configuration value | Depends on the selected wallet module |
+
+Custom-network records and custom-token records also live in `config.json`. Manage them with `wdk network` and `wdk token` so the CLI can validate their shape and related state.
+
+## Read Configuration
+
+Read one global key:
+
+```bash title="Terminal"
+wdk config get --key defaultIndex
+```
+
+Read one network configuration:
+
+```bash title="Terminal"
+wdk config get --network ethereum
+```
+
+Read a key inside one network configuration:
+
+```bash title="Terminal"
+wdk config get --network ethereum --key provider
+```
+
+Read the full configuration view:
+
+```bash title="Terminal"
+wdk config get --all
+```
+
+`config get --all` excludes the custom-token registry. Use `wdk token list` to read tokens.
+
+<Callout type="warn">
+`config.json` is plaintext. The CLI does not request an owner-only mode for this file, so its effective permissions follow the operating system and runtime defaults and may be `0644`. `config get --all` can reveal stored API keys, signing URLs, and credentials embedded in provider URLs. Do not publish the file or command output.
+</Callout>
+
+Prefer `WDK_INDEXER_API_KEY` when you do not want to persist the indexer key. No environment override is available for MoonPay configuration in beta.1.
+
+## Set Configuration
+
+Set a string:
+
+```bash title="Terminal"
+wdk config set --key indexer.baseUrl --value https://indexer.example.com
+```
+
+Set a number:
+
+```bash title="Terminal"
+wdk config set --key defaultIndex --value 1
+```
+
+Set a JSON object:
+
+```bash title="Terminal"
+wdk config set \
+  --key ramp.moonpay \
+  --value '{"apiKey":"pk_test_...","signUrl":"https://example.com/sign","environment":"sandbox"}'
+```
+
+`config set` parses a valid JSON value into its JSON type. If parsing fails, it stores the value as a string. Quote objects and arrays so the shell passes them as one argument.
+
+Set a network-specific key:
+
+```bash title="Terminal"
+wdk config set \
+  --network ethereum \
+  --key provider \
+  --value https://ethereum-rpc.publicnode.com
+```
+
+Replace a network's complete wallet-module configuration:
+
+```bash title="Terminal"
+wdk config set \
+  --network ethereum \
+  --value '{"chainId":1,"provider":"https://ethereum-rpc.publicnode.com","transferMaxFee":5000000000000000}'
+```
+
+Network configuration is passed to the selected WDK wallet module. Use only keys supported by that module.
+
+## Reset Configuration
+
+Reset one global key:
+
+```bash title="Terminal"
+wdk config reset --key indexer.baseUrl
+```
+
+Reset one network key:
+
+```bash title="Terminal"
+wdk config reset --network ethereum --key provider
+```
+
+Reset configuration defaults:
+
+```bash title="Terminal"
+wdk config reset --all
+```
+
+`config reset --all` preserves the default-wallet selection, custom networks, and custom tokens. It resets the remaining values to their installed defaults.
+
+## Authorization and Wallet Locking
+
+When at least one wallet exists, these configuration mutations verify the current default wallet's passphrase:
+
+- `wdk config set`
+- `wdk config reset`
+- `wdk network create`
+- `wdk network delete`
+- `wdk token add`
+- `wdk token delete`
+
+Set `WDK_PASSPHRASE` for non-interactive local automation or enter the passphrase at the prompt.
+
+Changing or resetting a key under `networks` locks all wallets so the next unlock initializes WDK with the new wallet-module configuration. `config reset --all` also locks all wallets.
+
+## Indexer
+
+Within the CLI command set, only `wdk get history` uses the WDK Indexer API. The MCP `get_history` tool uses the same history path. [Request an Indexer API key](/tools/indexer-api/get-started) before connecting directly.
+
+### Connect Directly
+
+The default `indexer.baseUrl` is `https://wdk-api.tether.io`. Store your API key:
+
+```bash title="Terminal"
+wdk config set --key indexer.apiKey --value YOUR_INDEXER_API_KEY
+```
+
+Alternatively, supply it to the current process without writing it to `config.json`:
+
+```bash title="Terminal"
+WDK_INDEXER_API_KEY=YOUR_INDEXER_API_KEY \
+  wdk get history --network ethereum --wallet dev
+```
+
+### Use an Indexer Proxy
+
+Point the CLI at your own endpoint when you do not want Indexer API keys on developer machines:
+
+```bash title="Terminal"
+wdk config reset --key indexer.apiKey
+wdk config set --key indexer.baseUrl --value https://indexer-proxy.example.com
+```
+
+Also ensure `WDK_INDEXER_API_KEY` is not set in the CLI process. A non-empty environment value overrides the stored empty value and causes the CLI to send an `x-api-key` header.
+
+The proxy must accept both history request forms:
+
+| Request | Used when |
+| --- | --- |
+| `GET /api/v1/{blockchain}/{token}/{address}/token-transfers` with optional `limit`, `fromTs`, and `toTs` query parameters | `wdk get history` includes `--token` |
+| `POST /api/v1/batch/token-transfers` | The command queries all Indexer-supported tokens |
+
+Forward the query parameters or JSON request body and the Indexer response unchanged. Add the Indexer `x-api-key` header when forwarding the request upstream.
+
+`WDK_INDEXER_BASE_URL` is not read by beta.1.
+
+## MoonPay
+
+`wdk buy` and `wdk sell` derive the selected wallet address and build a signed MoonPay widget URL. The CLI prints the URL, or returns it in JSON output; it does not open the browser or execute the fiat transaction. Open the URL to continue on MoonPay, which processes the transaction through the integration associated with your MoonPay account.
+
+Get a publishable key from **Developers → API Keys** in the [MoonPay dashboard](https://dashboard.moonpay.com/). Use a `pk_test_...` or `pk_live_...` publishable key here, never the `sk_test_...` or `sk_live_...` secret key.
+
+The commands require all three MoonPay values:
+
+```bash title="Terminal"
+wdk config set --key ramp.moonpay.apiKey --value pk_test_...
+wdk config set --key ramp.moonpay.signUrl --value https://example.com/moonpay/sign
+wdk config set --key ramp.moonpay.environment --value sandbox
+```
+
+### Sign Widget URLs
+
+Because the CLI includes a wallet address in the MoonPay widget URL, it sends the unsigned URL to your signing service. That service signs the URL with your MoonPay secret key and returns the complete signed URL. See MoonPay's [on-ramp URL signing](https://dev.moonpay.com/widget/on-ramp/customization/url-signing) and [off-ramp URL signing](https://dev.moonpay.com/widget/off-ramp/customization/url-signing) guides.
+
+The CLI sends this request to `ramp.moonpay.signUrl`:
+
+```http
+POST /moonpay/sign HTTP/1.1
+Content-Type: application/json
+
+{"urlForSignature":"https://..."}
+```
+
+Return a successful JSON response with the complete signed URL:
+
+```json
+{"signedUrl":"https://...&signature=..."}
+```
+
+Returning only the signature is not supported.
+
+<Callout type="warn">
+Keep the MoonPay secret key in the signing service. Beta.1 does not send configurable authentication headers to `signUrl`, so bind the service locally, keep it on a private network, or restrict access with network-level controls. Do not expose an unauthenticated public signing endpoint.
+</Callout>
+
+### Select an Environment
+
+| Environment | Publishable key | Network |
+| --- | --- | --- |
+| `sandbox` | `pk_test_...` | Testnet |
+| `production` | `pk_live_...` | Mainnet |
+
+The CLI rejects a sandbox/mainnet or production/testnet mismatch. It does not validate the publishable-key prefix, so configure the matching key yourself.
+
+***
+
+## Need Help?
+
+<SupportCards />
+
+***
+
+## Custom Networks
+URL: https://docs.wdk.tether.io/cli/guides/custom-networks
+Description: Add and remove blockchain networks in WDK CLI
+
+Use a custom network when WDK CLI already supports the network's wallet-module type but does not include the specific chain in its built-in registry.
+
+`wdk network create` cannot introduce a new wallet-module implementation. Its `module` field must match a wallet-module type already used by a built-in network.
+
+## Inspect Available Networks
+
+List built-in and custom networks:
+
+```bash title="Terminal"
+wdk network list
+```
+
+Use JSON output to inspect both the versioned `module` and its unversioned `type`:
+
+```bash title="Terminal"
+wdk --json network list
+```
+
+Use a returned `type`, such as `@tetherto/wdk-wallet-evm`, as the `module` value in a custom network spec.
+
+Inspect the effective metadata and SDK configuration for one network:
+
+```bash title="Terminal"
+wdk network info --network ethereum
+```
+
+## Network Spec
+
+`wdk network create <data>` accepts either an inline JSON object or the path to a JSON file.
+
+| Field | Required | Rules and effect |
+| --- | --- | --- |
+| `network` | Yes | Unique identifier containing lowercase letters, numbers, and hyphens. The first character must be a letter or number. |
+| `module` | Yes | Unversioned wallet-module type already used by a built-in network. |
+| `displayName` | No | Non-empty display label. Defaults to the `network` value. |
+| `testnet` | No | Boolean. Defaults to `false`. |
+| `indexerSlug` | No | Non-empty WDK Indexer chain identifier. Without it, `get history` is unavailable for the custom network. |
+| `config` | No | Object passed to the selected wallet module, such as a provider URL and chain ID. The wallet module validates these values when used. |
+| `tokens` | No | Array of token specs to store with the network. Token keys must be unique, and at most one entry can be native. |
+
+Each item in `tokens` uses the fields documented in [Manage Tokens](/cli/guides/manage-tokens/#token-spec), with `network` omitted because the parent network supplies it.
+
+## Create A Custom Network
+
+Create `optimism.json`:
+
+```json title="optimism.json"
+{
+  "network": "optimism",
+  "module": "@tetherto/wdk-wallet-evm",
+  "displayName": "Optimism",
+  "testnet": false,
+  "config": {
+    "provider": "https://mainnet.optimism.io",
+    "chainId": 10
+  },
+  "tokens": [
+    {
+      "token": "eth",
+      "symbol": "ETH",
+      "decimals": 18,
+      "isNative": true
+    }
+  ]
+}
+```
+
+Create the network and its native-token entry:
+
+```bash title="Terminal"
+wdk network create ./optimism.json
+```
+
+Verify the result:
+
+```bash title="Terminal"
+wdk network info --network optimism
+wdk token list --network optimism
+```
+
+<Callout type="warn">
+The example uses a public mainnet RPC endpoint. Verify the chain ID, provider, token addresses, and provider-specific limits before using a custom network with funds. Omit `indexerSlug` unless you know the WDK Indexer identifier for that chain.
+</Callout>
+
+## Creation Side Effects
+
+The CLI validates the complete network and token spec before storing it. On success, it writes:
+
+- The custom network metadata
+- The network's SDK `config`
+- Every entry in `tokens`
+
+If storing a token fails, the command rolls back the custom network, its SDK config, and token entries already written by that command.
+
+If at least one wallet exists, `network create` prompts for the current default wallet's passphrase. It does not require the wallet to be unlocked. With no wallets, it does not prompt.
+
+`network create` and `network delete` do not unlock, extend, or lock an existing daemon wallet session. `wdk config reset --all` preserves custom network entries.
+
+## Update Network Configuration
+
+Use `config set` to replace the complete SDK config object:
+
+```bash title="Terminal"
+wdk config set \
+  --network optimism \
+  --value '{"provider":"https://mainnet.optimism.io","chainId":10}'
+```
+
+Or change one nested key:
+
+```bash title="Terminal"
+wdk config set \
+  --network optimism \
+  --key provider \
+  --value https://mainnet.optimism.io
+```
+
+<Callout type="info">
+Changing `networks.*` configuration locks every unlocked wallet so the daemon drops cached wallet managers. Unlock the wallet again before reading balances or sending.
+</Callout>
+
+## Delete A Custom Network
+
+<Callout type="warn">
+Deleting a custom network also deletes its SDK configuration and every custom token under that network. Export or record the spec first if you may need to recreate it.
+</Callout>
+
+Delete the network:
+
+```bash title="Terminal"
+wdk network delete --name optimism
+```
+
+Deletion prompts for the default wallet's passphrase when wallets exist. Built-in networks cannot be deleted.
+
+Deleting registry configuration does not move blockchain assets or delete a wallet seed, but the CLI can no longer access that network until you recreate the registry entry.
+
+## Next Steps
+
+- [Manage Tokens](/cli/guides/manage-tokens/) - Add token contracts and provider mappings
+- [Configuration](/cli/configuration/) - Review paths, environment variables, and precedence
+- [API Reference](/cli/api-reference/) - Review all network command flags
+
+***
+
+## Need Help?
+
+<SupportCards />
+
+***
+
+## Get Started
+URL: https://docs.wdk.tether.io/cli/guides/get-started
+Description: Install WDK CLI and complete an Ethereum mainnet wallet flow
+
+Install WDK CLI globally:
+
+```bash title="Terminal"
+npm install -g --allow-scripts=@tetherto/wdk-cli @tetherto/wdk-cli@1.0.0-beta.1
+```
+
+The current release is `1.0.0-beta.1`. Beta releases can change before the stable release.
+
+<Callout type="warn">
+This guide uses Ethereum mainnet and can spend real funds. Create a dedicated wallet, fund it with only enough ETH for this example and network fees, and verify the network, address, and amount before sending funds.
+</Callout>
+
+## Prerequisites
+
+- Node.js `22.18.0` or later
+- npm
+- Enough ETH on Ethereum mainnet to fund the new wallet and pay the example transaction fee
+- A second Ethereum mainnet address you control to receive the example transfer
+
+Verify the installation:
+
+```bash title="Terminal"
+wdk --version
+wdk --help
+```
+
+The package installs the `wdk`, `wdk-mcp`, and `wdk-daemon` binaries. Use `wdk` for the steps below.
+
+## 1. Create A Wallet
+
+Create a named 12-word wallet:
+
+```bash title="Terminal"
+wdk wallet create --name quickstart --words 12
+```
+
+The CLI then asks for the wallet-encryption passphrase:
+
+1. At `Passphrase (empty for none):`, enter a strong, unique passphrase. The input is hidden.
+2. At `Confirm passphrase:`, enter the same passphrase again.
+3. After the wallet is stored, the CLI displays the generated seed phrase once. Record it offline before continuing.
+
+Store the seed phrase and passphrase separately. Do not put either value in a terminal command, source file, screenshot, agent transcript, or online note. The current CLI permits an empty passphrase, but an empty value provides no meaningful protection for the encrypted seed file.
+
+If this is your first wallet, it becomes the default automatically. You do not need to change an existing default wallet because the wallet-dependent commands below select `quickstart` explicitly.
+
+## 2. Unlock The Wallet
+
+Unlock the wallet for five minutes:
+
+```bash title="Terminal"
+wdk wallet unlock --name quickstart --ttl 5
+```
+
+At `Enter passphrase of 'quickstart' wallet to unlock:`, enter the wallet passphrase. The input is hidden.
+
+The TTL starts at unlock and does not restart when you use the wallet. Unlock it again if the session expires while you complete this guide.
+
+Set `--ttl 0` to disable automatic expiry:
+
+```bash title="Terminal"
+wdk wallet unlock --name quickstart --ttl 0
+```
+
+An unlimited session remains unlocked until you explicitly lock it, the daemon stops, its process fails, or the machine restarts. Any process running as the same operating-system user that can connect to the daemon can use an unlocked wallet without entering the passphrase again. Prefer a finite TTL and use `--ttl 0` only in a controlled local environment.
+
+## 3. Get The Ethereum Address
+
+Derive the wallet's Ethereum mainnet address:
+
+```bash title="Terminal"
+wdk get address --network ethereum --wallet quickstart
+```
+
+Copy the returned address and verify every character before using it as the funding destination.
+
+## 4. Fund The Wallet
+
+From another wallet or exchange you trust:
+
+1. Select Ethereum mainnet.
+2. Paste the address from step 3 as the destination.
+3. Send more than `0.0001 ETH` so the new wallet can send `0.0001 ETH` and pay the Ethereum gas fee in step 6.
+4. Account for any separate withdrawal or network fee charged by the sending wallet or exchange.
+5. Verify the network, destination, and amount, then submit the transfer.
+
+<Callout type="info">
+Receiving funds is an on-chain operation outside WDK CLI. The wallet does not need to remain unlocked while you wait for the transfer to confirm.
+</Callout>
+
+Wait for the funding transaction to confirm before checking the balance. The five-minute session may expire while you wait.
+
+## 5. Check The Balance
+
+Read the wallet's native Ethereum balance:
+
+```bash title="Terminal"
+wdk get balance --network ethereum --wallet quickstart
+```
+
+If the command reports that the wallet is locked, unlock it again and repeat the balance check.
+
+## 6. Send ETH
+
+Use an Ethereum address you control as the recipient.
+
+<Callout type="warn">
+The next command broadcasts an irreversible Ethereum mainnet transaction and spends real ETH. WDK CLI does not ask for another confirmation after the wallet is unlocked. Replace the placeholder, then review the network, recipient, amount, and available balance before running it.
+</Callout>
+
+```bash title="Terminal"
+wdk send \
+  --network ethereum \
+  --to YOUR_ETHEREUM_ADDRESS \
+  --amount 0.0001 \
+  --wallet quickstart
+```
+
+The command broadcasts immediately and prints the resulting transaction identifier.
+
+### Optional: Estimate Without Broadcasting
+
+Add `--dry-run` to estimate the fee and return a transaction summary without broadcasting:
+
+```bash title="Terminal"
+wdk send \
+  --network ethereum \
+  --to YOUR_ETHEREUM_ADDRESS \
+  --amount 0.0001 \
+  --wallet quickstart \
+  --dry-run
+```
+
+## 7. Lock The Wallet
+
+End the wallet session when you finish:
+
+```bash title="Terminal"
+wdk wallet lock --name quickstart
+```
+
+Lock every unlocked wallet with:
+
+```bash title="Terminal"
+wdk wallet lock --all
+```
+
+## Next Steps
+
+- [Manage Wallets](/cli/guides/manage-wallets/) - Import, export, rename, unlock, and delete wallets
+- [Manage Tokens](/cli/guides/manage-tokens/) - Inspect and extend the token registry
+- [Use the MCP Server](/cli/guides/use-mcp-server/) - Connect an MCP-compatible AI client
+- [Security Model](/cli/reference/security-model/) - Understand the daemon trust boundary and session trade-offs
+
+***
+
+## Need Help?
+
+<SupportCards />
+
+***
+
+## Handle Errors
+URL: https://docs.wdk.tether.io/cli/guides/handle-errors
+Description: Handle WDK CLI exit statuses, JSON output, stderr, and error codes
+
+Use a command's exit status as the primary success signal. When you request `--json`, parse stdout separately from stderr and allow for commands that still produce text.
+
+This page describes `@tetherto/wdk-cli@1.0.0-beta.1`.
+
+## Handled Error Envelope
+
+Errors that reach the WDK CLI command handler use this JSON shape:
+
+```json
+{
+  "error": "Wallet 'dev' is not unlocked.",
+  "code": "WALLET_NOT_UNLOCKED",
+  "suggestion": "Run: wdk wallet unlock --name dev"
+}
+```
+
+| Field | Present | Description |
+| --- | --- | --- |
+| `error` | Always | Human-readable message |
+| `code` | Always | Machine-readable code |
+| `suggestion` | Sometimes | Recovery guidance |
+| `stack` | Only with `--verbose` when available | JavaScript stack trace |
+
+`--verbose` adds error stacks. It does not enable general debug logging.
+
+## Exit Statuses
+
+| Status | Meaning in beta.1 |
+| --- | --- |
+| `0` | Command, help, or version output completed |
+| `1` | A handled CLI/runtime error or a command-line parsing error occurred |
+| `2` | An unexpected non-`Error` value or an error outside the normal command handler reached the top level |
+
+Do not treat the presence of stdout as success. Some handled failures emit a JSON object to stdout and exit with status `1`.
+
+## JSON Output Contract
+
+For most successful commands, `--json` emits one JSON value followed by a newline on stdout. Handled WDK CLI errors also emit one JSON object on stdout.
+
+The current exceptions are:
+
+| Case | Stdout | Stderr | Status |
+| --- | --- | --- | --- |
+| Most successful commands with `--json` | JSON | Usually empty | `0` |
+| Handled command error with `--json` | JSON error envelope | Usually empty | `1`, or `2` for a non-`Error` value |
+| Unknown command, unknown option, or missing required option | Empty | Human-readable Commander error and help | `1` |
+| Help or version, even with `--json` | Human-readable text | Empty | `0` |
+| Successful `wdk mcp setup`, `remove`, `verify-setup`, or `list` with `--json` | Human-readable text | Empty | `0` |
+| Wallet command that opens an interactive prompt with `--json` | Prompt text and terminal-control bytes, followed by JSON if the command completes | Normal notices or errors can still appear | Depends on result |
+| `wdk send --json` | JSON on completion or a handled error | May contain spinner, success, or failure text | Depends on result |
+| A command using non-empty `WDK_PASSPHRASE` | Normal command output | Includes a passphrase-source notice | Depends on result |
+
+<Callout type="warn">
+Do not combine stdout and stderr before parsing JSON. Spinner output and notices can make a combined stream invalid JSON.
+</Callout>
+
+`--json` changes output formatting; it does not make every command non-interactive or guarantee JSON-only stdout when a prompt opens. Wallet create, import, export, unlock, delete, default, and rename flows can still request secret input. Set a non-empty `WDK_PASSPHRASE` only when you accept the environment-variable exposure described in [Configuration](/cli/configuration#environment-variables). `wallet import` still prompts for the seed phrase, so its stdout is not a clean JSON stream even when the environment variable supplies the passphrase.
+
+## Handle Output in a Shell Script
+
+Capture the streams separately and inspect the exit status before parsing. This example requires `jq`:
+
+```bash title="check-balance.sh"
+#!/usr/bin/env bash
+set -euo pipefail
+
+stdout_file=$(mktemp)
+stderr_file=$(mktemp)
+trap 'rm -f "$stdout_file" "$stderr_file"' EXIT
+
+if wdk get balance \
+  --network ethereum \
+  --wallet dev \
+  --json >"$stdout_file" 2>"$stderr_file"; then
+  jq . "$stdout_file"
+elif jq -e 'type == "object" and has("code")' "$stdout_file" >/dev/null 2>&1; then
+  jq . "$stdout_file" >&2
+  exit 1
+else
+  cat "$stderr_file" >&2
+  exit 1
+fi
+```
+
+This pattern handles both JSON command errors and text-only argument parsing errors.
+
+## Error Codes
+
+The following names are defined by beta.1. A code can appear only on commands that reach the corresponding behavior.
+
+| Area | Codes |
+| --- | --- |
+| Wallet and key state | `KEY_NOT_FOUND`, `INVALID_SEED_PHRASE`, `WRONG_PASSPHRASE`, `WALLET_NOT_UNLOCKED`, `WALLET_EXISTS`, `WALLET_LOCKED`, `PASSPHRASE_MISMATCH` |
+| Arguments and configuration | `INVALID_ARGUMENT`, `INVALID_INDEX`, `INVALID_CONFIG`, `MISSING_CONFIG`, `INVALID_AMOUNT`, `INVALID_TOKEN` |
+| Networks and tokens | `NETWORK_NOT_SUPPORTED`, `TOKEN_NOT_SUPPORTED`, `NETWORK_ERROR` |
+| Transactions and providers | `INSUFFICIENT_BALANCE`, `TRANSACTION_FAILED`, `UNSUPPORTED_MODULE`, `ENVIRONMENT_MISMATCH`, `SIGN_FAILED`, `PROVIDER_UNAVAILABLE`, `QUOTE_REJECTED` |
+| Fallbacks | `UNKNOWN_ERROR`, `UNEXPECTED_ERROR` |
+
+The code set is not a closed protocol enum. The daemon and WDK dependencies can pass through additional codes. Beta.1 also recognizes and formats several dependency codes, including `INSUFFICIENT_FUNDS`, `SERVER_ERROR`, and `TIMEOUT`. Consumers should preserve unknown code strings instead of rejecting the response.
+
+## Common Recovery Paths
+
+| Code or symptom | Check |
+| --- | --- |
+| `WALLET_NOT_UNLOCKED` | Run `wdk wallet unlock --name NAME`; confirm that its TTL has not expired |
+| `KEY_NOT_FOUND` | Run `wdk wallet list`; verify the wallet name or default wallet |
+| `WRONG_PASSPHRASE` | Retry through the hidden prompt; do not print or log the passphrase |
+| `NETWORK_NOT_SUPPORTED` | Run `wdk network list`; check spelling and custom-network state |
+| `TOKEN_NOT_SUPPORTED` | Run `wdk token list --network NETWORK`; use the registered ticker |
+| `MISSING_CONFIG` for history | Configure `indexer.baseUrl` and, when required, `WDK_INDEXER_API_KEY` |
+| `MISSING_CONFIG` for buy or sell | Configure all `ramp.moonpay` values |
+| `ENVIRONMENT_MISMATCH` | Use MoonPay `sandbox` with a testnet or `production` with a mainnet |
+| `NETWORK_ERROR`, `TIMEOUT`, or `SERVER_ERROR` | Check the RPC/indexer endpoint and retry only when repeating the operation is safe |
+| Text error with empty stdout | Treat it as an argument/help parsing failure; inspect stderr |
+
+## Partial Results
+
+Some successful aggregate operations omit failed items:
+
+- `wdk get address --all` skips networks that fail address derivation.
+- `wdk get balance --all` skips networks that fail address or balance lookup.
+- `wdk get history` without `--token` ignores failed token batch items and returns successful transfers.
+
+These commands can exit `0` with an incomplete aggregate result. If completeness matters, query each required network or token separately and track failures in your application.
+
+***
+
+## Need Help?
+
+<SupportCards />
+
+***
+
+## Manage Tokens
+URL: https://docs.wdk.tether.io/cli/guides/manage-tokens
+Description: Inspect, add, override, and remove WDK CLI token registry entries
+
+WDK CLI resolves token names such as `usdt` through a local registry. Each entry defines how the CLI formats amounts, selects a native or contract transfer, and connects the token to optional indexer, MoonPay, and price-provider features.
+
+The effective registry combines built-in entries with your custom entries. A custom entry with the same network and token key replaces the built-in entry until you remove the override.
+
+## Inspect The Registry
+
+List tokens across every network:
+
+```bash title="Terminal"
+wdk token list
+```
+
+Filter the list to one network or inspect one entry:
+
+```bash title="Terminal"
+wdk token list --network ethereum
+wdk token info --network ethereum --token usdt
+```
+
+Use the lowercase registry key shown by these commands with `--token` on `get balance`, `send`, `buy`, and `sell`.
+
+`get history --token` is different: pass the exact `metadata.indexerSlug` value, which may differ from the registry key.
+
+## Token Spec
+
+`wdk token add <data>` accepts either an inline JSON object or the path to a JSON file.
+
+| Field | Required | Rules and effect |
+| --- | --- | --- |
+| `network` | Yes | Must name an existing built-in or custom network. |
+| `token` | Yes | Registry key. Use lowercase letters, numbers, and hyphens; the first character must be a letter or number. |
+| `symbol` | Yes | Non-empty display symbol, such as `DAI`. |
+| `decimals` | Yes | Integer from `0` through `24`; used to convert decimal amounts to base units. |
+| `isNative` | Yes | `true` uses the network's native transfer path; `false` uses a token contract or mint. |
+| `address` | For non-native tokens | Non-empty contract or mint address. Optional for a native token. |
+| `metadata` | No | Object containing supported provider mappings. |
+
+A network can have at most one effective entry with `isNative: true`.
+
+### Provider Metadata
+
+| Field | Used by | Effect when omitted |
+| --- | --- | --- |
+| `metadata.indexerSlug` | `wdk get history` | Pass this exact value to `--token`. Without it, a token-specific history request cannot use the token and an all-token history request skips it. The network also needs its own `indexerSlug`. |
+| `metadata.moonpaySlug` | `wdk buy` and `wdk sell` | MoonPay operations do not support that token. |
+| `metadata.bitfinexSlug` | USD price conversion | Balance and preview operations can continue without that provider's USD estimate. |
+
+Only `indexerSlug`, `moonpaySlug`, and `bitfinexSlug` are retained inside `metadata`.
+
+## Add A Custom Token
+
+Create a file named `dai-on-ethereum.json`:
+
+```json title="dai-on-ethereum.json"
+{
+  "network": "ethereum",
+  "token": "dai",
+  "symbol": "DAI",
+  "decimals": 18,
+  "isNative": false,
+  "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+}
+```
+
+Add the entry:
+
+```bash title="Terminal"
+wdk token add ./dai-on-ethereum.json
+```
+
+You can also pass the JSON inline:
+
+```bash title="Terminal"
+wdk token add '{"network":"ethereum","token":"dai","symbol":"DAI","decimals":18,"isNative":false,"address":"0x6B175474E89094C44Da98b954EedeAC495271d0F"}'
+```
+
+Verify the stored entry:
+
+```bash title="Terminal"
+wdk token info --network ethereum --token dai
+```
+
+<Callout type="info">
+Adding a registry entry does not transfer tokens or interact with the blockchain. Verify contract addresses, decimals, and provider identifiers independently before using the entry to query or send assets.
+</Callout>
+
+## Understand Mutation Confirmation
+
+`token add` and `token delete` protect registry changes with passphrase confirmation:
+
+- If at least one wallet exists, the CLI prompts for the current default wallet's passphrase.
+- If no wallet exists, the registry command does not prompt for a passphrase.
+- Confirmation does not unlock, extend, or lock an existing daemon wallet session.
+
+Set a valid default wallet before changing the registry if wallets already exist.
+
+## Override A Built-In Entry
+
+Adding a custom entry with the same `network` and `token` as a built-in entry replaces the complete effective entry; it does not merge individual fields. The CLI reports that the custom entry overrides the built-in entry.
+
+Use overrides carefully. An incorrect address, decimal count, or native-token flag can route later balance or send operations incorrectly.
+
+Remove the custom override to restore the built-in entry:
+
+```bash title="Terminal"
+wdk token delete --network ethereum --token usdt
+```
+
+## Delete A Custom Entry
+
+Delete the DAI entry created above:
+
+```bash title="Terminal"
+wdk token delete --network ethereum --token dai
+```
+
+`token delete` removes only custom entries. It rejects deletion of a built-in entry when no custom override exists. Deleting a custom network also removes every custom token stored under that network.
+
+`wdk config reset --all` preserves custom token entries.
+
+## Next Steps
+
+- [Custom Networks](/cli/guides/custom-networks/) - Create a network and its initial token entries together
+- [Configuration](/cli/configuration/) - Configure provider and indexer access
+- [API Reference](/cli/api-reference/) - Review token command flags and JSON results
+
+***
+
+## Need Help?
+
+<SupportCards />
+
+***
+
+## Manage Wallets
+URL: https://docs.wdk.tether.io/cli/guides/manage-wallets
+Description: Create, import, select, unlock, lock, export, rename, and delete WDK CLI wallets safely.
+
+WDK CLI stores independent named wallets and keeps only explicitly unlocked wallets in the daemon. This guide covers the complete wallet lifecycle.
+
+<Callout type="warn">
+Wallet create, import, and export handle a BIP-39 seed phrase. Use a private terminal with logging, screen sharing, and AI assistants disabled. Anyone who obtains the phrase can control the wallet.
+</Callout>
+
+## Wallet names
+
+Wallet names may contain letters, numbers, hyphens, and underscores. Other characters are rejected.
+
+Examples in this guide use a wallet named `dev`:
+
+```bash title="Terminal"
+wdk wallet list
+```
+
+## Create a wallet
+
+Create a 12-word wallet:
+
+```bash title="Terminal"
+wdk wallet create --name dev
+```
+
+Create a 24-word wallet:
+
+```bash title="Terminal"
+wdk wallet create --name dev --words 24
+```
+
+The CLI asks for a passphrase twice, writes the encrypted mnemonic to `wallets/dev/seed.enc`, and displays the generated phrase once. Record both the mnemonic and passphrase in separate recoverable locations before continuing.
+
+The first wallet becomes the default automatically. You do not need to run `wdk wallet default` after creating the first wallet.
+
+<Callout type="warn">
+The current CLI permits an empty passphrase. Although `seed.enc` remains AES-GCM ciphertext, an empty passphrase provides no meaningful confidentiality. Use a strong, unique passphrase.
+</Callout>
+
+## Import a wallet
+
+Import an existing 12- or 24-word BIP-39 phrase:
+
+```bash title="Terminal"
+wdk wallet import --name recovered
+```
+
+The CLI prompts for the phrase and then for a new local encryption passphrase. The seed-phrase input is interactive but is not masked, so import only in a private terminal.
+
+Import creates another encrypted local copy. It does not remove or change the source wallet or any existing backup.
+
+## List wallets and sessions
+
+Show stored wallets, the default wallet, lock status, and TTL remaining:
+
+```bash title="Terminal"
+wdk wallet list
+```
+
+When a wallet is unlocked, the table reports either the approximate remaining time or `unlimited` for a `--ttl 0` session.
+
+In JSON mode, an unlocked entry includes `ttlMs` and `ttlRemaining` in milliseconds:
+
+```bash title="Terminal"
+wdk --json wallet list
+```
+
+## Select the default wallet
+
+Commands use the default wallet when their `--wallet` option is omitted.
+
+```bash title="Terminal"
+wdk wallet default --name dev
+```
+
+If a default wallet already exists, changing it requires that wallet's passphrase. This prevents an unconfirmed configuration change, but it does not unlock either wallet.
+
+To target another wallet for one supported operation without changing the default, pass its command-level option:
+
+```bash title="Terminal"
+wdk get balance --network ethereum --wallet recovered
+```
+
+## Unlock a wallet
+
+Unlock with the default five-minute TTL:
+
+```bash title="Terminal"
+wdk wallet unlock --name dev
+```
+
+Specify an absolute TTL in minutes:
+
+```bash title="Terminal"
+wdk wallet unlock --name dev --ttl 15
+```
+
+Unlock starts the daemon if needed. The CLI verifies the passphrase, then the daemon decrypts the wallet, creates its WDK instance, and starts the timer.
+
+<Callout type="warn">
+After unlock, any process running as the same operating-system user that can connect to the daemon endpoint can request signing or sending without entering the passphrase. Use a short TTL, avoid running untrusted code, and lock immediately after use.
+</Callout>
+
+### Control the unlock lifetime
+
+TTL is per wallet and starts at unlock:
+
+| Command or event | Result |
+| --- | --- |
+| Omit `--ttl` | Wallet locks after five minutes |
+| `--ttl 15` | Wallet locks 15 minutes after unlock |
+| Use the wallet | Timer continues; activity does not restart it |
+| Unlock the wallet again | Timer resets to the newly requested TTL |
+| `--ttl 0` | No automatic expiry |
+| TTL expires | That wallet is disposed and locked |
+| Last wallet locks | Daemon exits |
+
+`--ttl 0` accepts the risk of a session that remains unlocked until explicit lock, daemon shutdown, process failure, or machine restart:
+
+```bash title="Terminal"
+wdk wallet unlock --name dev --ttl 0
+```
+
+Use it only for a controlled local workflow. Normal wallet operations do not refresh any TTL, so a finite session can expire during a long task.
+
+## Lock wallets
+
+Lock one wallet:
+
+```bash title="Terminal"
+wdk wallet lock --name dev
+```
+
+Lock every wallet:
+
+```bash title="Terminal"
+wdk wallet lock --all
+```
+
+Locking disposes the wallet's WDK instance and removes the session from the daemon. The daemon exits after the last wallet locks.
+
+Verify the result:
+
+```bash title="Terminal"
+wdk wallet list
+```
+
+Cleanup is best effort. The CLI zeroes retained mutable key and seed buffers on normal disposal, but JavaScript strings, dependency-internal copies, swap, core dumps, and abrupt termination cannot be guaranteed to be erased. See the [security model](/cli/reference/security-model#seed-and-passphrase-lifetime).
+
+## Export a seed phrase
+
+<Callout type="warn">
+Export prints the decrypted mnemonic. Do not run this command in CI, a recorded terminal, an agent session, or any environment that captures stdout.
+</Callout>
+
+Export a wallet:
+
+```bash title="Terminal"
+wdk wallet export --name dev
+```
+
+The CLI asks for the wallet passphrase and prints the phrase. `--json` also includes the phrase in stdout; JSON does not make secret output safe to log.
+
+Use export to create or verify an offline recovery backup. If WDK CLI itself is unavailable, use the standalone [version 1 manual-recovery procedure](/cli/reference/storage-format#recover-without-wdk-cli).
+
+## Rename a wallet
+
+Rename a stored wallet:
+
+```bash title="Terminal"
+wdk wallet rename --name dev --new-name development
+```
+
+The command verifies the old wallet's passphrase, locks that wallet if it is unlocked, and moves its storage directory. If it was the default, the new name becomes the default. Unlock it again under the new name before using it:
+
+```bash title="Terminal"
+wdk wallet unlock --name development
+```
+
+Renaming does not decrypt or re-encrypt `seed.enc`.
+
+## Delete a wallet
+
+<Callout type="warn">
+Deletion is irreversible through WDK CLI. Confirm that you have tested the mnemonic and passphrase backup before deleting the only local copy.
+</Callout>
+
+Delete a wallet:
+
+```bash title="Terminal"
+wdk wallet delete --name development
+```
+
+The command:
+
+1. verifies the wallet passphrase
+2. attempts to lock an active session
+3. recursively removes the wallet directory
+4. chooses another stored wallet as the default when necessary
+
+Deletion is ordinary filesystem removal, not secure erase. Copies can remain in backups, snapshots, journals, swap, or recoverable storage blocks.
+
+## Passphrases in automation
+
+Commands that prompt for a passphrase read a non-empty `WDK_PASSPHRASE` value when it is set:
+
+```bash title="Terminal"
+WDK_PASSPHRASE='YOUR_PASSPHRASE' wdk --json wallet unlock --name dev --ttl 5
+```
+
+Environment variables can leak through process inspection, child-process inheritance, command tracing, crash reports, or automation logs. Prefer the hidden interactive prompt. If automation is necessary:
+
+- inject the value from a secret manager for one process
+- disable command tracing and output capture
+- do not commit the value to a script or configuration file
+- lock the wallet and remove the environment variable immediately after use
+
+Never pass the passphrase or mnemonic as a CLI argument.
+
+## Related pages
+
+- [API reference](/cli/api-reference#wallet-commands)
+- [Architecture](/cli/reference/architecture)
+- [Storage format and manual recovery](/cli/reference/storage-format)
+- [Security model](/cli/reference/security-model)
+
+***
+
+## Use the MCP Server
+URL: https://docs.wdk.tether.io/cli/guides/use-mcp-server
+Description: Connect WDK CLI to an MCP-compatible AI client
+
+WDK CLI includes the `wdk-mcp` Model Context Protocol server. It exposes wallet operations as structured tools over stdio and routes wallet-dependent operations to the same local daemon used by the CLI.
+
+<Callout type="warn">
+Use a dedicated development wallet with limited funds. On Unix-like systems, while a wallet is unlocked, any process running as the same OS user that can connect to the owner-only daemon socket can request signing or sending without another passphrase.
+</Callout>
+
+## Prepare A Wallet
+
+Install WDK CLI with the command in [Install](/cli/#install). This guide deliberately uses a dedicated development wallet and Sepolia test funds; the general Get Started guide uses Ethereum mainnet.
+
+If `agent-dev` is your first wallet, it becomes the default automatically:
+
+```bash title="Terminal"
+wdk wallet create --name agent-dev --words 12
+wdk wallet unlock --name agent-dev --ttl 5
+```
+
+Enter and confirm a strong, non-empty passphrase when the create command prompts, then record the generated seed phrase offline.
+
+If another wallet is already the default, select `agent-dev` explicitly:
+
+```bash title="Terminal"
+wdk wallet default --name agent-dev
+```
+
+Wallet-dependent MCP tools use the default wallet unless the request includes `wallet`. The wallet must be unlocked before those tools run.
+
+The TTL is absolute from unlock; MCP activity does not extend it. Use a short TTL during development and lock the wallet when the session ends.
+
+## Configure An MCP Client
+
+Choose one setup target:
+
+```bash title="Claude Desktop"
+wdk mcp setup --ai-tool claude-desktop
+```
+
+```bash title="Claude Code"
+wdk mcp setup --ai-tool claude-code
+```
+
+```bash title="OpenClaw"
+wdk mcp setup --ai-tool openclaw
+```
+
+| Target | Setup behavior |
+| --- | --- |
+| Claude Desktop | Adds `wdk-wallet` under `mcpServers` in the platform-specific Claude Desktop JSON config. |
+| Claude Code | Runs `claude mcp add -s user wdk-wallet -- ...` with the current Node.js executable and installed MCP script. |
+| OpenClaw | Runs `openclaw mcp set wdk-wallet ...` with the current Node.js executable and installed MCP script. |
+
+Setup checks whether the target appears to be installed, tests the MCP server when possible, and reports the restart action required by that client.
+
+Verify one target:
+
+```bash title="Terminal"
+wdk mcp verify-setup --ai-tool claude-desktop
+```
+
+List the configuration status of all three targets:
+
+```bash title="Terminal"
+wdk mcp list
+```
+
+Remove a target configuration with:
+
+```bash title="Terminal"
+wdk mcp remove --ai-tool claude-desktop
+```
+
+Replace `claude-desktop` with `claude-code` or `openclaw` as needed.
+
+### Other MCP Clients
+
+`wdk-mcp` is a standard stdio MCP server. For clients that accept the common `mcpServers` JSON shape, add:
+
+```json
+{
+  "mcpServers": {
+    "wdk-wallet": {
+      "command": "wdk-mcp"
+    }
+  }
+}
+```
+
+This configuration requires the client process to find `wdk-mcp` on its `PATH`. If the client uses a different configuration shape or does not inherit your shell `PATH`, configure a stdio server named `wdk-wallet` and point its command to the installed `wdk-mcp` executable.
+
+## Available MCP Tools
+
+| Tool | Wallet required | Purpose |
+| --- | --- | --- |
+| `get_networks` | No | List networks, optionally filtered to mainnets or testnets. |
+| `list_tokens` | No | List every registered token or filter by network. |
+| `get_token` | No | Read one network and token registry entry. |
+| `get_address` | Yes | Derive one address or addresses across networks. |
+| `get_balance` | Yes | Read one balance or aggregate native balances with USD estimates. |
+| `get_history` | Yes | Query indexer-backed token-transfer history for one network. |
+| `send_token` | Yes | Preview or execute a native or registered-token transfer. |
+| `buy_crypto` | Yes | Create a signed MoonPay buy URL. |
+| `sell_crypto` | Yes | Create a signed MoonPay sell URL. |
+
+`get_history` needs indexer configuration. `buy_crypto` and `sell_crypto` need MoonPay configuration. See [Configuration](/cli/configuration/).
+
+## CLI Capabilities Not Exposed Over MCP
+
+`wdk-mcp` registers only the nine tools listed above. Through this server, an agent can operate a wallet that a person has already unlocked, but it cannot call the CLI's wallet administration or persistent-configuration commands.
+
+- Wallet administration: `wdk wallet create`, `import`, `export`, `unlock`, `lock`, `delete`, `rename`, and `default`. These commands create, import, or reveal seed material; confirm wallet ownership; change wallet identity or default selection; or control an unlock session. `wdk wallet unlock` is deliberately the human authorization moment, and `wdk wallet lock` ends that session.
+- Persistent configuration: `wdk config set` and `reset`, `wdk network create` and `delete`, and `wdk token add` and `delete`. These commands change durable local configuration and remain user-driven decisions.
+
+This is a boundary of the MCP tool surface, not an operating-system sandbox. An AI client with separate shell access is outside this boundary and may be able to invoke `wdk` directly.
+
+## Preview And Confirm Transfers
+
+`send_token` defaults to `dryRun: true`. The recommended client workflow is:
+
+1. Call `send_token` without `dryRun`, or with `dryRun: true`.
+2. Show the network, token, recipient, amount, and estimated fee to the user.
+3. Ask the user to confirm those exact values.
+4. Call `send_token` with `dryRun: false` only after confirmation.
+
+Example preview request:
+
+```json
+{
+  "network": "sepolia",
+  "to": "<recipient-address>",
+  "amount": "0.0001",
+  "wallet": "agent-dev"
+}
+```
+
+Example execution request after confirmation:
+
+```json
+{
+  "network": "sepolia",
+  "to": "<recipient-address>",
+  "amount": "0.0001",
+  "wallet": "agent-dev",
+  "dryRun": false
+}
+```
+
+<Callout type="error">
+The preview-and-confirm sequence is guidance for the AI client; the daemon does not enforce it. A direct `send_token` call with `dryRun: false` broadcasts when the selected wallet is unlocked and the request is otherwise valid.
+</Callout>
+
+## Security And Session Boundaries
+
+- The AI client sends tool parameters to `wdk-mcp`; it does not send the wallet seed or passphrase as tool input.
+- Wallet operations cross the local daemon endpoint. On Unix-like systems, owner-only socket permissions block other OS users, not other processes running as the wallet owner.
+- An unlocked wallet behaves like a local hot wallet for the session. Read, signing, and send operations do not ask for the passphrase again.
+- `--ttl 0` disables automatic expiry for that wallet. Prefer a finite TTL.
+- Prompts or client-side confirmation dialogs are not daemon authorization controls.
+
+Read [Security Model](/cli/reference/security-model/) before exposing an unlocked wallet to an AI client or local automation.
+
+Lock the wallet when the session is finished:
+
+```bash title="Terminal"
+wdk wallet lock --name agent-dev
+```
+
+## When To Use The MCP Toolkit
+
+Use [MCP Toolkit](/ai/mcp-toolkit/) when you need to build and control an MCP server in application code, select individual WDK tools, or add custom tools.
+
+Use the WDK CLI MCP server when you want the bundled tool set and local wallet daemon, with automated setup for Claude Desktop, Claude Code, and OpenClaw or manual stdio configuration for another MCP-compatible client.
+
+***
+
+## Need Help?
+
+<SupportCards />
+
+***
+
+## Architecture
+URL: https://docs.wdk.tether.io/cli/reference/architecture
+Description: Understand how the WDK CLI, MCP server, daemon, wallet store, and WDK modules work together.
+
+WDK CLI separates short-lived command and MCP processes from a background wallet daemon. The daemon owns unlocked WDK instances; the command and MCP processes ask it to derive addresses, read balances, estimate fees, and sign transactions over local inter-process communication (IPC).
+
+```text
+wdk command ─┐
+             ├─ local IPC ─> wdk-daemon ─> WDK wallet modules ─> RPC provider
+wdk-mcp ─────┘                    │
+                                 └─ in-memory unlocked wallets
+
+wdk command ─> WDK Indexer API (history, after deriving the address through the daemon)
+```
+
+## Components
+
+| Component | Lifetime | Responsibility |
+| --- | --- | --- |
+| `wdk` | One command | Parses arguments, prompts for secrets, reads and writes local configuration, formats output, and calls the daemon |
+| `wdk-mcp` | MCP client session | Exposes structured wallet tools and calls the same command actions and daemon used by `wdk` |
+| `wdk-daemon` | While at least one wallet is unlocked | Holds unlocked WDK instances, derives accounts, estimates fees, signs and sends transactions, and enforces wallet TTLs |
+| `seed.enc` | Until the wallet is deleted | Stores one encrypted BIP-39 mnemonic for each named wallet |
+| `config.json` | Until configuration is reset or removed | Stores non-seed CLI configuration, including the default wallet, networks, tokens, and provider settings |
+
+The CLI and MCP server share the same wallet store, configuration, and daemon. A wallet unlocked with `wdk wallet unlock` is therefore also available to `wdk-mcp` running as the same operating-system user.
+
+## Wallet creation and import
+
+Creating or importing a wallet does not require the daemon:
+
+```text
+generated or entered mnemonic
+          │
+          ├─ scrypt(passphrase, random salt) ─> AES-256-GCM
+          │
+          └─> wallets/NAME/seed.enc
+```
+
+The command process validates that the mnemonic is a 12- or 24-word BIP-39 phrase. It then encrypts the phrase and writes [`seed.enc`](/cli/reference/storage-format). The first wallet becomes the default wallet automatically.
+
+The generated or imported mnemonic and passphrase are JavaScript strings in the command process during this flow. JavaScript strings cannot be reliably overwritten after use. See the [security model](/cli/reference/security-model#seed-and-passphrase-lifetime) for the resulting memory limitations.
+
+## Wallet unlock
+
+Unlocking crosses both the command and daemon processes:
+
+1. `wdk` reads the passphrase from a hidden prompt or `WDK_PASSPHRASE`.
+2. The command process decrypts `seed.enc` to verify the passphrase.
+3. The command process starts `wdk-daemon` if it is not already running.
+4. It sends the wallet name, passphrase, and TTL to the daemon over local IPC.
+5. The daemon decrypts `seed.enc`, derives the BIP-39 master-seed buffer, creates a WDK instance, and starts that wallet's TTL.
+
+The passphrase and mnemonic therefore do not exist only inside the daemon. They are briefly present in the command process during normal unlock, and the daemon decrypts the mnemonic again to create the long-lived wallet session.
+
+<Callout type="warn">
+An unlocked wallet is a local hot wallet for the operating-system user that owns the daemon. Any process running as that user that can connect to the daemon endpoint can request wallet operations without entering the passphrase again. Socket permissions separate operating-system users; they do not authenticate individual programs running as the same user.
+</Callout>
+
+## Requests while unlocked
+
+The daemon creates wallet accounts lazily. The first request for a network loads the configured wallet module and obtains the requested account index; later requests reuse cached accounts for that wallet session.
+
+| Operation | Where it runs |
+| --- | --- |
+| Address derivation | Daemon |
+| Native and token balance reads | Daemon, followed by optional price lookup in the caller |
+| Fee estimation | Daemon |
+| Transaction signing and broadcast | Daemon |
+| Transaction history | Caller queries the Indexer API after obtaining the address from the daemon |
+| Wallet file creation, import, export, rename, and deletion | `wdk` command process |
+| Network, token, and general configuration | `wdk` command process |
+
+CLI and MCP callers use the same signing path. A dry run estimates fees through the daemon but does not broadcast. A later request that executes a send goes directly to the daemon; the daemon does not implement a second confirmation or passphrase challenge.
+
+## IPC and operating systems
+
+On macOS and Linux, the daemon listens on a Unix domain socket:
+
+```text
+~/.config/wdk-cli/daemon.sock
+```
+
+If `XDG_CONFIG_HOME` is set, the socket is under `$XDG_CONFIG_HOME/wdk-cli`. The daemon creates it under an owner-only `0077` umask; the current socket mode is `0700`.
+
+On Windows, the daemon uses the named pipe:
+
+```text
+\\.\pipe\wdk-cli-daemon
+```
+
+POSIX file modes do not apply to the Windows named pipe. The current implementation relies on the platform's default named-pipe access control rather than creating an explicit security descriptor.
+
+IPC messages are newline-delimited JSON and are limited to 64 KiB. The protocol is internal to the CLI package and is not a versioned public API. Use `wdk` or `wdk-mcp` instead of building another client against it.
+
+## Session and shutdown lifecycle
+
+Each unlocked wallet has an independent TTL. The default is five minutes.
+
+```text
+unlock or explicit re-unlock ─> start absolute TTL
+                                      │
+                         normal wallet use does not refresh it
+                                      │
+                           TTL expires or wallet is locked
+                                      │
+                         dispose wallet and remove its session
+                                      │
+                         last wallet locked ─> daemon exits
+```
+
+An explicit `wdk wallet unlock` for an already unlocked wallet resets that wallet's timer to the requested value. `--ttl 0` creates a session without automatic expiry. See [Manage wallets](/cli/guides/manage-wallets#control-the-unlock-lifetime) for commands and [Security model](/cli/reference/security-model#session-lifecycle) for the accepted trade-offs.
+
+On a normal lock, TTL expiry, `SIGINT`, or `SIGTERM`, the daemon disposes the affected WDK instances. When the last wallet is locked, it closes the IPC server, removes the socket and PID file, and exits. Abrupt process termination, system crashes, swap, and core dumps are outside this graceful-cleanup path.
+
+## Configuration changes
+
+Network configuration is captured by WDK instances when they are created. `wdk config set` and `wdk config reset` changes under `networks.*` lock the current wallet sessions so the next unlock creates fresh instances with the new settings. `wdk network create` and `wdk network delete` change the registry without automatically locking current sessions.
+
+Configuration and storage locations are covered in [Configuration](/cli/configuration) and [Storage format](/cli/reference/storage-format).
+
+## Next steps
+
+- [Manage wallets](/cli/guides/manage-wallets)
+- [Storage format and manual recovery](/cli/reference/storage-format)
+- [Security model](/cli/reference/security-model)
+- [API reference](/cli/api-reference)
+
+***
+
+## Security Model
+URL: https://docs.wdk.tether.io/cli/reference/security-model
+Description: Understand seed protection, daemon trust boundaries, memory lifetime, TTL auto-locking, and operational trade-offs.
+
+WDK CLI protects a locked wallet's mnemonic with passphrase-based encryption and restricts security-critical local artifacts to the owning operating-system user on macOS and Linux. After unlock, it deliberately trusts processes running as that user.
+
+<Callout type="warn">
+Treat an unlocked WDK CLI wallet as a local hot wallet. Use a dedicated wallet with limited funds, keep the unlock TTL short, and lock it before running untrusted code.
+</Callout>
+
+## Security boundaries
+
+| Boundary | Current protection | Not protected |
+| --- | --- | --- |
+| Locked seed at rest | AES-256-GCM with a scrypt-derived key; `seed.enc` mode `0600` on macOS and Linux | Weak or empty passphrases, compromised owner account, root/administrator, backups, or storage capture while unlocked |
+| Daemon endpoint | Unix socket mode `0700` under an owner-only umask | Another process running as the same owner; there is no per-program daemon credential |
+| PID file | Mode `0600` on macOS and Linux | Process discovery through other operating-system interfaces |
+| Wallet session | Per-wallet absolute TTL and explicit lock | Activity does not shorten or refresh exposure; `--ttl 0` has no automatic expiry |
+| In-memory cleanup | WDK disposal plus best-effort zeroing of retained mutable buffers | Immutable JavaScript strings, copies inside dependencies, swap, core dumps, crashes, or abrupt termination |
+| CLI and MCP sends | Dry-run support and caller-level guidance | The daemon does not enforce a second confirmation or passphrase check for an unlocked wallet |
+| General configuration | Separate from `seed.enc` | `config.json` has no owner-only guarantee and may contain user-added credentials |
+
+These controls reduce accidental exposure and cross-user access. They do not make a general-purpose computer a hardware wallet or isolate an unlocked wallet from malware running under the same account.
+
+## Seed encryption at rest
+
+Each named wallet stores its BIP-39 mnemonic in `wallets/NAME/seed.enc`. Version 1 uses:
+
+- AES-256-GCM authenticated encryption
+- scrypt with `N=65536`, `r=8`, and `p=1`
+- a random 32-byte salt and 12-byte IV
+- a 16-byte authentication tag
+- an owner read/write `0600` file mode on macOS and Linux
+
+See [Storage format](/cli/reference/storage-format#seedenc-version-1) for field encodings and the manual-recovery contract.
+
+A wrong passphrase or modified encrypted payload fails GCM authentication. Encryption does not protect a mnemonic after a process has decrypted it.
+
+### Passphrase handling
+
+The interactive passphrase prompt hides input. For automation, `WDK_PASSPHRASE` overrides the prompt when it contains a non-empty value.
+
+Environment variables can be inherited by child processes and may be visible through process inspection, crash reports, shell tooling, or automation logs. Prefer the interactive prompt for manual use. If automation requires `WDK_PASSPHRASE`, scope it to one trusted process, prevent command tracing, and remove it immediately after use.
+
+The current CLI accepts an empty passphrase. The file is still AES-GCM ciphertext, but an empty passphrase provides no meaningful confidentiality because anyone who obtains the file knows the value required to derive its key.
+
+## Same-user daemon access
+
+On macOS and Linux, `daemon.sock` is available only to the owning operating-system user. This stops a different local user from connecting through the socket. It does not identify or authorize individual programs owned by that user.
+
+Once a wallet is unlocked:
+
+- a same-user process that can connect to `daemon.sock` can derive addresses, read balances, estimate fees, and request signed transactions
+- it does not need to know or re-enter the wallet passphrase
+- it can speak directly to the internal daemon endpoint instead of using the normal CLI or MCP user flow
+- CLI dry runs and MCP instructions to preview and confirm are caller behavior, not daemon authorization controls
+
+This same-user signing capability is an accepted design trade-off: the daemon provides a reusable local wallet session, and the operating-system user is the session's trust boundary.
+
+<Callout type="warn">
+Do not run downloaded scripts, unreviewed packages, browser automation, plugins, or AI agents under the wallet owner's account while a valuable wallet is unlocked. Owner-only socket permissions do not protect against code that you run as the owner.
+</Callout>
+
+For stronger practical separation, run WDK CLI under a dedicated non-administrator operating-system account and do not run unrelated tools under that account. This does not protect against root/administrator compromise, but it narrows which processes can reach the owner-only endpoint.
+
+## Session lifecycle
+
+Each wallet has its own absolute unlock timer:
+
+| Action | Timer effect |
+| --- | --- |
+| `wdk wallet unlock --name NAME` | Starts the requested TTL; default is five minutes |
+| Normal address, balance, history, fee, or send request | Does not refresh the TTL |
+| Explicitly unlock an already unlocked wallet | Resets its timer to the new TTL |
+| `wdk wallet unlock --name NAME --ttl 0` | Disables automatic expiry for that wallet |
+| `wdk wallet lock --name NAME` | Immediately disposes that wallet session |
+| `wdk wallet lock --all` | Disposes all wallet sessions |
+| TTL expires | Disposes that wallet session |
+| Last wallet locks or expires | Shuts down the daemon |
+
+An absolute timer limits the maximum duration from unlock without silently extending the session on every operation. It can also expire during a longer workflow because activity does not refresh it. Re-unlock explicitly when more time is needed.
+
+Use `--ttl 0` only in a controlled environment where you accept an unlocked session that lasts until explicit lock, daemon shutdown, process failure, or machine restart. It is not appropriate as a convenience default.
+
+## Seed and passphrase lifetime
+
+Normal unlock handles sensitive values in more than one place:
+
+1. The `wdk` command process receives the passphrase as a JavaScript string.
+2. It decrypts `seed.enc` and receives the mnemonic as a JavaScript string to verify the passphrase.
+3. It sends the passphrase through owner-restricted local IPC to the daemon.
+4. The daemon decrypts the mnemonic as a JavaScript string.
+5. The daemon derives a mutable BIP-39 master-seed `Buffer` and retains it with the WDK instance until lock.
+
+The encryption key buffers are zeroed after encryption or decryption. On normal lock or graceful daemon shutdown, the CLI disposes the WDK instance and zeroes the retained master-seed buffer.
+
+These are best-effort language-level controls, not a guarantee that every copy is erased:
+
+- JavaScript strings are immutable and garbage-collected
+- WDK or wallet modules may hold internal copies while in use
+- operating-system swap, hibernation, crash dumps, and debugger access can capture process memory
+- `SIGKILL`, a power loss, or a runtime crash can bypass normal cleanup
+
+Use full-disk encryption, restrict crash dumps and debugger access, and keep the host patched and free of untrusted software. Locking promptly reduces exposure but cannot retroactively erase copies outside the CLI's control.
+
+## Wallet export, logs, and automation
+
+`wdk wallet create` displays the generated mnemonic, and `wdk wallet export` displays the decrypted mnemonic. With `--json`, that secret appears in structured stdout.
+
+Do not:
+
+- run create or export in CI
+- capture their output in logs or agent transcripts
+- paste output into tickets, chat, or AI tools
+- include `WDK_PASSPHRASE` in a committed script
+- pass a mnemonic or passphrase as a shell argument
+
+Use a private terminal, create an offline backup, and clear terminal scrollback after handling a mnemonic.
+
+## Configuration is not secret storage
+
+`config.json` is a normal plaintext file. It primarily contains public WDK-style configuration, but user-supplied values can include indexer keys or credentials embedded in provider and signing URLs.
+
+- Prefer `WDK_INDEXER_API_KEY` over storing the indexer key when your environment can protect it.
+- Protect any credentials embedded in custom provider URLs separately.
+- Review `wdk config get --all` before copying its output.
+- Do not assume `config.json` has the same `0600` mode as `seed.enc`.
+
+See [Configuration](/cli/configuration) for supported settings and precedence.
+
+## Deletion and recovery
+
+Wallet deletion performs ordinary recursive filesystem removal after passphrase verification. It is not secure erase, and it cannot remove copies from backups, snapshots, swap, journals, or previously copied files.
+
+Maintain an independently tested backup and the passphrase. The documented [`seed.enc` version 1 recovery procedure](/cli/reference/storage-format#recover-without-wdk-cli) remains available even if a future format does not provide automated migration.
+
+## Operational checklist
+
+Before unlock:
+
+- use a dedicated wallet with only the funds needed for the task
+- stop untrusted same-user processes
+- confirm the wallet name and requested TTL
+- prefer a hidden interactive passphrase prompt
+
+While unlocked:
+
+- preview recipient, amount, network, token, and fees
+- remember that normal use does not refresh the timer
+- do not install packages or run unreviewed scripts under the same user
+- treat MCP clients and agents as capable of requesting real sends
+
+After use:
+
+- run `wdk wallet lock --name NAME` or `wdk wallet lock --all`
+- verify `wdk wallet list` reports the wallet as locked
+- clear terminals or files that displayed the mnemonic
+
+## Related pages
+
+- [Architecture](/cli/reference/architecture)
+- [Storage format and manual recovery](/cli/reference/storage-format)
+- [Manage wallets](/cli/guides/manage-wallets)
+- [Use the MCP server](/cli/guides/use-mcp-server)
+
+***
+
+## Storage Format
+URL: https://docs.wdk.tether.io/cli/reference/storage-format
+Description: Inspect WDK CLI storage, seed.enc version 1, file permissions, and the standalone manual-recovery procedure.
+
+WDK CLI stores each named wallet as an encrypted `seed.enc` file. This page defines the current version 1 format and provides a recovery path that uses only Node.js built-in modules if the CLI is unavailable.
+
+<Callout type="warn">
+Possession of a recovered seed phrase gives control of the wallet. Perform recovery on a trusted, offline computer. Do not upload `seed.enc` to a website, paste it into an AI assistant, or use an online decryption tool.
+</Callout>
+
+## Storage layout
+
+The default storage root is `~/.config/wdk-cli`. If `XDG_CONFIG_HOME` is non-empty, the root is `$XDG_CONFIG_HOME/wdk-cli`.
+
+```text
+wdk-cli/
+├── config.json
+├── daemon.pid
+├── daemon.sock                 # macOS and Linux only
+└── wallets/
+    └── WALLET_NAME/
+        └── seed.enc
+```
+
+Windows uses the named pipe `\\.\pipe\wdk-cli-daemon` instead of `daemon.sock`.
+
+Run the following command to print the exact `config.json` path:
+
+```bash title="Terminal"
+wdk config path
+```
+
+## Current file permissions
+
+The current permissions are intentional and protect the artifacts that enforce seed-at-rest and daemon access controls.
+
+| Artifact | macOS and Linux | Purpose |
+| --- | --- | --- |
+| `wallets/NAME/seed.enc` | `0600` | Owner read and write only |
+| `daemon.pid` | `0600` | Owner read and write only |
+| `daemon.sock` | `0700` | Owner-only daemon endpoint |
+| `config.json` | No owner-only mode is set by WDK CLI | Ordinary plaintext configuration; its resulting mode follows the config library and process environment and may be `0644` |
+| Storage and wallet directories | No explicit mode is set by WDK CLI | Resulting modes depend on the process umask |
+
+POSIX modes do not apply on Windows. The CLI uses a named pipe for daemon IPC and relies on Windows access controls.
+
+`config.json` is not seed storage. However, values that you add can still be sensitive, including API keys and provider URLs containing credentials. Do not treat the absence of seed material as permission to publish the file. Prefer supported environment-variable overrides for secrets, and review output from `wdk config get --all` before sharing it.
+
+The Unix socket's owner-only mode excludes other operating-system users. It does not distinguish between programs running as the owner. See the [same-user trust boundary](/cli/reference/security-model#same-user-daemon-access).
+
+## `seed.enc` version 1
+
+`seed.enc` is a UTF-8 JSON object with five fields:
+
+```json title="seed.enc shape"
+{
+  "version": 1,
+  "salt": "64 hexadecimal characters",
+  "iv": "24 hexadecimal characters",
+  "tag": "32 hexadecimal characters",
+  "ciphertext": "variable-length hexadecimal ciphertext"
+}
+```
+
+All binary fields use hexadecimal encoding, not Base64.
+
+| Property | Version 1 value |
+| --- | --- |
+| Cipher | AES-256-GCM |
+| Password KDF | scrypt |
+| scrypt `N` | `65536` (`2^16`) |
+| scrypt `r` | `8` |
+| scrypt `p` | `1` |
+| scrypt maximum memory | `134217728` bytes (128 MiB) |
+| Derived key | 32 bytes |
+| Salt | 32 random bytes |
+| IV | 12 random bytes |
+| Authentication tag | 16 bytes |
+| Ciphertext encoding | Hexadecimal |
+| Additional authenticated data | None |
+| Plaintext | UTF-8 BIP-39 mnemonic |
+
+Only `version` and the four binary fields are stored. The algorithm and scrypt parameters are implicit in version 1.
+
+Each write generates a new random salt and IV. AES-GCM authenticates the ciphertext: a wrong passphrase or a modified salt, IV, tag, or ciphertext causes decryption to fail.
+
+<Callout type="info">
+Users can rely on the documented version 1 recovery procedure. If a future format is introduced, an automated migration is not guaranteed, but the version 1 recovery procedure will remain documented so existing files can be recovered.
+</Callout>
+
+## Empty passphrases
+
+The current CLI accepts an empty passphrase. It still runs scrypt and writes AES-256-GCM ciphertext, so the mnemonic is not stored as plaintext. An empty passphrase is nevertheless known to any reader of the file and provides no meaningful confidentiality. File permissions become the only practical at-rest barrier.
+
+Use a strong, unique passphrase and keep a recoverable record separate from `seed.enc`.
+
+## Recover without WDK CLI
+
+This procedure requires Node.js `22.18.0` or later but does not import WDK CLI or any third-party package.
+
+Before recovery:
+
+1. Copy `seed.enc` and its backup to a trusted, offline computer.
+2. Preserve the original file; do not edit it in place.
+3. Close screen-sharing, logging, terminal recording, clipboard managers, and AI assistants.
+4. Use a private terminal. The recovered mnemonic will appear in terminal output and may remain in scrollback.
+5. Do not put the passphrase in a command argument or exported environment variable.
+
+Save the following as `recover-wdk-seed.mjs`:
+
+```javascript title="recover-wdk-seed.mjs"
+import { createDecipheriv, scryptSync } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
+import { emitKeypressEvents } from 'node:readline'
+import process from 'node:process'
+
+const SCRYPT = {
+  N: 2 ** 16,
+  r: 8,
+  p: 1,
+  maxmem: 128 * 1024 * 1024
+}
+
+function decodeHex(field, value, expectedBytes) {
+  if (typeof value !== 'string' || value.length === 0) {
+    throw new Error(`${field} must be a non-empty hexadecimal string`)
+  }
+  if (value.length % 2 !== 0 || !/^[0-9a-f]+$/i.test(value)) {
+    throw new Error(`${field} is not valid hexadecimal`)
+  }
+
+  const decoded = Buffer.from(value, 'hex')
+  if (decoded.length * 2 !== value.length) {
+    throw new Error(`${field} is not valid hexadecimal`)
+  }
+  if (expectedBytes !== undefined && decoded.length !== expectedBytes) {
+    throw new Error(`${field} must decode to ${expectedBytes} bytes`)
+  }
+  return decoded
+}
+
+function validatePayload(payload) {
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('seed.enc must contain a JSON object')
+  }
+  if (payload.version !== 1) {
+    throw new Error(`unsupported seed.enc version: ${String(payload.version)}`)
+  }
+
+  return {
+    salt: decodeHex('salt', payload.salt, 32),
+    iv: decodeHex('iv', payload.iv, 12),
+    tag: decodeHex('tag', payload.tag, 16),
+    ciphertext: decodeHex('ciphertext', payload.ciphertext)
+  }
+}
+
+function promptHidden(message) {
+  if (!process.stdin.isTTY || !process.stdout.isTTY ||
+      typeof process.stdin.setRawMode !== 'function') {
+    throw new Error('run this script directly in a private interactive terminal')
+  }
+
+  emitKeypressEvents(process.stdin)
+  const wasRaw = process.stdin.isRaw
+  let secret = ''
+
+  process.stdin.setRawMode(true)
+  process.stdin.resume()
+
+  return new Promise((resolve, reject) => {
+    function finish(error) {
+      process.stdin.removeListener('keypress', onKeypress)
+      process.stdin.setRawMode(Boolean(wasRaw))
+      if (!wasRaw) process.stdin.pause()
+      process.stdout.write('\n')
+
+      if (error) reject(error)
+      else resolve(secret)
+    }
+
+    function onKeypress(text, key = {}) {
+      if (key.ctrl && key.name === 'c') {
+        finish(new Error('recovery cancelled'))
+        return
+      }
+      if (key.name === 'return' || key.name === 'enter') {
+        finish()
+        return
+      }
+      if (key.name === 'backspace') {
+        secret = secret.slice(0, -1)
+        return
+      }
+      if (typeof text === 'string' && !key.ctrl && !key.meta &&
+          !/[\u0000-\u001f\u007f]/.test(text)) {
+        secret += text
+      }
+    }
+
+    process.stdin.on('keypress', onKeypress)
+    process.stdout.write(message)
+  })
+}
+
+function writeOutput(chunk) {
+  return new Promise((resolve, reject) => {
+    process.stdout.write(chunk, (error) => {
+      if (error) reject(error)
+      else resolve()
+    })
+  })
+}
+
+async function main() {
+  const args = process.argv.slice(2)
+  if (args.length !== 1) {
+    throw new Error('usage: node recover-wdk-seed.mjs /path/to/seed.enc')
+  }
+
+  const file = await readFile(args[0], 'utf8')
+  let payload
+  try {
+    payload = JSON.parse(file)
+  } catch {
+    throw new Error('seed.enc is not valid JSON')
+  }
+
+  const { salt, iv, tag, ciphertext } = validatePayload(payload)
+  const passphrase = await promptHidden('Passphrase: ')
+  const key = scryptSync(passphrase, salt, 32, SCRYPT)
+  let decryptedChunk
+  let authenticatedTail
+  let plaintext
+
+  try {
+    const decipher = createDecipheriv('aes-256-gcm', key, iv)
+    decipher.setAuthTag(tag)
+    decryptedChunk = decipher.update(ciphertext)
+    authenticatedTail = decipher.final()
+    plaintext = Buffer.concat([decryptedChunk, authenticatedTail])
+
+    await writeOutput('Recovered seed phrase:\n')
+    await writeOutput(plaintext)
+    await writeOutput('\n')
+  } finally {
+    key.fill(0)
+    decryptedChunk?.fill(0)
+    authenticatedTail?.fill(0)
+    plaintext?.fill(0)
+  }
+}
+
+main().catch((error) => {
+  console.error(`Recovery failed: ${error.message}`)
+  process.exitCode = 1
+})
+```
+
+Run it with only the `seed.enc` path as an argument:
+
+```bash title="Terminal"
+chmod 700 recover-wdk-seed.mjs
+node recover-wdk-seed.mjs "$HOME/.config/wdk-cli/wallets/WALLET_NAME/seed.enc"
+```
+
+Enter the passphrase at the hidden prompt. The script intentionally refuses non-interactive input so the passphrase is not supplied through a pipe, argument, or environment variable.
+
+The script validates the version, field encodings, and fixed field lengths before deriving the key. It makes a best-effort attempt to clear the derived key, decrypted chunks, and concatenated plaintext buffer after success or failure. The passphrase and displayed mnemonic still pass through JavaScript, OpenSSL internals, and terminal-managed memory, where reliable zeroization is not possible.
+
+After recovery:
+
+1. Verify the phrase by importing it into trusted wallet software while still offline.
+2. Clear the terminal and close it to reduce scrollback exposure.
+3. If the original computer or passphrase may be compromised, move funds to a newly generated seed.
+4. Securely remove any temporary copies according to the storage medium and backup system you used.
+
+## Rename and deletion behavior
+
+Renaming a wallet moves its directory; it does not decrypt or re-encrypt `seed.enc`.
+
+Deleting a wallet removes its wallet directory after passphrase verification and attempts to lock its active daemon session first. This is ordinary filesystem deletion, not cryptographic erasure. Copies may remain in backups, snapshots, filesystem journals, swap, or recoverable storage blocks.
+
+Always keep an independently tested recovery backup before deleting or changing the only working copy.
+
+## Related pages
+
+- [Manage wallets](/cli/guides/manage-wallets)
+- [Architecture](/cli/reference/architecture)
+- [Security model](/cli/reference/security-model)
+- [Configuration](/cli/configuration)
+
+***
+
 ## React Native Starter (Alpha)
 URL: https://docs.wdk.tether.io/examples-and-starters/react-native-starter
 Description: Multi-chain wallet starter built with WDK, Expo, and React Native
@@ -3035,6 +5404,7 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 **What's New**
 - **wallet-solana-gasless** ([v1.0.0-beta.2](https://github.com/tetherto/wdk-wallet-solana-gasless/releases/tag/v1.0.0-beta.2)): Let owned accounts quote and submit the fully signed transaction returned by `signTransaction()`. Quoting decodes the embedded paymaster-token fee without broadcasting; sending applies `transactionMaxFee` and submits the exact base64 wire transaction through Solana RPC without contacting the paymaster again. The signed payload keeps its existing blockhash or durable-nonce lifetime and is not refreshed or re-signed.
+- **WDK CLI** ([v1.0.0-beta.1](https://github.com/tetherto/wdk-cli/releases/tag/v1.0.0-beta.1)): Introduce the public `@tetherto/wdk-cli` beta with the `wdk` command-line interface, a local wallet daemon, and a bundled MCP server. The release supports encrypted named wallets, multi-network reads and sends, custom networks and tokens, indexer history, MoonPay buy/sell links, and MCP setup for supported AI tools.
 
 ---
 
@@ -38044,8 +40414,11 @@ WDK documentation is optimized for AI coding assistants. Give your AI tool conte
 Use this page as the starting point for building WDK apps with AI assistance.
 
 <Cards>
+<Card title="WDK CLI" href="/cli">
+Run a ready-made local wallet CLI, daemon, and MCP server for AI agents
+</Card>
 <Card title="MCP Toolkit" href="/ai/mcp-toolkit">
-Give AI agents access to WDK wallet tools through MCP
+Build a custom MCP server that exposes WDK wallet tools
 </Card>
 <Card title="Agent Skills" href="/ai/agent-skills">
 Use WDK instructions with agentic coding tools
@@ -38064,7 +40437,7 @@ There are two practical ways to provide WDK context to your AI:
 2. **[Add WDK project rules](#add-wdk-project-rules-optional)** - Give your AI assistant persistent context about package names, architecture, and coding patterns.
 
 <Callout type="info">
-**Want to give AI agents wallet access?** The [MCP Toolkit](/ai/mcp-toolkit) creates an MCP server that exposes WDK wallets as tools, letting AI agents check balances, send transactions, swap tokens, bridge assets, and more.
+**Want to give AI agents wallet access?** Use [WDK CLI](/cli/) for a ready-made local wallet CLI, daemon, and MCP server. Use the [MCP Toolkit](/ai/mcp-toolkit/) when you are building a custom MCP server in code.
 </Callout>
 
 ---

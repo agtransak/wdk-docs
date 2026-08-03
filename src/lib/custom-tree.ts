@@ -366,6 +366,25 @@ export const customTree: Node[] = [
     apiReference('/sdk/fiat-modules/fiat-moonpay/api-reference'),
   ]),
 
+  separator('CLI'),
+  folder('WDK CLI', '/cli', 'Terminal', [
+    configuration('/cli/configuration'),
+    apiReference('/cli/api-reference'),
+    guides([
+      page('Get Started', '/cli/guides/get-started', 'Rocket'),
+      page('Manage Wallets', '/cli/guides/manage-wallets', 'WalletCards'),
+      page('Manage Tokens', '/cli/guides/manage-tokens', 'Coins'),
+      page('Custom Networks', '/cli/guides/custom-networks', 'Network'),
+      page('Use the MCP Server', '/cli/guides/use-mcp-server', 'Wand'),
+      page('Handle Errors', '/cli/guides/handle-errors', 'CircleAlert'),
+    ]),
+    group('Reference', 'BookOpen', [
+      page('Architecture', '/cli/reference/architecture', 'Network'),
+      page('Storage Format', '/cli/reference/storage-format', 'Database'),
+      page('Security Model', '/cli/reference/security-model', 'ShieldCheck'),
+    ]),
+  ]),
+
   separator('AI'),
   page('Build with AI', '/start-building/build-with-ai', 'Bot'),
   folder('MCP Toolkit', '/ai/mcp-toolkit', 'Wand', [

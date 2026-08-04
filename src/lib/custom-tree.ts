@@ -386,8 +386,6 @@ export const customTree: Node[] = [
 
   separator('CLI'),
   folder('WDK CLI', '/cli', 'Terminal', [
-    configuration('/cli/configuration'),
-    apiReference('/cli/api-reference'),
     guides([
       page('Get Started', '/cli/guides/get-started', 'Rocket'),
       page('Manage Wallets', '/cli/guides/manage-wallets', 'WalletCards'),
@@ -396,6 +394,8 @@ export const customTree: Node[] = [
       page('Use the MCP Server', '/cli/guides/use-mcp-server', 'Wand'),
       page('Handle Errors', '/cli/guides/handle-errors', 'CircleAlert'),
     ]),
+    configuration('/cli/configuration'),
+    apiReference('/cli/api-reference'),
     group('Reference', 'BookOpen', [
       page('Architecture', '/cli/reference/architecture', 'Network'),
       page('Storage Format', '/cli/reference/storage-format', 'Database'),

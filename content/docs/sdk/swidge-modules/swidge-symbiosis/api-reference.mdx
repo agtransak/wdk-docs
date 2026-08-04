@@ -1,6 +1,6 @@
 ---
 title: Symbiosis Swidge API Reference
-description: API reference for @symbiosis-finance/wdk-protocol-swidge-symbiosis 1.2.0.
+description: API reference for @symbiosis-finance/wdk-protocol-swidge-symbiosis 1.3.0.
 docType: reference
 schemaType: APIReference
 icon: Code
@@ -32,7 +32,7 @@ import SymbiosisProtocol, {
 
 The package exports `SymbiosisProtocol` as both its default export and a named export. It also re-exports `ISwidgeProtocol` from `@tetherto/wdk-wallet/protocols`.
 
-This reference covers release [`1.2.0`](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/tree/v1.2.0).
+This reference covers release [`1.3.0`](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/tree/v1.3.0).
 
 ## `SymbiosisProtocol`
 
@@ -112,6 +112,8 @@ swidge(
 ```
 
 Requires an account with `sendTransaction()`. It calls `/v2/swap`, checks the applicable fee caps, performs the route-specific approval or source-payment steps, and returns after source broadcast.
+
+For `ton`, `tron`, and `solana` source routes, the method first probes the bound account for the transaction format the route requires (raw BoC message bodies, smart contract calls plus TRC-20 approvals, and serialized transactions respectively) and throws `UnsupportedRouteError` when the capability is missing or a `ton` route needs more than one message.
 
 The optional second argument overrides `maxNetworkFeeBps` and `maxProtocolFeeBps` for this execution.
 
@@ -215,7 +217,7 @@ The provider does not map a quote expiry into `SwidgeQuote`.
 | `id` | `string` | `<sourceChainId>:<sourceTransactionHash>` |
 | `hash` | `string \| undefined` | Source transaction hash |
 | `fees` | `SwidgeFee[]` | Fees from the fresh execution response |
-| `transactions` | `SwidgeTransaction[] \| undefined` | Zero, one, or two EVM approval hashes followed by the source hash; a later status response returns its own source, destination, or refund transaction list |
+| `transactions` | `SwidgeTransaction[] \| undefined` | Zero, one, or two EVM or Tron approval hashes followed by the source hash; a later status response returns its own source, destination, or refund transaction list |
 | `fromTokenAmount` | `bigint` | Submitted exact input |
 | `toTokenAmount` | `bigint` | Fresh provider-estimated output |
 | `toTokenAmountMin` | `bigint \| undefined` | Fresh provider minimum output |
@@ -259,10 +261,10 @@ Every package-specific error extends `SymbiosisError`.
 | `ExactOutNotSupportedError` | `toTokenAmount` requests exact-output execution | — |
 | `UnsupportedChainError` | A chain ID or name is not in provider discovery | `identifier` |
 | `UnsupportedTokenError` | A token is not in the selected chain's token catalog | `identifier` |
-| `ReadOnlyAccountError` | Execution lacks a writable account or route-required capability | — |
-| `UnsupportedRouteError` | The API returns a source transaction type not executable through WDK in this release | `type` |
+| `ReadOnlyAccountError` | Execution lacks a writable account, or an EVM approval is required and the account does not support approvals | — |
+| `UnsupportedRouteError` | The route's source transaction cannot be executed through the bound account: a missing wallet capability for `ton`, `tron`, or `solana`, or a multi-message `ton` route | `type` |
 | `FeeLimitExceededError` | A mapped `network` or `protocol` total exceeds its configured cap | `feeType`, `bps`, `cap` |
-| `TransactionError` | Approval receipt polling detects a revert or reaches its 180-second timeout | `hash` |
+| `TransactionError` | Approval receipt polling detects a revert (including a failed Tron approval receipt) or reaches its 180-second timeout | `hash` |
 | `ApiError` | The REST API returns a non-2xx response other than status lookup's special `404` handling, or a request fails or times out before a response | `status`, `response`, and `cause` for failures before a response |
 
 `ApiError.status` is `0` when no HTTP response was received. Errors thrown by wallet account methods are propagated and are not necessarily instances of `SymbiosisError`.

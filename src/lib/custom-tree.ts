@@ -316,6 +316,13 @@ export const customTree: Node[] = [
   ]),
   folder('Symbiosis', '/sdk/swidge-modules/swidge-symbiosis', 'Waypoints', [
     usage('/sdk/swidge-modules/swidge-symbiosis/usage'),
+    guides([
+      page('Get Started', '/sdk/swidge-modules/swidge-symbiosis/guides/get-started'),
+      page('Quote and Execute', '/sdk/swidge-modules/swidge-symbiosis/guides/quote-and-execute'),
+      page('Bridge from Bitcoin', '/sdk/swidge-modules/swidge-symbiosis/guides/bridge-from-bitcoin'),
+      page('Track Settlement', '/sdk/swidge-modules/swidge-symbiosis/guides/track-settlement'),
+      page('Handle Errors', '/sdk/swidge-modules/swidge-symbiosis/guides/handle-errors'),
+    ]),
     configuration('/sdk/swidge-modules/swidge-symbiosis/configuration'),
     apiReference('/sdk/swidge-modules/swidge-symbiosis/api-reference'),
   ]),

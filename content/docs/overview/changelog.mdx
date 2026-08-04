@@ -10,6 +10,13 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 ---
 
+### August 1, 2026
+
+**What's New**
+- **swidge-symbiosis** ([v1.3.0](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/tree/v1.3.0)): Execute TON, Tron, and Solana source routes when the bound wallet account supports the required transaction format, probed at execution time: raw BoC message bodies for single-message TON routes, smart contract calls plus TRC-20 approvals for Tron with approval receipts checked for on-chain failure, and base64-serialized transactions for Solana. Wallet versions without the capability keep the previous quote-only behavior and throw `UnsupportedRouteError`. The repository adds a runnable end-to-end example that quotes, executes, and tracks a route.
+
+---
+
 ### July 30, 2026
 
 **What's New**

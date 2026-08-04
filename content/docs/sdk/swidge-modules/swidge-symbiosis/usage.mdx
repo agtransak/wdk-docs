@@ -14,13 +14,15 @@ Tether and the WDK Team do not endorse or assume responsibility for their code, 
 
 ## Install
 
-The released Symbiosis package is `1.2.0`. The EVM example uses the WDK wallet version installed by that release's tests:
+The released Symbiosis package is `1.3.0`. The EVM example uses the WDK wallet version installed by that release's tests:
 
 ```bash
-npm install @symbiosis-finance/wdk-protocol-swidge-symbiosis@1.2.0 @tetherto/wdk-wallet-evm@1.0.0-beta.14
+npm install @symbiosis-finance/wdk-protocol-swidge-symbiosis@1.3.0 @tetherto/wdk-wallet-evm@1.0.0-beta.14
 ```
 
 The provider package includes `@tetherto/wdk-wallet` as a runtime dependency. Install the matching WDK wallet module separately for the source chain you intend to execute from.
+
+A runnable end-to-end example that quotes, executes, and tracks a route is available at [`examples/swidge.js`](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis/blob/v1.3.0/examples/swidge.js) in the source repository.
 
 ## Create the provider
 
@@ -171,7 +173,9 @@ const result = await symbiosis.swidge({
 
 `swidge()` requests a deposit address and sends the input amount to it without returning the deposit address for a separate confirmation. Confirm the refund address, recipient, amount, selected slippage, and indicative quote before calling the method.
 
-TON, Tron, and Solana source routes are quote-only in `1.2.0`; execution throws `UnsupportedRouteError`. TON execution was removed because WDK TON accounts treat the raw route payload as a text comment rather than the required BoC message body.
+## Execute TON, Tron, and Solana source routes
+
+TON, Tron, and Solana source routes execute in `1.3.0` when the bound wallet account supports the transaction format the route requires: raw BoC message bodies for TON (single-message routes only), smart contract calls plus TRC-20 approvals for Tron, and base64-serialized transactions for Solana. The module probes the account at execution time and throws `UnsupportedRouteError` when the capability is missing, so older wallet versions keep the previous quote-only behavior. Tron approval receipts are checked for on-chain failure before the swap is sent.
 
 ## Track settlement
 

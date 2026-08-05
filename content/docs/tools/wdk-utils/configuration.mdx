@@ -21,6 +21,10 @@ npm install react-native-get-random-values
 
 Load the polyfill before importing WDK Utils in the application entrypoint.
 
+```javascript title="React Native Entrypoint"
+import 'react-native-get-random-values'
+```
+
 ## Import address validation helpers
 
 You can import only the validators your flow needs from the package entrypoint:
@@ -124,7 +128,7 @@ import {
 - `validateSolanaAddress()` accepts base58-encoded 32-byte public keys, including off-curve program-derived addresses. Solana has no address checksum, so the helper cannot detect every mistyped address.
 - `splitMnemonic()` accepts valid 12-, 15-, 18-, 21-, or 24-word English BIP-39 phrases. It returns hex-encoded Shamir shares and supports threshold schemes from 2-of-2 through 255-of-255.
 - `combineMnemonic()` verifies an embedded integrity checksum before returning the reconstructed phrase. The checksum detects corruption but does not authenticate shares.
-- `encrypt()` and `splitMnemonic()` require `globalThis.crypto.getRandomValues`. In React Native, load `react-native-get-random-values` before importing `@tetherto/wdk-utils` when the runtime does not provide secure random bytes.
+- `encrypt()` requires `globalThis.crypto.getRandomValues`. In Node.js, `splitMnemonic()` uses the dependency's `node:crypto` implementation; browser and React Native paths require `globalThis.crypto.getRandomValues`. In React Native, load `react-native-get-random-values` before importing `@tetherto/wdk-utils` when the runtime does not provide secure random bytes.
 - `parseBip21Request()` accepts `bitcoin:` URIs with a validated Bitcoin address and optional `amount`, `label`, and `message` parameters.
 - `encodeBip21Request()` validates the Bitcoin address and amount before returning a `bitcoin:` URI.
 - `encrypt()` returns a versioned payload with hex-encoded `salt`, `iv`, `tag`, and `ciphertext` fields plus the scrypt cost parameters used for key derivation.
@@ -210,25 +214,7 @@ const encrypted = encrypt(seedPhrase, passphrase)
 const restoredSeedPhrase = decrypt(encrypted, passphrase)
 ```
 
-You can split a BIP-39 mnemonic into shares that require a threshold to recover:
-
-```javascript title="Split And Recover A Mnemonic"
-import 'react-native-get-random-values' // React Native only; load before WDK Utils
-import { combineMnemonic, splitMnemonic } from '@tetherto/wdk-utils'
-
-const shares = await splitMnemonic(seedPhrase, {
-  shares: 5,
-  threshold: 3
-})
-
-const restored = await combineMnemonic([
-  shares[0],
-  shares[2],
-  shares[4]
-])
-```
-
-Treat every unencrypted share as sensitive recovery material. Store shares separately and do not send them to logs, analytics, or untrusted services.
+For mnemonic sharing, follow [Shamir Secret Sharing](/tools/wdk-utils/guides/shamir-secret-sharing) to choose a threshold, authenticate stored shares, verify the recovery path, and understand compatibility limits. In React Native, load the random-values polyfill in the application entrypoint as shown above rather than importing it in shared Node.js or browser code.
 
 You can derive independent keys for application-specific purposes by using distinct domain labels:
 

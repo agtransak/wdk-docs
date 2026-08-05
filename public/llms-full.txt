@@ -47956,6 +47956,9 @@ WDK Utils provides CAIP-2-aware and chain-specific validation helpers for Bitcoi
 - Reuse the same helpers across Node.js and Bare-based environments without adding a larger wallet module dependency.
 
 <Cards>
+<Card title="Shamir Secret Sharing" href="/tools/wdk-utils/guides/shamir-secret-sharing">
+Split an English BIP-39 mnemonic, plan threshold recovery, and handle shares safely.
+</Card>
 <Card title="WDK Utils Configuration" href="/tools/wdk-utils/configuration">
 Install the package, import the helpers, and review runtime notes.
 </Card>
@@ -48436,14 +48439,16 @@ Treat the returned `secretKey` as sensitive and clear it after its final use. Th
 
 ### BIP-39 Mnemonic Sharing Helpers
 
+See [Shamir Secret Sharing](/tools/wdk-utils/guides/shamir-secret-sharing) for the complete split, storage, verification, and recovery journey.
+
 | Function | Description | Returns |
 | --- | --- | --- |
 | `splitMnemonic(mnemonic, options)` | Split valid BIP-39 mnemonic entropy into hex-encoded Shamir shares. | `Promise<string[]>` |
-| `combineMnemonic(shares)` | Reconstruct and validate a BIP-39 mnemonic from a threshold-sized share set. | `Promise<string>` |
+| `combineMnemonic(shares)` | Reconstruct and validate a BIP-39 mnemonic from a threshold-or-larger share set. | `Promise<string>` |
 
 #### `splitMnemonic(mnemonic, options)`
 
-Decode a valid 12-, 15-, 18-, 21-, or 24-word English BIP-39 mnemonic to entropy and split it into Shamir shares.
+Normalize and decode a valid 12-, 15-, 18-, 21-, or 24-word English BIP-39 mnemonic to entropy and split it into Shamir shares. The helper receives only the mnemonic words; it does not include an optional BIP-39 passphrase or wallet-specific recovery metadata.
 
 ```javascript title="Split A Mnemonic"
 import { splitMnemonic } from '@tetherto/wdk-utils'
@@ -48457,12 +48462,13 @@ const shares = await splitMnemonic(seedPhrase, {
 - `shares` must be an integer from `2` through `255`.
 - `threshold` must be an integer from `2` through `shares`.
 - The returned shares are unencrypted lowercase hex strings.
+- The package-specific share strings are not SLIP-39 mnemonic shares. They do not include the recovery threshold or a format-version marker, so retain that metadata separately.
 - Invalid BIP-39 words, word counts, and checksums are rejected.
-- The runtime must provide secure `crypto.getRandomValues`; React Native apps may need to load `react-native-get-random-values` before importing WDK Utils.
+- Node.js uses the dependency's `node:crypto` implementation. Browser and React Native paths must provide secure `crypto.getRandomValues`; React Native apps may need to load `react-native-get-random-values` before importing WDK Utils.
 
 #### `combineMnemonic(shares)`
 
-Reconstruct a mnemonic from enough shares produced by `splitMnemonic()`.
+Reconstruct a mnemonic from enough shares produced by the same `splitMnemonic()` call.
 
 ```javascript title="Reconstruct A Mnemonic"
 import { combineMnemonic } from '@tetherto/wdk-utils'
@@ -48474,10 +48480,12 @@ const restored = await combineMnemonic([
 ])
 ```
 
-The helper verifies the embedded four-byte integrity checksum and rejects malformed, corrupted, duplicate, mixed-length, or insufficient share sets.
+The helper accepts 2 through 255 case-insensitive hex shares and returns the normalized English BIP-39 mnemonic. Shares must have the same length and unique coordinates. `combineMnemonic()` does not receive or recover the original threshold, so the application must retain and enforce it.
+
+Both helpers return Promises that reject with `Error` objects. For `combineMnemonic()`, non-array input, fewer than two shares, non-string entries, and malformed hex retain specific messages. Duplicate coordinates, mixed lengths, more than 255 shares, reconstruction failures, and checksum failures collapse to `Invalid shares: could not reconstruct a valid mnemonic`.
 
 <Callout type="warn">
-Each share is sensitive recovery material. Store shares in separate trusted locations and never log or transmit them through analytics. The embedded checksum detects accidental corruption; it does not authenticate shares or protect against maliciously crafted input.
+Each share is sensitive recovery material. Store shares in separate trusted locations and never log or transmit them through analytics. The embedded checksum detects accidental corruption; it does not authenticate shares or protect against maliciously crafted input. Authenticate the exact share bytes against a tamper-evident record before combining them, then verify the recovered wallet against an independently protected public identifier.
 </Callout>
 
 ### BIP-21 Bitcoin Payment URI Helpers
@@ -48616,6 +48624,10 @@ npm install react-native-get-random-values
 
 Load the polyfill before importing WDK Utils in the application entrypoint.
 
+```javascript title="React Native Entrypoint"
+import 'react-native-get-random-values'
+```
+
 ## Import address validation helpers
 
 You can import only the validators your flow needs from the package entrypoint:
@@ -48719,7 +48731,7 @@ import {
 - `validateSolanaAddress()` accepts base58-encoded 32-byte public keys, including off-curve program-derived addresses. Solana has no address checksum, so the helper cannot detect every mistyped address.
 - `splitMnemonic()` accepts valid 12-, 15-, 18-, 21-, or 24-word English BIP-39 phrases. It returns hex-encoded Shamir shares and supports threshold schemes from 2-of-2 through 255-of-255.
 - `combineMnemonic()` verifies an embedded integrity checksum before returning the reconstructed phrase. The checksum detects corruption but does not authenticate shares.
-- `encrypt()` and `splitMnemonic()` require `globalThis.crypto.getRandomValues`. In React Native, load `react-native-get-random-values` before importing `@tetherto/wdk-utils` when the runtime does not provide secure random bytes.
+- `encrypt()` requires `globalThis.crypto.getRandomValues`. In Node.js, `splitMnemonic()` uses the dependency's `node:crypto` implementation; browser and React Native paths require `globalThis.crypto.getRandomValues`. In React Native, load `react-native-get-random-values` before importing `@tetherto/wdk-utils` when the runtime does not provide secure random bytes.
 - `parseBip21Request()` accepts `bitcoin:` URIs with a validated Bitcoin address and optional `amount`, `label`, and `message` parameters.
 - `encodeBip21Request()` validates the Bitcoin address and amount before returning a `bitcoin:` URI.
 - `encrypt()` returns a versioned payload with hex-encoded `salt`, `iv`, `tag`, and `ciphertext` fields plus the scrypt cost parameters used for key derivation.
@@ -48805,25 +48817,7 @@ const encrypted = encrypt(seedPhrase, passphrase)
 const restoredSeedPhrase = decrypt(encrypted, passphrase)
 ```
 
-You can split a BIP-39 mnemonic into shares that require a threshold to recover:
-
-```javascript title="Split And Recover A Mnemonic"
-import 'react-native-get-random-values' // React Native only; load before WDK Utils
-import { combineMnemonic, splitMnemonic } from '@tetherto/wdk-utils'
-
-const shares = await splitMnemonic(seedPhrase, {
-  shares: 5,
-  threshold: 3
-})
-
-const restored = await combineMnemonic([
-  shares[0],
-  shares[2],
-  shares[4]
-])
-```
-
-Treat every unencrypted share as sensitive recovery material. Store shares separately and do not send them to logs, analytics, or untrusted services.
+For mnemonic sharing, follow [Shamir Secret Sharing](/tools/wdk-utils/guides/shamir-secret-sharing) to choose a threshold, authenticate stored shares, verify the recovery path, and understand compatibility limits. In React Native, load the random-values polyfill in the application entrypoint as shown above rather than importing it in shared Node.js or browser code.
 
 You can derive independent keys for application-specific purposes by using distinct domain labels:
 
@@ -48844,6 +48838,222 @@ const signingKeyPair = deriveSeedKeyPair(seedBytes, {
 syncKey.fill(0)
 signingKeyPair.secretKey.fill(0)
 ```
+
+***
+
+## Need Help?
+
+<SupportCards />
+
+***
+
+## Shamir Secret Sharing
+URL: https://docs.wdk.tether.io/tools/wdk-utils/guides/shamir-secret-sharing
+Description: Split and recover English BIP-39 mnemonics with threshold shares from @tetherto/wdk-utils
+
+`splitMnemonic()` and `combineMnemonic()` are root exports of `@tetherto/wdk-utils`. They convert an English BIP-39 mnemonic to entropy, add a four-byte integrity check, and create hex-encoded Shamir shares. Install and import this capability from the WDK Utils package root; the package does not export an `@tetherto/wdk-utils/shamir` subpath.
+
+<Callout type="warn">
+Shares are unencrypted recovery material. Anyone who obtains the threshold number of shares can reconstruct the mnemonic. Store shares in separate trusted locations, authenticate the exact share bytes before recovery, and never send a mnemonic or its shares to logs, analytics, crash reports, or untrusted services.
+</Callout>
+
+## Before you start
+
+You need:
+
+- A valid 12-, 15-, 18-, 21-, or 24-word English BIP-39 mnemonic generated with a cryptographically secure source. A valid word list and checksum do not prove that the original generation process was secure.
+- A recovery policy that defines the total number of shares (`n`) and the threshold needed to recover (`k`). Both values must be integers, `2 <= k <= n <= 255`.
+- A secure way to distribute and retain each share separately, plus a tamper-evident record for authenticating the share bytes during recovery.
+- Cryptographically secure randomness. Node.js uses its `node:crypto` implementation. Browser and React Native paths must provide `globalThis.crypto.getRandomValues`; React Native runtimes may need a polyfill.
+
+<Callout type="warn">
+The helper receives only the mnemonic words. It does not include an optional BIP-39 passphrase, derivation path, network, account index, or other wallet metadata. Preserve everything your wallet needs for recovery through a separate protected process.
+</Callout>
+
+The returned values are package-specific hex shares. They are not SLIP-39 mnemonic shares and are not compatible with tools that expect word-based recovery shares.
+
+## Install WDK Utils
+
+```bash title="Install WDK Utils"
+npm install @tetherto/wdk-utils
+```
+
+In React Native, install a secure random-values polyfill when the runtime does not provide `globalThis.crypto.getRandomValues`:
+
+```bash title="Install React Native Random Values"
+npm install react-native-get-random-values
+```
+
+Load the polyfill in the application entrypoint before any file imports WDK Utils:
+
+```javascript title="React Native Entrypoint"
+import 'react-native-get-random-values'
+```
+
+Node.js does not need this polyfill for `splitMnemonic()`.
+
+## Choose a threshold
+
+A `3`-of-`5` policy creates five shares and requires any three from the same generated set to recover the mnemonic. It tolerates the loss of two shares, while compromise of any three shares exposes the mnemonic.
+
+There is no universal threshold. Choose `n` and `k` from the number of independent storage locations, the people or systems involved in recovery, and the acceptable loss and compromise scenarios. Do not create more shares than the recovery process can inventory and protect.
+
+## Split the mnemonic
+
+Keep the policy in application configuration or a protected recovery record. Do not rely on the share strings to describe it.
+
+```javascript title="Create Recovery Shares"
+import { splitMnemonic } from '@tetherto/wdk-utils'
+
+export const recoveryPolicy = {
+  shares: 5,
+  threshold: 3
+}
+
+export async function createRecoveryShares(mnemonic) {
+  return splitMnemonic(mnemonic, recoveryPolicy)
+}
+```
+
+`splitMnemonic()` returns five lowercase hex strings for this policy. It normalizes leading, trailing, and repeated whitespace in the mnemonic. It rejects invalid English BIP-39 words, word counts, and checksums.
+
+Do not print the returned array or persist all shares as one application record.
+
+## Preserve the recovery record
+
+The API returns share strings, not a self-describing recovery bundle. Keep protected operational metadata that identifies:
+
+- The package and installed version used to create the shares.
+- The total share count and recovery threshold.
+- An application-defined identifier for this generated share set.
+- The English BIP-39 format and hex share encoding.
+- Whether the wallet also requires a separate BIP-39 passphrase or other recovery metadata.
+- Which share belongs in each trusted location, without placing every share in the same record.
+- An authenticated digest or signature for each exact share value, stored where an attacker cannot replace both a share and its integrity record.
+- An expected public wallet identifier, such as an address or fingerprint derived with the recorded passphrase and derivation settings, for validating the recovered wallet before use.
+
+Each call to `splitMnemonic()` creates a new random share set. Do not mix shares from different calls, even when they were created from the same mnemonic.
+
+The share strings do not carry a format-version marker, and the package does not document a cross-version compatibility guarantee. Record the installed package version and test recovery before depending on a package upgrade for an existing backup.
+
+## Verify the backup
+
+Retrieve a threshold-sized subset from the intended independent storage locations and verify it in a trusted environment before treating the backup as recoverable. Use a subset rather than all generated shares so the test exercises the intended threshold and retrieval path.
+
+<Callout type="info">
+The wrappers below show application-defined integration boundaries, not additional WDK Utils exports. Your recovery system must implement `verifyShare` and `matchesExpectedWallet` against independently protected records. Each callback must return `true` or `false`, or a Promise of that boolean. Stop recovery when either control is unavailable.
+</Callout>
+
+```javascript title="Verify A Recovery Subset"
+import { combineMnemonic } from '@tetherto/wdk-utils'
+
+export async function verifyRecovery(
+  mnemonic,
+  retrievedShares,
+  { threshold, verifyShare }
+) {
+  if (!Array.isArray(retrievedShares) || retrievedShares.length > 255) {
+    throw new Error('Invalid recovery shares')
+  }
+  if (!Number.isInteger(threshold) || threshold < 2 || threshold > 255) {
+    throw new Error('Invalid recovery threshold')
+  }
+  if (typeof verifyShare !== 'function') {
+    throw new Error('Share verifier is required')
+  }
+  if (retrievedShares.length < threshold) {
+    throw new Error('Not enough recovery shares')
+  }
+
+  const verified = await Promise.all(retrievedShares.map(verifyShare))
+  if (!verified.every((result) => result === true)) {
+    throw new Error('Recovery share authentication failed')
+  }
+
+  const restored = await combineMnemonic(retrievedShares)
+  const expected = mnemonic.trim().replace(/\s+/g, ' ')
+
+  if (restored !== expected) {
+    throw new Error('Recovery verification failed')
+  }
+}
+```
+
+`verifyShare` must compare each exact share value with the authenticated digest or signature recorded when the share set was created. Checking only that a share is valid hex is not authentication.
+
+Do not log either value during comparison. Keep the original recovery material until the recovery policy and independently stored threshold subset have been verified. Repeat recovery drills when storage locations, custodians, or package versions change.
+
+## Recover the mnemonic
+
+Collect at least the recorded threshold number of shares from the same generated set. Authenticate each share before combining it, then validate the recovered wallet against an independently protected public identifier before use:
+
+```javascript title="Recover A Mnemonic"
+import { combineMnemonic } from '@tetherto/wdk-utils'
+
+export async function recoverMnemonic(
+  recoveryShares,
+  { threshold, verifyShare, matchesExpectedWallet }
+) {
+  if (!Array.isArray(recoveryShares) || recoveryShares.length > 255) {
+    throw new Error('Invalid recovery shares')
+  }
+  if (!Number.isInteger(threshold) || threshold < 2 || threshold > 255) {
+    throw new Error('Invalid recovery threshold')
+  }
+  if (
+    typeof verifyShare !== 'function' ||
+    typeof matchesExpectedWallet !== 'function'
+  ) {
+    throw new Error('Recovery verification callbacks are required')
+  }
+  if (recoveryShares.length < threshold) {
+    throw new Error('Not enough recovery shares')
+  }
+
+  const verified = await Promise.all(recoveryShares.map(verifyShare))
+  if (!verified.every((result) => result === true)) {
+    throw new Error('Recovery share authentication failed')
+  }
+
+  const mnemonic = await combineMnemonic(recoveryShares)
+  const walletMatches = await matchesExpectedWallet(mnemonic)
+  if (walletMatches !== true) {
+    throw new Error('Recovered wallet identity does not match')
+  }
+
+  return mnemonic
+}
+```
+
+`verifyShare` has the same authenticated-record requirement as the verification step. `matchesExpectedWallet` must derive and compare the expected public wallet identifier with the separately recorded passphrase and derivation settings. Do not transfer funds, discard another backup, or update a wallet identity based only on a successful checksum.
+
+`combineMnemonic()` accepts case-insensitive hex strings and returns the normalized English BIP-39 mnemonic. The supplied shares must have the same length, use unique share coordinates, and belong to the same generated set. The helper accepts between 2 and 255 shares, but the application must retain and enforce the actual recovery threshold.
+
+Both mnemonic helpers return Promises that reject with `Error` objects. For `combineMnemonic()`, non-array input, fewer than two shares, non-string entries, and malformed hex retain specific messages. Duplicate coordinates, mixed lengths, more than 255 shares, reconstruction failures, and checksum failures collapse to `Invalid shares: could not reconstruct a valid mnemonic`.
+
+<Callout type="warn">
+The embedded four-byte checksum detects ordinary corruption and incorrect reconstruction. It is not a MAC or signature, does not authenticate the people or systems providing shares, and does not protect against deliberately forged input. Do not use `combineMnemonic()` itself as a share-authentication check.
+</Callout>
+
+## Understand the limits
+
+- WDK Utils does not generate or store the mnemonic, distribute shares, enforce access control, or manage recovery custodians.
+- Sharing is not encryption. Protect every share as material that may later be combined with compromised shares.
+- Only the English BIP-39 wordlist is supported.
+- An optional BIP-39 passphrase and wallet-specific recovery metadata remain outside these shares.
+- The implementation clears decoded mnemonic entropy and the reconstructed secret on a best-effort basis. It does not clear decoded share arrays, and JavaScript strings held by the application cannot be reliably zeroized. Keep mnemonic and share strings out of long-lived state.
+- The returned Promises reject with `Error` objects rather than structured error codes. Handle failures with `await` and `try...catch` or with `.catch()`, show a safe generic message to users, and never include share values in diagnostics.
+
+## Next steps
+
+<Cards>
+<Card title="WDK Utils Configuration" href="/tools/wdk-utils/configuration">
+Review package imports and runtime requirements.
+</Card>
+<Card title="WDK Utils API Reference" href="/tools/wdk-utils/api-reference#bip-39-mnemonic-sharing-helpers">
+Review exact signatures, constraints, and failure behavior.
+</Card>
+</Cards>
 
 ***
 

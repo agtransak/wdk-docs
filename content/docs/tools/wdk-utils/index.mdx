@@ -16,7 +16,7 @@ WDK Utils provides CAIP-2-aware and chain-specific validation helpers for Bitcoi
 - **Lightning payment parsing**: Decode LNURL strings and BOLT11 invoices before you display or route payment details.
 - **BOLT11 invoice helpers**: Validate, decode, hash, sign, and encode BOLT11 invoices for Bitcoin, testnet, regtest, and signet flows.
 - **EIP-681 request parsing**: Detect request-shaped EIP-681 strings and parse transfer payloads into `recipient`, `tokenAddress`, `chainId`, and `amountSmallest`.
-- **No runtime setup**: Import the functions you need. The package has no constructor or runtime configuration.
+- **No client initialization**: Import the functions you need; there is no constructor or client object. Review [Configuration](/tools/wdk-utils/configuration) for platform prerequisites.
 - **TypeScript support**: The published package ships typed exports for every validator and parser.
 - **Bare runtime export**: The package publishes a bare entrypoint in addition to the default module entrypoint.
 

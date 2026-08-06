@@ -481,10 +481,13 @@ export const customTree: Node[] = [
     configuration('/tools/pear-wrk-wdk/configuration'),
     apiReference('/tools/pear-wrk-wdk/api-reference'),
   ]),
-  folder('Validate addresses and parse payment links', '/tools/wdk-utils', 'Wrench', [
+  folder('Validate inputs and manage key material', '/tools/wdk-utils', 'Wrench', [
+    guides([
+      page('Split and Recover a Mnemonic', '/tools/wdk-utils/guides/shamir-secret-sharing', 'Share2'),
+    ]),
     configuration('/tools/wdk-utils/configuration'),
     apiReference('/tools/wdk-utils/api-reference'),
-  ]),
+  ], 'WDK Utils'),
   folder('Bundle WDK for a Bare worklet', '/tools/worklet-bundler', 'Package', [
     configuration('/tools/worklet-bundler/configuration'),
     apiReference('/tools/worklet-bundler/api-reference'),

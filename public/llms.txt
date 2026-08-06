@@ -325,6 +325,7 @@ Raw markdown is available by appending `.md` to any documentation page URL.
 - WDK Utils: https://docs.wdk.tether.io/tools/wdk-utils
 - WDK Utils API Reference: https://docs.wdk.tether.io/tools/wdk-utils/api-reference
 - WDK Utils Configuration: https://docs.wdk.tether.io/tools/wdk-utils/configuration
+- Shamir Secret Sharing: https://docs.wdk.tether.io/tools/wdk-utils/guides/shamir-secret-sharing
 - Worklet Bundler: https://docs.wdk.tether.io/tools/worklet-bundler
 - Worklet Bundler API Reference: https://docs.wdk.tether.io/tools/worklet-bundler/api-reference
 - Worklet Bundler Configuration: https://docs.wdk.tether.io/tools/worklet-bundler/configuration

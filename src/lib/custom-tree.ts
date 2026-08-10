@@ -74,8 +74,6 @@ export const customTree: Node[] = [
     configuration('/sdk/core-module/configuration'),
     apiReference('/sdk/core-module/api-reference'),
   ]),
-  page('All modules reference', '/sdk/all-modules', 'LayoutGrid'),
-
   separator('Wallets'),
   page('Which wallet module do I need?', '/sdk/wallet-modules/which-wallet-module', 'ListChecks'),
   page('Wallet module reference', '/sdk/wallet-modules', 'WalletCards'),

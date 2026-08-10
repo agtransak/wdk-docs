@@ -11,7 +11,8 @@ icon: Code
 | Class | Description | Methods |
 |-------|-------------|---------|
 | [WDK](#wdk) | Main class for managing wallets across multiple blockchains. Orchestrates wallet managers, protocols, middleware, and local transaction policies. | [Constructor](#constructor), [Methods](#methods) |
-| [IWalletAccount](#iwalletaccount) | Base writable wallet account interface from `@tetherto/wdk-wallet`. | [Methods](#methods-1) |
+| [IWalletAccount](#iwalletaccount) | Base single-signer writable wallet account interface from `@tetherto/wdk-wallet`. | [Methods](#methods-1) |
+| [Multisig account contracts](#multisig-account-contracts) | Implementation contracts exported from `@tetherto/wdk-wallet/multisig`. | Interfaces and types |
 | [IWalletAccountWithProtocols](#iwalletaccountwithprotocols) | Protocol registration and access surface added to a wallet account. | [Methods](#methods-2) |
 | [WdkAccount](#wdkaccount) | Consumer-facing account type returned by `getAccount()` and `getAccountByPath()`. | Type alias |
 
@@ -388,7 +389,7 @@ console.log('Seed phrase valid:', isInvalid) // false
 
 ## IWalletAccount
 
-Base writable wallet account interface exposed by `@tetherto/wdk-wallet`. Blockchain modules implement this interface and may narrow the transaction type accepted by `signTransaction()` and `sendTransaction()`.
+Base single-signer writable wallet account interface exposed by `@tetherto/wdk-wallet`. Blockchain modules implement this interface and may narrow the transaction type accepted by `signTransaction()` and `sendTransaction()`.
 
 ### Methods
 
@@ -422,6 +423,120 @@ const signedTransaction = await account.signTransaction({
 
 console.log('Signed transaction:', signedTransaction)
 ```
+
+## Multisig Account Contracts
+
+`@tetherto/wdk-wallet/multisig` exports contracts for chain-specific multisig wallet implementations. The package does not include a concrete multisig account or add these methods to [`WdkAccount`](#wdkaccount). The `Transaction` and `TransactionResult` types remain type exports of the root `@tetherto/wdk-wallet` package.
+
+```javascript title="Import Multisig Contracts"
+import {
+  IWalletAccountReadOnlyMultisig,
+  IWalletAccountMultisig,
+  IMultisigOwnerManagement
+} from '@tetherto/wdk-wallet/multisig'
+```
+
+These runtime exports are interface base classes. Their methods throw `NotImplementedError` until a wallet module overrides them.
+
+### `IWalletAccountReadOnlyMultisig`
+
+The read-only contract shares the base address, signature-verification, balance, token-balance, and receipt methods, then adds multisig state and proposal reads:
+
+```typescript title="Read-only Multisig Contract"
+interface IWalletAccountReadOnlyMultisig {
+  getMultisigInfo(): Promise<MultisigInfo>
+  getProposals(ids: string[]): Promise<Record<string, MultisigProposal | null>>
+  getProposal(id: string): Promise<MultisigProposal | null>
+  getMessageProposals(ids: string[]): Promise<Record<string, MultisigMessageProposal | null>>
+  getMessageProposal(id: string): Promise<MultisigMessageProposal | null>
+  quoteExecuteProposal(id: string): Promise<Omit<TransactionResult, 'hash'>>
+}
+```
+
+Missing proposal and message IDs return `null`. `quoteExecuteProposal()` throws `NoSuchElementError` when the proposal does not exist.
+
+### `IWalletAccountMultisig`
+
+The writable contract extends the read-only contract with signer identity, proposal actions, and execution:
+
+```typescript title="Writable Multisig Contract"
+interface IWalletAccountMultisig extends IWalletAccountReadOnlyMultisig {
+  readonly index: number
+  readonly path: string
+  readonly keyPair: KeyPair
+
+  getSignerAddress(): Promise<string>
+  propose(
+    tx: Transaction,
+    options?: MultisigTransactionOptions
+  ): Promise<MultisigProposal & MultisigAutoExecuteResult>
+  proposeMessage(message: string): Promise<MultisigMessageProposal & MultisigSignature>
+  approveMessageProposal(id: string): Promise<MultisigMessageProposal & MultisigSignature>
+  approveProposal(id: string): Promise<MultisigProposal & MultisigAutoExecuteResult>
+  rejectProposal(id: string): Promise<MultisigProposal>
+  executeProposal(id: string): Promise<TransactionResult>
+}
+```
+
+`propose()` creates a proposal rather than executing the transaction directly. `executeProposal()` requires the approval threshold and throws `ValueError` when the proposal is not ready. Proposal quote, mutation, and execution methods can throw `NoSuchElementError` for an unknown ID; getter methods return `null`.
+
+When `autoExecute: true` makes the current `propose()` or `approveProposal()` call supply the final required approval, the returned intersection can include `transaction` with the execution hash and fee. Otherwise `transaction` is absent.
+
+### `IMultisigOwnerManagement`
+
+Implement this separate contract when a chain-specific account supports proposal-based owner and threshold changes:
+
+```typescript title="Owner Management Contract"
+interface IMultisigOwnerManagement {
+  addOwner(owner: string, options?: MultisigOptions): Promise<MultisigProposal>
+  removeOwner(owner: string, options?: MultisigOptions): Promise<MultisigProposal>
+  swapOwner(oldOwner: string, newOwner: string): Promise<MultisigProposal>
+  changeThreshold(newThreshold: number): Promise<MultisigProposal>
+}
+```
+
+### Multisig Types
+
+```typescript title="Multisig Result Types"
+interface MultisigInfo {
+  address: string
+  owners: string[]
+  threshold: number
+}
+
+interface MultisigProposal {
+  proposalId: string
+  confirmations: number
+  threshold: number
+  status: 'pending' | 'executed'
+}
+
+interface MultisigMessageProposal {
+  messageId: string
+  message: string
+  confirmations: number
+  threshold: number
+  combinedSignature: string | null
+}
+
+interface MultisigTransactionOptions {
+  autoExecute?: boolean
+}
+
+interface MultisigAutoExecuteResult {
+  transaction?: TransactionResult
+}
+
+interface MultisigSignature {
+  signature: string
+}
+
+interface MultisigOptions {
+  threshold: number
+}
+```
+
+The subpath also re-exports the base wallet `KeyPair` type.
 
 ## IWalletAccountWithProtocols
 

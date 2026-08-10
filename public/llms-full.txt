@@ -5366,6 +5366,39 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 ---
 
+### August 10, 2026
+
+**What's New**
+- **pear-wrk-wdk** ([v1.0.0-beta.11](https://github.com/tetherto/pear-wrk-wdk/releases/tag/v1.0.0-beta.11)): Add opt-in method allowlists before dynamic wallet, protocol, and generic-module dispatch. Account rules are scoped by network, protocol rules by network, type, and name, and generic-module rules are HRPC-only. Omitted maps or levels remain unrestricted; rejected calls use the new runtime `METHOD_NOT_ALLOWED` code, which is not included in the published error-code declaration for this release.
+- **wallet-evm-7702-gasless** ([v1.0.0-beta.3](https://github.com/tetherto/wdk-wallet-evm-7702-gasless/releases/tag/v1.0.0-beta.3)): Add `signTransaction()` and signed `UserOperationV8` quote and send support, plus `parallel` and `nonceKey` lanes for signing, sending, and transfers. Signed operations seal their nonce and any EIP-7702 authorization, so submit them before the nonce moves. Let the first delegation land before concurrent sends, and do not overlap operations on one lane because a conflicting operation can return a hash that never receives a receipt.
+
+**Fixes**
+- **p2p-address-book** ([v1.0.0-beta.3](https://github.com/tetherto/wdk-p2p-address-book/releases/tag/v1.0.0-beta.3)): Fix `suspend()` and `resume()` to pause and restore blind peering, an active swarm, and the book's Corestore. Local-only books now suspend and resume without requiring a swarm.
+- **wallet-btc** ([v1.0.0-beta.13](https://github.com/tetherto/wdk-wallet-btc/releases/tag/v1.0.0-beta.13)): Make Blockbook balance reads subtract address-owned confirmed inputs spent by pending transactions, credit address-owned pending change only for trusted transaction chains, and exclude other unconfirmed incoming funds. Electrum and custom clients that do not report `unconfirmedOutgoing` still use their raw net unconfirmed balance, so provider results can differ temporarily.
+
+---
+
+### August 8, 2026
+
+**Changes**
+- **worklet-bundler** ([v1.0.0-beta.9](https://github.com/tetherto/wdk-worklet-bundler/releases/tag/v1.0.0-beta.9)): Publish the beta.8 method-allowlist configuration to npm and add generated HRPC logs for Bare `suspend`, `resume`, and `idle` lifecycle events.
+
+---
+
+### August 7, 2026
+
+**What's New**
+- **wdk-wallet** ([v1.0.0-beta.16](https://github.com/tetherto/wdk-wallet/releases/tag/v1.0.0-beta.16)): Add the `@tetherto/wdk-wallet/multisig` entrypoint with read-only, writable, and owner-management interface classes and proposal, message, threshold, and auto-execution result types. These are implementation contracts whose base methods throw `NotImplementedError`; wallet modules must provide the chain-specific behavior.
+
+---
+
+### August 3, 2026
+
+**What's New**
+- **worklet-bundler** ([v1.0.0-beta.8](https://github.com/tetherto/wdk-worklet-bundler/releases/tag/v1.0.0-beta.8)): Add opt-in `allowedMethods` restrictions for network and nested protocol calls and HRPC-only `allowedModuleMethods` restrictions for generic modules. This GitHub release has no matching public npm artifact; install beta.9 for this surface.
+
+---
+
 ### August 1, 2026
 
 **What's New**
@@ -5896,7 +5929,7 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 ### March 5, 2026
 
 **What's New**
-- **create-wdk-module**: Added documentation for the [`create-wdk-module`](/tools/create-wdk-module) CLI scaffolding tool. Updated [Community Modules](/sdk/community-modules/) and [SDK Get Started](/sdk/get-started) pages with references to the new tool.
+- **create-wdk-module**: Added documentation for the [`create-wdk-module`](/tools/create-wdk-module) CLI scaffolding tool. Updated the [Community Modules](https://wdk.tether.io/developers/blocks) and [SDK Get Started](/sdk/get-started) pages with references to the new tool.
 
 ---
 
@@ -5926,7 +5959,7 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 **What's New**
 - **[Showcase](/overview/showcase)**: More visibility for our showcase page, we value contributions! Added 4 featured community projects: [wdk-mcp](https://github.com/dieselftw/wdk-mcp), [wdk-starter-browser-extension](https://github.com/base58-io/wdk-starter-browser-extension), [wdk-wallet-evm-x402-facilitator](https://github.com/SemanticPay/wdk-wallet-evm-x402-facilitator), and [x402-usdt0](https://github.com/baghdadgherras/x402-usdt0).
-- **[Community Modules](/sdk/community-modules)**: Added [`@base58-io/wdk-wallet-cosmos`](https://github.com/base58-io/wdk-wallet-cosmos) — wallet module for Cosmos-compatible blockchains by [Base58](https://base58.io/).
+- **[Community Modules](https://wdk.tether.io/developers/blocks)**: Added [`@base58-io/wdk-wallet-cosmos`](https://github.com/base58-io/wdk-wallet-cosmos) — wallet module for Cosmos-compatible blockchains by [Base58](https://base58.io/).
 
 ---
 
@@ -6058,12 +6091,12 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 **What's New**
 - Added [MoonPay Fiat Module](/sdk/fiat-modules/fiat-moonpay/) for on-ramp and off-ramp functionality
-- Added [Community Modules](/sdk/community-modules/) section to highlight community-built modules
+- Added a [Community Modules](https://wdk.tether.io/developers/blocks) section to highlight community-built modules
 
 **Changes**
 - Added this changelog page in the docs!
 - **wallet-spark**: Updated Spark SDK to latest version ([v1.0.0-beta.6](https://github.com/tetherto/wdk-wallet-spark/releases/tag/v1.0.0-beta.6))
-- Introduced [All Modules](/sdk/all-modules) page in docs for comprehensive module listings
+- Introduced an [All Modules](https://wdk.tether.io/developers/blocks) page in docs for comprehensive module listings
 - Reorganized documentation structure for better navigation
 
 ---
@@ -6279,7 +6312,7 @@ Tether and the WDK Team do not endorse or assume responsibility for their code, 
 </Callout>
 
 <Callout type="info">
-Looking for community-built WDK modules you can install and use in your project? Check out the [Community Modules](/sdk/community-modules/) page instead.
+Looking for community-built WDK modules you can install and use in your project? Explore the [Building Blocks catalog](https://wdk.tether.io/developers/blocks) on the WDK website.
 </Callout>
 
 ---
@@ -6591,127 +6624,6 @@ The below faucets are for testnets. The USD₮ tokens and other tokens available
 *   **Aave Test Tokens (Sepolia)**: [Aave Faucet](https://app.aave.com/faucet/) — get test USD₮, DAI and other tokens for DeFi testing
 *   **TON Testnet**: [Testgiver Bot](https://t.me/testgiver_ton_bot)
 *   **Bitcoin Testnet**: [CoinFaucet](https://coinfaucet.eu/en/btc-testnet/)
-
-***
-
-## All Modules
-URL: https://docs.wdk.tether.io/sdk/all-modules
-Description: Complete list of available WDK wallet, pricing, swidge, swap, bridge, lending, and fiat interfaces and modules.
-
-A comprehensive list of all available WDK modules. Each module is designed to be modular and can be used independently or combined with others.
-
-## Core Module
-
-The orchestrator that manages all WDK modules.
-
-| Module | Description | Documentation |
-|--------|-------------|---------------|
-| [`@tetherto/wdk`](https://github.com/tetherto/wdk) | Central orchestrator for all WDK modules | [Docs](/sdk/core-module/) |
-
-## Wallet Modules
-
-Wallet modules provide blockchain-specific wallet functionality for managing addresses, balances, and transactions.
-
-| Module | Blockchain | Description | Documentation |
-|--------|------------|-------------|---------------|
-| [`@tetherto/wdk-wallet-btc`](https://github.com/tetherto/wdk-wallet-btc) | Bitcoin | Bitcoin SegWit wallet with BIP-39/BIP-44 support | [Docs](/sdk/wallet-modules/wallet-btc/) |
-| [`@tetherto/wdk-wallet-evm`](https://github.com/tetherto/wdk-wallet-evm) | EVM | Ethereum and EVM-compatible chains wallet | [Docs](/sdk/wallet-modules/wallet-evm/) |
-| [`@tetherto/wdk-wallet-evm-erc-4337`](https://github.com/tetherto/wdk-wallet-evm-erc-4337) | EVM | ERC-4337 Account Abstraction for EVM chains | [Docs](/sdk/wallet-modules/wallet-evm-erc-4337/) |
-| [`@tetherto/wdk-wallet-evm-7702-gasless`](https://github.com/tetherto/wdk-wallet-evm-7702-gasless) | EVM | EIP-7702 gasless account abstraction for EVM chains | [Docs](/sdk/wallet-modules/wallet-evm-7702-gasless/) |
-| [`@tetherto/wdk-wallet-ton`](https://github.com/tetherto/wdk-wallet-ton) | TON | TON blockchain wallet | [Docs](/sdk/wallet-modules/wallet-ton/) |
-| [`@tetherto/wdk-wallet-ton-gasless`](https://github.com/tetherto/wdk-wallet-ton-gasless) | TON | Gasless Jetton transfers on TON | [Docs](/sdk/wallet-modules/wallet-ton-gasless/) |
-| [`@tetherto/wdk-wallet-tron`](https://github.com/tetherto/wdk-wallet-tron) | TRON | TRON blockchain wallet | [Docs](/sdk/wallet-modules/wallet-tron/) |
-| [`@tetherto/wdk-wallet-tron-gasfree`](https://github.com/tetherto/wdk-wallet-tron-gasfree) | TRON | Gas-free transactions on TRON | [Docs](/sdk/wallet-modules/wallet-tron-gasfree/) |
-| [`@tetherto/wdk-wallet-solana`](https://github.com/tetherto/wdk-wallet-solana) | Solana | Solana blockchain wallet | [Docs](/sdk/wallet-modules/wallet-solana/) |
-| [`@tetherto/wdk-wallet-solana-gasless`](https://github.com/tetherto/wdk-wallet-solana-gasless) | Solana | Gasless Solana transactions through a Kora-compatible paymaster | [Docs](/sdk/wallet-modules/wallet-solana-gasless/) |
-| [`@tetherto/wdk-wallet-aptos`](https://github.com/tetherto/wdk-wallet-aptos) | Aptos | Aptos blockchain wallet with native APT and fungible asset support | [Docs](/sdk/wallet-modules/wallet-aptos/) |
-| [`@tetherto/wdk-wallet-spark`](https://github.com/tetherto/wdk-wallet-spark) | Spark | Spark/Lightning Bitcoin L2 wallet | [Docs](/sdk/wallet-modules/wallet-spark/) |
-
-## Swidge Modules
-
-Swidge providers can quote and execute asset routes. A route can be swap-only, bridge-only, or a combined swap and bridge route.
-
-<Callout type="warn">
-Rows marked Community are developed and maintained independently by third-party contributors.
-
-Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
-</Callout>
-
-| Module | Provider | Ownership | Description | Documentation |
-|--------|----------|-----------|-------------|---------------|
-| [`wdk-protocol-swidge-orchestra`](https://www.npmjs.com/package/wdk-protocol-swidge-orchestra) | Flashnet Orchestra | Community | Swidge provider for BTC and stablecoin routes returned by Orchestra. Treat the live [Orchestra route matrix](https://orchestration.flashnet.xyz/v1/orchestration/routes) as provider-level data and filter through package discovery before exposing routes. | [Docs](/sdk/swidge-modules/swidge-orchestra/) |
-| [`@rhino.fi/wdk-protocol-swidge-rhinofi`](https://www.npmjs.com/package/@rhino.fi/wdk-protocol-swidge-rhinofi) | Rhino.fi | Community | Swidge routes for Rhino.fi cross-chain swap and bridge operations | [Docs](/sdk/swidge-modules/swidge-rhinofi/) |
-| [`@symbiosis-finance/wdk-protocol-swidge-symbiosis`](https://www.npmjs.com/package/@symbiosis-finance/wdk-protocol-swidge-symbiosis) | Symbiosis | Community | Runtime-discovered exact-input quotes with EVM, Bitcoin, and capability-gated TON, Tron, and Solana source execution through the Symbiosis API | [Docs](/sdk/swidge-modules/swidge-symbiosis/) |
-| [`@lifi/wdk-protocol-swidge-lifi`](https://www.npmjs.com/package/@lifi/wdk-protocol-swidge-lifi) | LI.FI | Community | Swidge routes for LI.FI swap, bridge, and combined swap-plus-bridge operations | [Docs](/sdk/swidge-modules/swidge-lifi/) |
-
-## Pricing Modules
-
-Pricing modules provide `PricingClient` implementations for market data sources.
-
-| Module | Provider | Description | Documentation |
-|--------|----------|-------------|---------------|
-| [`@tetherto/wdk-pricing-coingecko-http`](https://github.com/tetherto/wdk-pricing-coingecko-http) | CoinGecko | CoinGecko HTTP pricing client for current prices, price data, and historical series | [Docs](/sdk/pricing-modules/pricing-coingecko-http/) |
-| [`@tetherto/wdk-pricing-bitfinex-http`](https://github.com/tetherto/wdk-pricing-bitfinex-http) | Bitfinex | Bitfinex HTTP pricing client for current prices, batched price data, and historical series | [Docs](/tools/price-rates/) |
-
-## Swap Modules
-
-DEX swap functionality for token exchanges.
-
-| Module | Blockchain | Description | Documentation |
-|--------|------------|-------------|---------------|
-| [`@tetherto/wdk-protocol-swap-velora-evm`](https://github.com/tetherto/wdk-protocol-swap-velora-evm) | EVM | DEX aggregator swap on EVM chains | [Docs](/sdk/swap-modules/swap-velora-evm/) |
-
-## Bridge Modules
-
-Cross-chain bridge functionality for token transfers between blockchains.
-
-| Module | Route | Description | Documentation |
-|--------|-------|-------------|---------------|
-| [`@tetherto/wdk-protocol-bridge-usdt0-evm`](https://github.com/tetherto/wdk-protocol-bridge-usdt0-evm) | EVM → EVM + Non-EVM | USD₮0 bridging from EVM source chains to EVM and non-EVM destinations | [Docs](/sdk/bridge-modules/bridge-usdt0-evm/) |
-
-## Lending Modules
-
-DeFi lending and borrowing functionality.
-
-<Callout type="warn">
-Rows marked Community are developed and maintained independently by third-party contributors.
-
-Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
-</Callout>
-
-| Module | Blockchain | Ownership | Description | Documentation |
-|--------|------------|-----------|-------------|---------------|
-| [`@tetherto/wdk-protocol-lending-aave-evm`](https://github.com/tetherto/wdk-protocol-lending-aave-evm) | EVM | Tether | Aave protocol integration for EVM | [Docs](/sdk/lending-modules/lending-aave-evm/) |
-| [`@morpho-org/wdk-protocol-lending-morpho-evm`](https://www.npmjs.com/package/@morpho-org/wdk-protocol-lending-morpho-evm) | EVM | Community | Morpho Vault V2 and Morpho Blue lending integration for EVM | [Docs](/sdk/lending-modules/lending-morpho-evm/) |
-
-## Fiat Modules
-
-On-ramp and off-ramp functionality for fiat currency integration.
-
-| Module | Provider | Description | Documentation |
-|--------|----------|-------------|---------------|
-| [`@tetherto/wdk-protocol-fiat-moonpay`](https://github.com/tetherto/wdk-protocol-fiat-moonpay) | MoonPay | MoonPay integration for fiat on-ramp | [Docs](/sdk/fiat-modules/fiat-moonpay/) |
-
-## Community Modules
-
-Modules built by the WDK community. See the [Community Modules](/sdk/community-modules/) page for more details.
-
-<Callout type="warn">
-Community modules are developed and maintained independently by third-party contributors.
-
-Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
-</Callout>
-
-| Module | Category | Description | Documentation |
-|--------|----------|-------------|---------------|
-| [`@utexo/wdk-wallet-rgb`](https://github.com/UTEXO-Protocol/wdk-wallet-rgb) | Wallet | RGB protocol wallet integration | [Docs](/sdk/community-modules/wdk-wallet-rgb/) |
-| [`@utexo/wdk-rgb-lightning`](https://www.npmjs.com/package/@utexo/wdk-rgb-lightning) | Wallet | RGB Lightning node and wallet integration | [Docs](/sdk/community-modules/wdk-rgb-lightning/) |
-| [`@base58-io/wdk-wallet-cosmos`](https://github.com/base58-io/wdk-wallet-cosmos) | Wallet | Cosmos-compatible wallet integration | [Docs](/sdk/community-modules/wdk-wallet-cosmos/) |
-| [`@morpho-org/wdk-protocol-lending-morpho-evm`](https://www.npmjs.com/package/@morpho-org/wdk-protocol-lending-morpho-evm) | Lending | Morpho Vault V2 and Morpho Blue lending integration | [Docs](/sdk/lending-modules/lending-morpho-evm/) |
-| [`wdk-protocol-swidge-orchestra`](https://github.com/flashnetxyz/wdk-protocol-swidge-orchestra) | Swidge | Flashnet Orchestra BTC and stablecoin route integration | [Docs](/sdk/swidge-modules/swidge-orchestra/) |
-| [`@rhino.fi/wdk-protocol-swidge-rhinofi`](https://www.npmjs.com/package/@rhino.fi/wdk-protocol-swidge-rhinofi) | Swidge | Rhino.fi cross-chain route integration | [Docs](/sdk/swidge-modules/swidge-rhinofi/) |
-| [`@symbiosis-finance/wdk-protocol-swidge-symbiosis`](https://www.npmjs.com/package/@symbiosis-finance/wdk-protocol-swidge-symbiosis) | Swidge | Same-chain and cross-chain exact-input routes through Symbiosis | [Docs](/sdk/swidge-modules/swidge-symbiosis/) |
-| [`@lifi/wdk-protocol-swidge-lifi`](https://www.npmjs.com/package/@lifi/wdk-protocol-swidge-lifi) | Swidge | LI.FI swap and bridge route integration | [Docs](/sdk/swidge-modules/swidge-lifi/) |
 
 ***
 
@@ -8240,82 +8152,6 @@ Constructor, methods, types, and error behavior
 ***
 
 <SupportCards />
-
-***
-
-## Community Modules
-URL: https://docs.wdk.tether.io/sdk/community-modules
-Description: Explore WDK modules built by the community and learn how to create your own custom modules.
-
-The WDK ecosystem is enriched by modules developed by our community. These modules extend WDK's capabilities to support additional blockchains, protocols, and use cases.
-
-<Callout type="warn">
-Community modules are developed and maintained independently by third-party contributors.
-
-Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
-</Callout>
-
-## Available Community Modules
-
-| Module | Type | Description | Documentation | Author |
-|--------|------|-------------|---------------|--------|
-| [@utexo/wdk-wallet-rgb](https://www.npmjs.com/package/@utexo/wdk-wallet-rgb) ([GitHub](https://github.com/UTEXO-Protocol/wdk-wallet-rgb)) | Wallet Module | Wallet module for RGB, Bitcoin-based smart contracts | [Docs](/sdk/community-modules/wdk-wallet-rgb/) | [UTEXO](https://github.com/UTEXO-Protocol) |
-| [@utexo/wdk-rgb-lightning](https://www.npmjs.com/package/@utexo/wdk-rgb-lightning) ([GitHub](https://github.com/UTEXO-Protocol/wdk-rgb-lightning)) | Wallet Module | RGB Lightning node, channel, payment, and asset integration | [Docs](/sdk/community-modules/wdk-rgb-lightning/) | [UTEXO](https://github.com/UTEXO-Protocol) |
-| [@arkade-os/wdk](https://www.npmjs.com/package/@arkade-os/wdk) ([GitHub](https://github.com/arkade-os/arkade-wdk)) | Wallet Module | Bitcoin wallet module built on the Arkade SDK with Arkade addresses, boarding addresses, BIP21/LNURL/Lightning send routing, and optional Boltz swaps | [README](https://github.com/arkade-os/arkade-wdk#readme) | [Arkade](https://github.com/arkade-os) |
-| [@base58-io/wdk-wallet-cosmos](https://www.npmjs.com/package/@base58-io/wdk-wallet-cosmos) ([GitHub](https://github.com/base58-io/wdk-wallet-cosmos)) | Wallet Module | Wallet module for Cosmos-compatible blockchains | [Docs](/sdk/community-modules/wdk-wallet-cosmos/) | [Base58](https://base58.io/) |
-| [@morpho-org/wdk-protocol-lending-morpho-evm](https://www.npmjs.com/package/@morpho-org/wdk-protocol-lending-morpho-evm) ([GitHub](https://github.com/morpho-org/sdks/tree/main/packages/wdk-protocol-lending-morpho-evm)) | Lending Module | Morpho EVM lending module for vault deposits, collateral supply, borrowing, repayment, and position reads | [Docs](/sdk/lending-modules/lending-morpho-evm/) | [Morpho Association](https://morpho.org/) |
-| [wdk-protocol-swidge-orchestra](https://www.npmjs.com/package/wdk-protocol-swidge-orchestra) ([GitHub](https://github.com/flashnetxyz/wdk-protocol-swidge-orchestra)) | Swidge Module | Flashnet Orchestra Swidge provider for BTC and stablecoin routes returned by Orchestra | [Docs](/sdk/swidge-modules/swidge-orchestra/) | [Flashnet](https://github.com/flashnetxyz) |
-| [@rhino.fi/wdk-protocol-swidge-rhinofi](https://www.npmjs.com/package/@rhino.fi/wdk-protocol-swidge-rhinofi) ([GitHub](https://github.com/rhinofi/wdk-protocol-swidge-rhinofi)) | Swidge Module | Rhino.fi cross-chain swap and bridge routes through the WDK swidge interface | [Docs](/sdk/swidge-modules/swidge-rhinofi/) | [Rhino.fi](https://rhino.fi/) |
-| [@lifi/wdk-protocol-swidge-lifi](https://www.npmjs.com/package/@lifi/wdk-protocol-swidge-lifi) ([GitHub](https://github.com/lifinance/wdk-lifi-swidge-protocol)) | Swidge Module | LI.FI swap and bridge routes through the WDK swidge interface | [Docs](/sdk/swidge-modules/swidge-lifi/) | [LI.FI](https://li.fi/) |
-| [@moonpay/wdk-protocol-swidge-moonpay-trade](https://www.npmjs.com/package/@moonpay/wdk-protocol-swidge-moonpay-trade) | Swidge Module | Routes through MoonPay Trade | [README](https://www.npmjs.com/package/@moonpay/wdk-protocol-swidge-moonpay-trade#readme) | [MoonPay](https://www.moonpay.com/) |
-| [@swapdk/wdk-protocol-swidge-swapdk](https://www.npmjs.com/package/@swapdk/wdk-protocol-swidge-swapdk) ([GitHub](https://github.com/Swap-DK/wdk-protocol-bridges-swapdk)) | Swidge Module | Routes through SwapDK | [README](https://github.com/Swap-DK/wdk-protocol-bridges-swapdk#readme) | [SwapDK](https://swapdk.com/) |
-| [@gobob/wdk-protocol-swidge-gateway](https://www.npmjs.com/package/@gobob/wdk-protocol-swidge-gateway) ([GitHub](https://github.com/bob-collective/wdk-protocol-swidge-gateway)) | Swidge Module | Routes through the BOB Gateway | [README](https://github.com/bob-collective/wdk-protocol-swidge-gateway#readme) | [BOB](https://www.gobob.xyz/) |
-| [@symbiosis-finance/wdk-protocol-swidge-symbiosis](https://www.npmjs.com/package/@symbiosis-finance/wdk-protocol-swidge-symbiosis) ([GitHub](https://github.com/symbiosis-finance/wdk-protocol-swidge-symbiosis)) | Swidge Module | Runtime-discovered exact-input quotes with EVM, Bitcoin, and capability-gated TON, Tron, and Solana source execution through the Symbiosis API | [Docs](/sdk/swidge-modules/swidge-symbiosis/) | [Symbiosis](https://symbiosis.finance/) |
-
----
-
-## Create Your Own Module
-
-Want to extend WDK with your own custom module? Use the `create-wdk-module` CLI to scaffold a fully configured project in seconds:
-
-```bash title="Scaffold a new module"
-npx @tetherto/create-wdk-module@latest
-```
-
-The CLI generates source files, tests, TypeScript type definitions, and CI workflows for supported wallet and protocol module types. See the [Create WDK Module documentation](/tools/create-wdk-module) for the full guide, CLI options, and generated project structure.
-
-You can also:
-
-1. **Study existing modules** - Review the source code of official WDK modules on [GitHub](https://github.com/orgs/tetherto/repositories?q=wdk) to understand the patterns and interfaces
-2. **Join the community** - Connect with other developers on our [Discord](https://discord.gg/arYXDhHB2w) to discuss your ideas
-3. **Open an issue** - Have questions? Open an issue on the relevant repository
-
----
-
-## Submit Your Module
-
-If you've built a WDK module, we'd love to feature it here!
-
-**To submit your module:**
-
-1. Ensure your module follows WDK interface conventions
-2. Include comprehensive documentation and a clear README
-3. Make the repository publicly accessible
-4. Submit through our [Community Form](https://forms.gle/wmNwc5epxaa85u8a9) or share on our **#wdk-showcase** Discord channel
-
-Your module may be featured in our documentation and community showcases.
-
----
-
-## Guidelines for Community Modules
-
-Community modules should:
-
-- Implement the standard WDK module interface
-- Include TypeScript type definitions
-- Provide clear installation and usage instructions
-- Be open source or publicly accessible
-- Include appropriate tests and examples
 
 ***
 
@@ -10054,8 +9890,8 @@ Review the public API published in `1.0.0-beta.4`.
 <Card title="Source at v1.0.0-beta.4" href="https://github.com/base58-io/wdk-wallet-cosmos/tree/v1.0.0-beta.4">
 Inspect the source that corresponds to the documented package.
 </Card>
-<Card title="Community modules" href="/sdk/community-modules">
-Review the community module catalog and submission guidance.
+<Card title="Building Blocks" href="https://wdk.tether.io/developers/blocks">
+Explore the official and community-maintained module catalog.
 </Card>
 </Cards>
 
@@ -12581,7 +12417,8 @@ Description: Complete API documentation for @tetherto/wdk
 | Class | Description | Methods |
 |-------|-------------|---------|
 | [WDK](#wdk) | Main class for managing wallets across multiple blockchains. Orchestrates wallet managers, protocols, middleware, and local transaction policies. | [Constructor](#constructor), [Methods](#methods) |
-| [IWalletAccount](#iwalletaccount) | Base writable wallet account interface from `@tetherto/wdk-wallet`. | [Methods](#methods-1) |
+| [IWalletAccount](#iwalletaccount) | Base single-signer writable wallet account interface from `@tetherto/wdk-wallet`. | [Methods](#methods-1) |
+| [Multisig account contracts](#multisig-account-contracts) | Implementation contracts exported from `@tetherto/wdk-wallet/multisig`. | Interfaces and types |
 | [IWalletAccountWithProtocols](#iwalletaccountwithprotocols) | Protocol registration and access surface added to a wallet account. | [Methods](#methods-2) |
 | [WdkAccount](#wdkaccount) | Consumer-facing account type returned by `getAccount()` and `getAccountByPath()`. | Type alias |
 
@@ -12958,7 +12795,7 @@ console.log('Seed phrase valid:', isInvalid) // false
 
 ## IWalletAccount
 
-Base writable wallet account interface exposed by `@tetherto/wdk-wallet`. Blockchain modules implement this interface and may narrow the transaction type accepted by `signTransaction()` and `sendTransaction()`.
+Base single-signer writable wallet account interface exposed by `@tetherto/wdk-wallet`. Blockchain modules implement this interface and may narrow the transaction type accepted by `signTransaction()` and `sendTransaction()`.
 
 ### Methods
 
@@ -12992,6 +12829,120 @@ const signedTransaction = await account.signTransaction({
 
 console.log('Signed transaction:', signedTransaction)
 ```
+
+## Multisig Account Contracts
+
+`@tetherto/wdk-wallet/multisig` exports contracts for chain-specific multisig wallet implementations. The package does not include a concrete multisig account or add these methods to [`WdkAccount`](#wdkaccount). The `Transaction` and `TransactionResult` types remain type exports of the root `@tetherto/wdk-wallet` package.
+
+```javascript title="Import Multisig Contracts"
+import {
+  IWalletAccountReadOnlyMultisig,
+  IWalletAccountMultisig,
+  IMultisigOwnerManagement
+} from '@tetherto/wdk-wallet/multisig'
+```
+
+These runtime exports are interface base classes. Their methods throw `NotImplementedError` until a wallet module overrides them.
+
+### `IWalletAccountReadOnlyMultisig`
+
+The read-only contract shares the base address, signature-verification, balance, token-balance, and receipt methods, then adds multisig state and proposal reads:
+
+```typescript title="Read-only Multisig Contract"
+interface IWalletAccountReadOnlyMultisig {
+  getMultisigInfo(): Promise<MultisigInfo>
+  getProposals(ids: string[]): Promise<Record<string, MultisigProposal | null>>
+  getProposal(id: string): Promise<MultisigProposal | null>
+  getMessageProposals(ids: string[]): Promise<Record<string, MultisigMessageProposal | null>>
+  getMessageProposal(id: string): Promise<MultisigMessageProposal | null>
+  quoteExecuteProposal(id: string): Promise<Omit<TransactionResult, 'hash'>>
+}
+```
+
+Missing proposal and message IDs return `null`. `quoteExecuteProposal()` throws `NoSuchElementError` when the proposal does not exist.
+
+### `IWalletAccountMultisig`
+
+The writable contract extends the read-only contract with signer identity, proposal actions, and execution:
+
+```typescript title="Writable Multisig Contract"
+interface IWalletAccountMultisig extends IWalletAccountReadOnlyMultisig {
+  readonly index: number
+  readonly path: string
+  readonly keyPair: KeyPair
+
+  getSignerAddress(): Promise<string>
+  propose(
+    tx: Transaction,
+    options?: MultisigTransactionOptions
+  ): Promise<MultisigProposal & MultisigAutoExecuteResult>
+  proposeMessage(message: string): Promise<MultisigMessageProposal & MultisigSignature>
+  approveMessageProposal(id: string): Promise<MultisigMessageProposal & MultisigSignature>
+  approveProposal(id: string): Promise<MultisigProposal & MultisigAutoExecuteResult>
+  rejectProposal(id: string): Promise<MultisigProposal>
+  executeProposal(id: string): Promise<TransactionResult>
+}
+```
+
+`propose()` creates a proposal rather than executing the transaction directly. `executeProposal()` requires the approval threshold and throws `ValueError` when the proposal is not ready. Proposal quote, mutation, and execution methods can throw `NoSuchElementError` for an unknown ID; getter methods return `null`.
+
+When `autoExecute: true` makes the current `propose()` or `approveProposal()` call supply the final required approval, the returned intersection can include `transaction` with the execution hash and fee. Otherwise `transaction` is absent.
+
+### `IMultisigOwnerManagement`
+
+Implement this separate contract when a chain-specific account supports proposal-based owner and threshold changes:
+
+```typescript title="Owner Management Contract"
+interface IMultisigOwnerManagement {
+  addOwner(owner: string, options?: MultisigOptions): Promise<MultisigProposal>
+  removeOwner(owner: string, options?: MultisigOptions): Promise<MultisigProposal>
+  swapOwner(oldOwner: string, newOwner: string): Promise<MultisigProposal>
+  changeThreshold(newThreshold: number): Promise<MultisigProposal>
+}
+```
+
+### Multisig Types
+
+```typescript title="Multisig Result Types"
+interface MultisigInfo {
+  address: string
+  owners: string[]
+  threshold: number
+}
+
+interface MultisigProposal {
+  proposalId: string
+  confirmations: number
+  threshold: number
+  status: 'pending' | 'executed'
+}
+
+interface MultisigMessageProposal {
+  messageId: string
+  message: string
+  confirmations: number
+  threshold: number
+  combinedSignature: string | null
+}
+
+interface MultisigTransactionOptions {
+  autoExecute?: boolean
+}
+
+interface MultisigAutoExecuteResult {
+  transaction?: TransactionResult
+}
+
+interface MultisigSignature {
+  signature: string
+}
+
+interface MultisigOptions {
+  threshold: number
+}
+```
+
+The subpath also re-exports the base wallet `KeyPair` type.
 
 ## IWalletAccountWithProtocols
 
@@ -24023,7 +23974,7 @@ new WalletAccountBtc(seed, path, config)
 | Method | Description | Returns |
 |--------|-------------|---------|
 | `getAddress()` | Returns the account's Bitcoin address | `Promise<string>` |
-| `getBalance()` | Returns the total account balance in satoshis, including unconfirmed funds when present | `Promise<bigint>` |
+| `getBalance()` | Returns the provider-adjusted account balance in satoshis | `Promise<bigint>` |
 | `sendTransaction(tx, timeoutMs?)` | Signs and sends transaction options, or broadcasts signed raw transaction hex, then optionally polls spent inputs | `Promise<{hash: string, fee: bigint}>` |
 | `signTransaction(options)` | Signs a Bitcoin transaction without broadcasting it | `Promise<string>` |
 | `quoteSendTransaction(tx)` | Estimates an unsigned transaction fee or calculates the fee of signed raw transaction hex | `Promise<{fee: bigint}>` |
@@ -24046,7 +23997,7 @@ const address = await account.getAddress()
 console.log('Address:', address) // bc1q... (BIP-84) or 1... (BIP-44)
 ```
 ##### `getBalance()`
-Returns the account's total balance in satoshis, including unconfirmed funds when present.
+Returns the account balance in satoshis. The built-in Blockbook client subtracts address-owned confirmed inputs spent by pending transactions, credits pending change only when every input is address-owned and confirmed or descends from a trusted pending transaction, and excludes other unconfirmed incoming funds. The built-in Electrum clients add their server's raw net unconfirmed delta instead. Custom clients select the Blockbook-style formula by returning `BtcBalance.unconfirmedOutgoing`.
 
 **Returns:** `Promise<bigint>` - Balance in satoshis
 
@@ -24276,7 +24227,7 @@ new WalletAccountReadOnlyBtc(address, config)
 | Method | Description | Returns |
 |--------|-------------|---------|
 | `getAddress()` | Returns the account's Bitcoin address | `Promise<string>` |
-| `getBalance()` | Returns the total account balance in satoshis, including unconfirmed funds when present | `Promise<bigint>` |
+| `getBalance()` | Returns the provider-adjusted account balance in satoshis | `Promise<bigint>` |
 | `quoteSendTransaction(options)` | Estimates the fee for a transaction | `Promise<{fee: bigint}>` |
 | `getTransactionReceipt(hash)` | Returns a transaction's receipt | `Promise<BtcTransactionReceipt \| null>` |
 | `getMaxSpendable()` | Returns the maximum spendable amount | `Promise<BtcMaxSpendableResult>` |
@@ -24295,7 +24246,7 @@ console.log('Address:', address)
 ```
 
 ##### `getBalance()`
-Returns the account's confirmed balance in satoshis.
+Returns the provider-adjusted account balance in satoshis. Read-only and owned accounts use the same [pending-transaction policy](/sdk/wallet-modules/wallet-btc/guides/check-balances#native-btc-balance).
 
 **Returns:** `Promise<bigint>` - Balance in satoshis
 
@@ -24451,9 +24402,9 @@ new ElectrumWs(config)
 | `connect()` | Establishes connection to Electrum server | `Promise<void>` |
 | `close()` | Closes the connection | `Promise<void>` |
 | `reconnect()` | Recreates the underlying socket and reinitializes the session | `Promise<void>` |
-| `getBalance(scripthash)` | Returns balance for a script hash | `Promise<ElectrumBalance>` |
-| `listUnspent(scripthash)` | Returns UTXOs for a script hash | `Promise<ElectrumUtxo[]>` |
-| `getHistory(scripthash)` | Returns transaction history | `Promise<ElectrumHistoryItem[]>` |
+| `getBalance(address)` | Returns balance data for a Bitcoin address | `Promise<BtcBalance>` |
+| `listUnspent(address)` | Returns UTXOs for a Bitcoin address | `Promise<BtcUtxo[]>` |
+| `getHistory(address)` | Returns transaction history for a Bitcoin address | `Promise<BtcHistoryItem[]>` |
 | `getTransaction(txHash)` | Returns raw transaction hex | `Promise<string>` |
 | `broadcast(rawTx)` | Broadcasts raw transaction | `Promise<string>` |
 | `estimateFee(blocks)` | Returns estimated fee rate | `Promise<number>` |
@@ -24563,26 +24514,29 @@ interface IBtcClient {
   connect(): Promise<void>
   close(): Promise<void>
   reconnect(): Promise<void>
-  getBalance(scripthash: string): Promise<ElectrumBalance>
-  listUnspent(scripthash: string): Promise<ElectrumUtxo[]>
-  getHistory(scripthash: string): Promise<ElectrumHistoryItem[]>
+  getBalance(address: string): Promise<BtcBalance>
+  listUnspent(address: string): Promise<BtcUtxo[]>
+  getHistory(address: string): Promise<BtcHistoryItem[]>
   getTransaction(txHash: string): Promise<string>
   broadcast(rawTx: string): Promise<string>
   estimateFee(blocks: number): Promise<number>
 }
 ```
 
-### ElectrumBalance
+### BtcBalance
 ```typescript
-interface ElectrumBalance {
-  confirmed: number    // Confirmed balance in satoshis
-  unconfirmed?: number // Unconfirmed balance in satoshis
+interface BtcBalance {
+  confirmed: number             // Confirmed balance in satoshis
+  unconfirmed?: number          // Raw net unconfirmed balance in satoshis
+  unconfirmedOutgoing?: number  // Trusted pending outgoing amount in satoshis
 }
 ```
 
-### ElectrumUtxo
+When `unconfirmedOutgoing` is present, `WalletAccountReadOnlyBtc.getBalance()` returns `confirmed - unconfirmedOutgoing` and ignores `unconfirmed`. Otherwise it returns `confirmed + (unconfirmed || 0)`.
+
+### BtcUtxo
 ```typescript
-interface ElectrumUtxo {
+interface BtcUtxo {
   tx_hash: string  // The transaction hash containing this UTXO
   tx_pos: number   // The output index within the transaction
   value: number    // The UTXO value in satoshis
@@ -24590,9 +24544,9 @@ interface ElectrumUtxo {
 }
 ```
 
-### ElectrumHistoryItem
+### BtcHistoryItem
 ```typescript
-interface ElectrumHistoryItem {
+interface BtcHistoryItem {
   tx_hash: string // The transaction hash
   height: number  // The block height (0 or negative if unconfirmed)
 }
@@ -24698,6 +24652,16 @@ const config = {
 | `electrum` | Creates a TCP, TLS, or SSL Electrum client from `clientConfig`. |
 | `electrum-ws` | Creates a WebSocket Electrum client from `clientConfig`. |
 | `blockbook-http` | Creates a stateless Blockbook HTTP client from `clientConfig`. |
+
+#### Unconfirmed Balance Handling
+
+The selected client affects [`getBalance()`](/sdk/wallet-modules/wallet-btc/guides/check-balances) while transactions are pending:
+
+- `blockbook-http` reports `unconfirmedOutgoing`. It subtracts address-owned confirmed inputs spent by pending transactions, credits pending change only when every input is address-owned and confirmed or descends from a trusted pending transaction, and excludes other unconfirmed incoming outputs.
+- The built-in Electrum clients return only the server's raw `unconfirmed` delta, so the wallet adds that value to the confirmed balance.
+- A custom `IBtcClient` can return optional `BtcBalance.unconfirmedOutgoing`. When present, the wallet subtracts it from `confirmed` and does not use `unconfirmed`.
+
+Use the same client policy anywhere balances are compared or displayed. Blockbook and Electrum results can differ until pending transactions confirm.
 
 #### Built-in Transport Clients
 
@@ -25118,15 +25082,21 @@ This guide explains how to check [native BTC balances](#native-btc-balance), [ma
 
 ## Native BTC Balance
 
-You can retrieve the confirmed balance in satoshis using [`account.getBalance()`](/sdk/wallet-modules/wallet-btc/api-reference):
+You can retrieve the provider-adjusted balance in satoshis using [`account.getBalance()`](/sdk/wallet-modules/wallet-btc/api-reference):
 
 ```javascript title="Get Native BTC Balance"
 const balance = await account.getBalance()
 console.log('Total balance:', balance, 'satoshis')
 ```
 
-<Callout type="info">
-On Bitcoin, balances are expressed in satoshis (1 BTC = 100,000,000 satoshis). The [`getBalance()`](/sdk/wallet-modules/wallet-btc/api-reference) method returns the total balance, including unconfirmed funds when present.
+On Bitcoin, balances are expressed in satoshis (1 BTC = 100,000,000 satoshis). Pending transactions are handled differently by the selected client:
+
+- The built-in Blockbook client starts with confirmed funds and subtracts address-owned confirmed inputs spent by pending transactions. It credits pending change only when every input is address-owned and confirmed or descends from a trusted pending transaction. Other unconfirmed incoming funds are not added. An untrusted mixed-input transaction can therefore reduce the displayed balance without crediting its pending change.
+- The built-in Electrum clients do not calculate `unconfirmedOutgoing`. They return the confirmed balance plus the Electrum server's raw net unconfirmed delta, which can include pending incoming funds.
+- A custom client can return optional `BtcBalance.unconfirmedOutgoing` to select the Blockbook-style calculation. When that field is present, `getBalance()` ignores the raw `unconfirmed` value.
+
+<Callout type="warning">
+Balances from Blockbook and Electrum can differ while transactions are unconfirmed. Choose one provider policy for user-visible balances, and wait for confirmation before treating incoming funds as final.
 </Callout>
 
 ## Maximum Spendable Amount
@@ -25169,7 +25139,7 @@ console.log('Read-only account balance:', balance, 'satoshis')
 ```
 
 <Callout type="info">
-Read-only accounts follow the same balance behavior as owned accounts: [`getBalance()`](/sdk/wallet-modules/wallet-btc/api-reference) includes unconfirmed funds when present.
+Read-only accounts use the same provider-specific pending-transaction policy as owned accounts.
 </Callout>
 
 <Callout type="info">
@@ -25192,7 +25162,7 @@ This guide explains how to [install the package](#1-install-the-package), [creat
 
 ### Prerequisites
 
-*   **[Node.js](https://nodejs.org/)**: version 20.19.0 or higher. Since Wallet BTC beta.11, `@bitcoinerlab/descriptors` 3.1.7 sets this minimum; the requirement remains unchanged in beta.12.
+*   **[Node.js](https://nodejs.org/)**: version 20.19.0 or higher. Since Wallet BTC beta.11, `@bitcoinerlab/descriptors` 3.1.7 sets this minimum.
 *   **[npm](https://www.npmjs.com/)**: usually comes with Node.js.
 
 ```bash title="Install @tetherto/wdk-wallet-btc"
@@ -25781,6 +25751,8 @@ It handles EIP-7702 authorization, UserOperation construction, UserOperation sig
 - **Paymaster-token transactions**: Configure `paymasterToken` to pay UserOperation costs in an ERC-20 token.
 - **Provider failover**: Pass one provider or an ordered list of RPC URLs / EIP-1193 providers. Provider arrays support `retries`.
 - **UserOperation receipts**: Resolve a UserOperation hash through `getUserOperationReceipt()` or map it to an EVM transaction receipt with `getTransactionReceipt()`.
+- **Non-broadcasting UserOperation signing**: Build and sign a self-contained `UserOperationV8` without submitting it, then quote or send that operation separately. Construction still uses the configured provider, bundler, and paymaster services.
+- **Independent nonce lanes**: Use named or one-time EntryPoint lanes for concurrent operations that do not require ordering.
 - **Read-only and signing accounts**: Use `WalletAccountReadOnlyEvm7702Gasless` for balances, quotes, receipts, allowances, and verification. Use `WalletAccountEvm7702Gasless` when you need signing and sending.
 - **EVM signing support**: Sign plain messages and EIP-712 typed data through the wrapped EVM account.
 
@@ -25812,13 +25784,13 @@ The EOA delegates execution to the configured `delegationAddress`. Treat that ad
 Install the package and create an EIP-7702 gasless account.
 </Card>
 <Card title="Configuration" href="/sdk/wallet-modules/wallet-evm-7702-gasless/configuration">
-Review required fields, fee modes, provider failover, and per-call overrides.
+Review required fields, fee modes, provider failover, nonce lanes, and per-call overrides.
 </Card>
 <Card title="API Reference" href="/sdk/wallet-modules/wallet-evm-7702-gasless/api-reference">
 See the public classes, methods, config types, and error behavior.
 </Card>
 <Card title="Send Transactions" href="/sdk/wallet-modules/wallet-evm-7702-gasless/guides/send-transactions">
-Quote and submit EVM transactions through ERC-4337 UserOperations.
+Sign, quote, and submit ERC-4337 UserOperations, including concurrent sends on independent nonce lanes.
 </Card>
 </Cards>
 
@@ -25919,9 +25891,10 @@ Treat the arrays returned through `keyPair` as read-only. Call `dispose()` when 
 | `signTypedData(typedData)` | `TypedData` | `Promise\<string\>` | Signs EIP-712 typed data. |
 | `verify(message, signature)` | `message: string`, `signature: string` | `Promise\<boolean\>` | Verifies a plain message signature. |
 | `verifyTypedData(typedData, signature)` | `TypedData`, `signature: string` | `Promise\<boolean\>` | Verifies EIP-712 typed data. |
+| `signTransaction(tx, config?)` | `EvmTransaction \| EvmTransaction[]`, partial fee-mode config | `Promise\<UserOperationV8\>` | Signs a self-contained UserOperation without broadcasting it. |
 | `approve(options)` | `ApproveOptions` | `Promise\<TransactionResult\>` | Sends an ERC-20 approval as a UserOperation. |
-| `quoteSendTransaction(tx, config?)` | `EvmTransaction \| EvmTransaction[]`, partial fee-mode config | `Promise\<Omit\<TransactionResult, 'hash'\>\>` | Returns `{ fee }`; owned accounts cache paymaster-token quotes for up to 2 minutes and validate the nonce before reuse. |
-| `sendTransaction(tx, config?)` | `EvmTransaction \| EvmTransaction[]`, partial fee-mode config | `Promise\<TransactionResult\>` | Returns a UserOperation hash and fee. |
+| `quoteSendTransaction(tx, config?)` | `EvmTransaction \| EvmTransaction[] \| UserOperationV8`, partial fee-mode config | `Promise\<Omit\<TransactionResult, 'hash'\>\>` | Returns `{ fee }`; owned accounts cache paymaster-token quotes for up to 2 minutes and validate the nonce before reuse. |
+| `sendTransaction(tx, config?)` | `EvmTransaction \| EvmTransaction[] \| UserOperationV8`, partial fee-mode config | `Promise\<TransactionResult\>` | Builds and signs an operation, or broadcasts an already-signed UserOperation. |
 | `quoteTransfer(options, config?)` | `EvmTransferOptions`, partial fee-mode config | `Promise\<Omit\<TransferResult, 'hash'\>\>` | Quotes an ERC-20 transfer. |
 | `transfer(options, config?)` | `EvmTransferOptions`, partial fee-mode config | `Promise\<TransferResult\>` | Sends an ERC-20 transfer as a UserOperation. |
 | `getAllowance(token, spender)` | `token: string`, `spender: string` | `Promise\<bigint\>` | Reads ERC-20 allowance. |
@@ -25934,10 +25907,21 @@ Treat the arrays returned through `keyPair` as read-only. Call `dispose()` when 
 
 - Sponsored mode returns `fee: 0n` from quote methods.
 - Paymaster-token mode returns fees in the configured paymaster token's base units.
+- `signTransaction()` returns a signed `UserOperationV8` without broadcasting it. The type comes from `abstractionkit` and is not re-exported from this package's root.
+- Quoting a signed UserOperation avoids paymaster calls. Sponsorship mode returns `fee: 0n`; paymaster-token mode derives a native-gas ceiling in wei from its existing gas fields rather than returning the token amount established by the paymaster.
+- Sending a signed UserOperation broadcasts its supplied nonce, authorization, gas fields, and signature unchanged, without rebuilding or signing it.
 - Owned account paymaster-token quotes are cached for up to 2 minutes for the same serialized transaction. Before reusing a cached UserOperation, the account reads the current EntryPoint nonce and re-quotes if it has moved.
 - The cache key contains the transaction but not the per-call fee-mode configuration. Use the same fee-mode and paymaster settings for a quote and its matching `sendTransaction()` or `transfer()` call.
-- `sendTransaction()` signs the UserOperation typed data before submitting it to the bundler.
+- Unsigned transaction inputs are built and signed before submission. A `UserOperationV8` input is broadcast with its supplied signature unchanged.
 - If the account is already delegated to `delegationAddress`, the send path does not include a new EIP-7702 authorization. A send that needs a fresh authorization rebuilds the UserOperation instead of reusing the cached one.
+
+### Nonce Lane Behavior
+
+- The default EntryPoint lane uses key `0`. `nonceKey` takes precedence over `parallel`, and different keys have no ordering relationship.
+- A string `nonceKey` is hashed to a deterministic 192-bit key. Numeric keys must be within the uint192 range; use bigint or string form above JavaScript's safe integer range.
+- Let the first delegation reach the chain before using concurrent lanes. Overlapping operations on the same lane can return hashes even when one can never receive a receipt.
+- A fresh `parallel` lane creates a permanent EntryPoint nonce slot. Reuse a bounded set of named lanes for sustained workloads.
+- The runtime accepts lane fields in per-call overrides for signing, sending, and transfers, but the beta.3 second-argument declarations omit them. Constructor-level lane fields are correctly typed.
 
 ### Transfer Fee Cap
 
@@ -26013,6 +25997,8 @@ Known configuration errors include:
 | `bundlerUrl` | `string` | Yes | ERC-4337 bundler endpoint. |
 | `paymasterUrl` | `string` | No | Paymaster endpoint when different from `bundlerUrl`. |
 | `delegationAddress` | `string` | Yes | Smart-account implementation address used for EIP-7702 delegation. |
+| `parallel` | `boolean` | No | Uses a fresh random nonce lane for each sign, send, or transfer operation unless `nonceKey` is set. |
+| `nonceKey` | `number \| bigint \| string` | No | Uses a reusable explicit uint192 nonce lane; strings are hashed deterministically. |
 
 ### Evm7702GaslessSponsorshipPolicyConfig
 
@@ -26042,7 +26028,7 @@ type Evm7702GaslessWalletConfig =
 
 The package also re-exports EVM wallet types from `@tetherto/wdk-wallet-evm`, including `FeeRates`, `KeyPair`, `EvmTransaction`, `TransactionResult`, `EvmTransferOptions`, `TransferResult`, `EvmTransactionReceipt`, `ApproveOptions`, `TypedData`, `TypedDataDomain`, and `TypedDataField`.
 
-Module-specific exported types include `UserOperationReceipt`, `Eip7702AuthorizationOverride`, `BuildSponsoredUserOperationOverrides`, and `SponsoredUserOperation`.
+Module-specific exported types include `UserOperationReceipt`, `Eip7702AuthorizationOverride`, `BuildSponsoredUserOperationOverrides`, and `SponsoredUserOperation`. In beta.3, `BuildSponsoredUserOperationOverrides` adds optional `nonce?: bigint` for explicitly selecting the EntryPoint nonce in lower-level builder typing; it does not expose the protected builder as a public method.
 
 ***
 
@@ -26099,6 +26085,8 @@ Account constructors and per-call config overrides throw `ConfigurationError` if
 |-------|------|---------|-------------|
 | `paymasterUrl` | `string` | `bundlerUrl` | Paymaster endpoint when it differs from the bundler endpoint. |
 | `retries` | `number` | `3` | Additional retry attempts when `provider` is an array. Total attempts are `1 + retries`. |
+| `parallel` | `boolean` | `false` | Use a fresh random EntryPoint nonce lane for each sign, send, or transfer operation. Ignored when `nonceKey` is set. |
+| `nonceKey` | `number \| bigint \| string` | - | Use a reusable explicit nonce lane. Strings are hashed to a deterministic key; numeric keys must fit the uint192 range. |
 
 ### Provider Failover
 
@@ -26120,6 +26108,24 @@ const wallet = new WalletManagerEvm7702Gasless(seedPhrase, {
 <Callout type="warn">
 An empty provider array throws `ConfigurationError`. Include at least one RPC URL or EIP-1193 provider.
 </Callout>
+
+### Nonce Lanes
+
+The default lane uses key `0` and is sequential. Use `parallel: true` for independent one-off operations, or configure `nonceKey` for a reusable lane:
+
+```javascript title="Configure a named nonce lane"
+const wallet = new WalletManagerEvm7702Gasless(seedPhrase, {
+  provider: 'https://rpc.mevblocker.io/fast',
+  delegationAddress: '<VERIFIED_DELEGATION_ADDRESS>',
+  bundlerUrl: 'https://api.pimlico.io/v2/1/rpc?apikey=YOUR_KEY',
+  isSponsored: true,
+  nonceKey: 'payments'
+})
+```
+
+`nonceKey` takes precedence over `parallel`. A string produces a deterministic 192-bit key that can resume the lane across sessions. A number or bigint is treated as the raw uint192 key; values outside `0` through `2^192 - 1` throw, and values above `2^53` should use bigint or string form.
+
+Wait for the account's first delegation before sending on multiple lanes. Reuse one lane sequentially, because overlapping same-lane operations can return hashes even when one cannot be included. Fresh random lanes also create permanent EntryPoint nonce slots, so prefer a small set of named lanes for recurring workloads.
 
 ## Fee Mode Configuration
 
@@ -26192,7 +26198,7 @@ If a provider serves its paymaster from a different URL than the bundler, set `p
 
 ## Per-call Overrides
 
-`quoteSendTransaction()`, `sendTransaction()`, `quoteTransfer()`, and `transfer()` accept a partial fee-mode config override. Overrides are shallow-merged with the account config. Include `isSponsored: false` when switching a sponsored account to paymaster-token mode for one operation:
+`quoteSendTransaction()`, `signTransaction()`, `sendTransaction()`, `quoteTransfer()`, and `transfer()` accept a partial fee-mode config override. Overrides are shallow-merged with the account config. Include `isSponsored: false` when switching a sponsored account to paymaster-token mode for one operation:
 
 ```javascript title="Override the paymaster token"
 const result = await account.sendTransaction({
@@ -26208,6 +26214,8 @@ const result = await account.sendTransaction({
 ```
 
 When an override is provided, the merged config is validated before the operation runs.
+
+The beta.3 JavaScript runtime also reads `parallel` and `nonceKey` from per-call overrides for `signTransaction()`, `sendTransaction()`, and `transfer()`. The published second-argument TypeScript declarations include only fee-mode fields, so constructor-level lane configuration is the typed path in this release.
 
 <Callout type="warning">
 The two-minute quote cache is keyed by the transaction, not by this override. Pass the same fee-mode and paymaster settings to a quote and its matching send or transfer. If those settings must change, do not execute the same transaction from that account until its earlier cached quote has expired.
@@ -26513,7 +26521,7 @@ const readOnlyAccount = await account.toReadOnlyAccount()
 const balance = await readOnlyAccount.getBalance()
 ```
 
-Read-only accounts do not expose `sign()`, `signTypedData()`, `sendTransaction()`, `transfer()`, or `approve()`.
+Read-only accounts do not expose `sign()`, `signTypedData()`, `signTransaction()`, `sendTransaction()`, `transfer()`, or `approve()`.
 
 ## Create a Read-only Account from an Address
 
@@ -26563,13 +26571,13 @@ wallet.dispose()
 
 ## Send Transactions
 URL: https://docs.wdk.tether.io/sdk/wallet-modules/wallet-evm-7702-gasless/guides/send-transactions
-Description: Quote and send EVM transactions through EIP-7702 gasless UserOperations.
+Description: Sign, quote, and send EVM transactions through EIP-7702 gasless UserOperations.
 
-This guide explains how to quote and send EVM transactions through ERC-4337 UserOperations.
+This guide explains how to sign, quote, and send EVM transactions through ERC-4337 UserOperations, including concurrent sends with independent nonce lanes. Use it to [send one transaction](#send-a-transaction), [send a batch](#send-a-batch), [sign without broadcasting](#sign-without-broadcasting), [quote and send a signed operation](#quote-and-send-a-signed-useroperation), [quote before sending](#quote-before-sending), [understand quote reuse](#quote-reuse), [override the fee mode](#override-fee-mode-for-one-send), [send concurrently](#send-concurrently-with-nonce-lanes), or [read receipts](#read-receipts).
 
 ## Send a Transaction
 
-Use `sendTransaction(tx)` with a single transaction object or an array of transaction objects.
+Use [`sendTransaction(tx)`](/sdk/wallet-modules/wallet-evm-7702-gasless/api-reference#walletaccountevm7702gasless) with a single transaction object or an array of transaction objects.
 
 ```javascript title="Send a transaction"
 const result = await account.sendTransaction({
@@ -26582,7 +26590,7 @@ console.log('UserOperation hash:', result.hash)
 console.log('Fee:', result.fee)
 ```
 
-The returned `hash` is a UserOperation hash. Use `getUserOperationReceipt(hash)` or `getTransactionReceipt(hash)` to check inclusion.
+The returned `hash` is a UserOperation hash. Use [`getUserOperationReceipt(hash)` or `getTransactionReceipt(hash)`](/sdk/wallet-modules/wallet-evm-7702-gasless/api-reference#walletaccountevm7702gasless) to check inclusion.
 
 ## Send a Batch
 
@@ -26601,9 +26609,44 @@ const result = await account.sendTransaction([
 ])
 ```
 
+## Sign Without Broadcasting
+
+Use [`signTransaction(tx)`](/sdk/wallet-modules/wallet-evm-7702-gasless/api-reference#quote-and-send-behavior) to build and sign a self-contained `UserOperationV8` without submitting it to the bundler. A transaction array produces one atomic, ordered UserOperation.
+
+```javascript title="Sign a UserOperation"
+const signedUserOperation = await account.signTransaction({
+  to: '0x742C4265F5Ba4F8E0842e2b9EfE66302F7a13B6F',
+  value: 0n,
+  data: '0x'
+})
+```
+
+<Callout type="warning">
+A signed UserOperation seals its EntryPoint nonce and, for a fresh account, its EIP-7702 authorization. Submit it before that nonce changes, and accept signed operations only from a trusted source prepared for the same account, chain, EntryPoint, delegation, and paymaster configuration.
+</Callout>
+
+## Quote and Send a Signed UserOperation
+
+Pass a signed operation to [`quoteSendTransaction()`](/sdk/wallet-modules/wallet-evm-7702-gasless/api-reference#quote-and-send-behavior) to inspect its fee without submitting it. Call [`sendTransaction()`](/sdk/wallet-modules/wallet-evm-7702-gasless/api-reference#quote-and-send-behavior) separately when you intend to broadcast the exact signed operation.
+
+1. Inspect the signed operation's fee:
+
+```javascript title="Quote a signed UserOperation"
+const quote = await account.quoteSendTransaction(signedUserOperation)
+console.log('Signed operation fee:', quote.fee)
+```
+
+2. After deciding to submit, broadcast the signed operation:
+
+```javascript title="Broadcast a signed UserOperation"
+const result = await account.sendTransaction(signedUserOperation)
+```
+
+Quoting a signed UserOperation avoids paymaster calls. Sponsorship mode returns `fee: 0n`; paymaster-token mode derives a native-gas ceiling in wei from the operation's existing gas fields rather than returning the token amount fixed when the operation was built. Sending broadcasts the supplied nonce, authorization, gas fields, and signature without rebuilding the operation or requesting another signature.
+
 ## Quote Before Sending
 
-Use `quoteSendTransaction(tx)` to estimate the fee without submitting the UserOperation.
+Use [`quoteSendTransaction(tx)`](/sdk/wallet-modules/wallet-evm-7702-gasless/api-reference#quote-and-send-behavior) to estimate the fee without submitting the UserOperation.
 
 ```javascript title="Quote then send"
 const tx = {
@@ -26625,6 +26668,8 @@ For paymaster-token mode, the fee is returned in the paymaster token's base unit
 
 Owned accounts cache a recently quoted paymaster-token transaction for up to 2 minutes. If `sendTransaction()` receives the same transaction during that window, the account first reads the current EntryPoint nonce. It reuses the built UserOperation only when the nonce still matches; if the nonce moved, it quotes again. A send that needs a fresh EIP-7702 authorization also rebuilds the UserOperation before submission.
 
+Sends that set `parallel` or `nonceKey` build against that explicit lane and do not reuse the default-lane quote cache.
+
 <Callout type="warning">
 Cache identity does not include per-call fee-mode configuration. Use the same fee-mode and paymaster settings for `quoteSendTransaction()` and the matching `sendTransaction()`. Do not quote with one paymaster token or mode and send the same transaction with another while the quote is cached.
 </Callout>
@@ -26641,6 +26686,50 @@ const result = await account.sendTransaction({
   sponsorshipPolicyId: 'sp_special_case'
 })
 ```
+
+## Send Concurrently with Nonce Lanes
+
+The default EntryPoint nonce lane is sequential. Set `parallel: true` to create a fresh random lane for an operation, or set `nonceKey` to reuse a named or numeric lane:
+
+```javascript title="Use independent nonce lanes"
+const firstTx = {
+  to: '0x1111111111111111111111111111111111111111',
+  value: 1n,
+  data: '0x'
+}
+const secondTx = {
+  to: '0x2222222222222222222222222222222222222222',
+  value: 1n,
+  data: '0x'
+}
+
+await Promise.all([
+  account.sendTransaction(firstTx, { parallel: true }),
+  account.sendTransaction(secondTx, { parallel: true })
+])
+
+const scheduledPayment = {
+  to: '0x3333333333333333333333333333333333333333',
+  value: 1n,
+  data: '0x'
+}
+await account.sendTransaction(scheduledPayment, { nonceKey: 'scheduled-payments' })
+```
+
+`nonceKey` takes precedence over `parallel`. String keys are hashed into deterministic 192-bit lane keys. A number or bigint is used as the raw key and must be between `0` and `2^192 - 1`; use a bigint or string above JavaScript's safe integer range.
+
+<Callout type="warning">
+The beta.3 runtime accepts per-call `parallel` and `nonceKey`, but the published second-argument declarations omit those common fields. TypeScript object literals using the per-call form fail type checking. Configure lanes on the wallet or account constructor for typed code, or isolate an explicit local type workaround until the package declarations are corrected.
+</Callout>
+
+Use nonce lanes with these constraints:
+
+- Let one operation delegate a fresh EOA before starting concurrent lanes. Otherwise the EIP-7702 authorizations can race on the EOA nonce.
+- Different lanes have no ordering guarantee. Two overlapping sends on the same lane can both return hashes even though the later operation can never be included and never receives a receipt. Await inclusion before reusing a lane, or batch ordered calls into one UserOperation.
+- `parallel: true` creates a new EntryPoint nonce slot with a one-time on-chain state cost. Reuse a small set of named lanes for sustained parallel workloads.
+- Bundlers may enforce an [ERC-7562](https://eips.ethereum.org/EIPS/eip-7562) per-sender in-flight limit, commonly four UserOperations. The exact cap is bundler-specific, and additional lanes can be rejected until earlier operations are included.
+
+The same lane configuration applies to [`signTransaction()` and `transfer()`](/sdk/wallet-modules/wallet-evm-7702-gasless/api-reference#nonce-lane-behavior).
 
 ## Read Receipts
 
@@ -26825,7 +26914,7 @@ Work with account indices, derivation paths, and existing EVM accounts.
 Query native, ERC-20, and paymaster token balances.
 </Card>
 <Card title="Send Transactions" href="/sdk/wallet-modules/wallet-evm-7702-gasless/guides/send-transactions">
-Quote and send EVM transactions through UserOperations.
+Sign, quote, and send UserOperations, including concurrent sends on independent nonce lanes.
 </Card>
 <Card title="Transfer Tokens" href="/sdk/wallet-modules/wallet-evm-7702-gasless/guides/transfer-tokens">
 Transfer ERC-20 tokens and cap paymaster-token fees.
@@ -26846,7 +26935,7 @@ Get started with WDK in a Node.js environment.
 Compare WDK wallet modules across supported chains.
 </Card>
 <Card title="Configuration" href="/sdk/wallet-modules/wallet-evm-7702-gasless/configuration">
-Review EIP-7702 gasless wallet configuration.
+Review fee modes, providers, nonce lanes, and per-call overrides.
 </Card>
 <Card title="API Reference" href="/sdk/wallet-modules/wallet-evm-7702-gasless/api-reference">
 Review classes, methods, config types, and return values.
@@ -44256,8 +44345,8 @@ The beta.3 SDA scaffold is a starting point, not an operational provider. Implem
 <Card title="Wallet Modules" href="/sdk/wallet-modules">
 See how official wallet modules are structured and documented
 </Card>
-<Card title="Community Modules" href="/sdk/community-modules">
-Explore community-built modules and submit your own
+<Card title="Building Blocks" href="https://wdk.tether.io/developers/blocks">
+Explore official and community-built WDK modules
 </Card>
 </Cards>
 
@@ -44873,7 +44962,7 @@ Plan availability, storage, privacy, deletion, and beta-version operations.
 ## Related resources
 
 <Cards>
-<Card title="Package source" href="https://github.com/tetherto/wdk-p2p-address-book/tree/v1.0.0-beta.2">
+<Card title="Package source" href="https://github.com/tetherto/wdk-p2p-address-book/tree/v1.0.0-beta.3">
 Review the released implementation, declarations, and tests.
 </Card>
 <Card title="WDK Utils" href="/tools/wdk-utils/">
@@ -44933,16 +45022,16 @@ Prefer `fromSeed()`. The low-level constructor permits replication without an en
 | `name` | No | Label stored for the enrolling device writer. |
 | `bootstrap`, `swarm`, `relayThrough` | No | Advanced networking hooks whose concrete types are not declared stable. `close()` destroys a supplied swarm. |
 
-The declared low-level `optimistic` option is ignored in `1.0.0-beta.2`; Autobase optimistic mode is always enabled.
+The declared low-level `optimistic` option is ignored in `1.0.0-beta.3`; Autobase optimistic mode is always enabled.
 
 ## Lifecycle and identity
 
 | Surface | Description |
 |---|---|
-| `ready()` | Opens the local book. In beta.2, initial swarm flush and peering continue in the background. |
+| `ready()` | Opens the local book. In beta.3, initial swarm flush and peering continue in the background. |
 | `create()` | Enrolls the local writer for a new book without attempting restoration. |
 | `close()` | Closes book-owned Autobase, peering, and swarm resources. |
-| `suspend()` / `resume()` | Suspends or resumes networking resources. |
+| `suspend()` / `resume()` | `suspend()` pauses peering, an active swarm, and the book's Corestore in that order. `resume()` resumes the Corestore, swarm, and peering in reverse order. Local-only books also suspend and resume their Corestore. The recommended `fromSeed()` path operates on its namespaced Corestore. |
 | `getInfo()` | Returns `{ autobaseKey, writable }`. |
 | `writerKey` | Current device writer key. |
 | `key` | Public Autobase key. |
@@ -45011,7 +45100,7 @@ Writer-management methods are not included in the exported worklet bridge interf
 | `removeMirror(key)` | Removes a persisted mirror record. See the beta limitation below. |
 
 <Callout type="warn">
-In `1.0.0-beta.2`, `removeMirror()` leaves the key active in the current in-memory peering instance. Close and reopen the book without that key before treating peering as stopped. The method does not delete blocks already held by the server.
+In `1.0.0-beta.3`, `removeMirror()` leaves the key active in the current in-memory peering instance. Close and reopen the book without that key before treating peering as stopped. The method does not delete blocks already held by the server.
 </Callout>
 
 ## Worklet API
@@ -45102,7 +45191,7 @@ Use `create()` only when the book is known to be new. To join an existing book, 
 `fromSeed()` opens the local Autobase before resolving. With replication enabled, it also joins the Hyperswarm discovery topic.
 
 <Callout type="warn">
-In `1.0.0-beta.2`, the initial swarm flush and blind-peer setup continue in the background after `ready()` and `fromSeed()` resolve. Errors from that background startup are not surfaced to the caller. Do not treat either promise as proof that a peer is reachable or that replication has completed.
+In `1.0.0-beta.3`, the initial swarm flush and blind-peer setup continue in the background after `ready()` and `fromSeed()` resolve. Errors from that background startup are not surfaced to the caller. Do not treat either promise as proof that a peer is reachable or that replication has completed.
 </Callout>
 
 `addMirror()` has stronger semantics for a device joining an existing book: it awaits peering, waits for existing genesis, and enrolls the local writer. It still does not prove that every record has been restored or retained remotely.
@@ -45147,7 +45236,7 @@ The package includes the blind-peer client integration, not the server. Deploy t
 - Monitor storage, garbage collection, requests, database health, and transports. These signals do not prove per-book durability or recovery completion.
 
 <Callout type="warn">
-In `1.0.0-beta.2`, `removeMirror()` removes the persisted record but leaves the key active in the current in-memory instance. Close and reopen the book without that key before treating peering as stopped. The method also does not erase blocks already held by the blind peer.
+In `1.0.0-beta.3`, `removeMirror()` removes the persisted record but leaves the key active in the current in-memory instance. Close and reopen the book without that key before treating peering as stopped. The method also does not erase blocks already held by the blind peer.
 </Callout>
 
 ## Understand encryption boundaries
@@ -45253,7 +45342,7 @@ The `mirrors` constructor option configures peering but does not enroll a restor
 When `addMirror()` resolves, the device has observed existing genesis and enrolled its writer. Resolution does not confirm that every record has arrived or that the blind peer will retain the history. Refetch on payload-free `update` events, unregister listeners during cleanup, and close both the book and root Corestore.
 
 <Callout type="warn">
-`ready()` and `fromSeed()` are not connectivity signals in `1.0.0-beta.2`. Initial swarm flush and blind-peer setup run in the background. Use the explicit `addMirror()` restore path and application-level recovery checks rather than assuming that local readiness means synchronization is complete.
+`ready()` and `fromSeed()` are not connectivity signals in `1.0.0-beta.3`. Initial swarm flush and blind-peer setup run in the background. Use the explicit `addMirror()` restore path and application-level recovery checks rather than assuming that local readiness means synchronization is complete.
 </Callout>
 
 The seed and namespace can reproduce the book identity and keys, but not missing history. If all devices and retained replicas are unavailable, the contacts cannot be rebuilt from the seed alone.
@@ -45292,6 +45381,7 @@ Powered by `@tetherto/pear-wrk-wdk`.
 - **Typed lifecycle requests**: Initialize WDK with `initializeWDK({ config, encryptionKey, encryptedSeed })` and tear it down with `dispose()`
 - **Selective wallet resets**: Re-register only the wallet modules listed in a new worklet `networks` config using `resetWdkWallets({ config })`
 - **Generic wallet and protocol calls**: Call account methods through `callMethod({ methodName, network, accountIndex, args, options })`, including Swidge protocols by name
+- **Opt-in method allowlists**: Restrict wallet and nested protocol calls for HRPC and JSON-RPC, plus generic-module calls for HRPC
 - **HRPC generic modules**: Construct named modules during WDK initialization, call their methods with `callModule()`, and forward declared events to the host
 - **Framed JSON-RPC server**: Register a length-prefixed JSON-RPC 2.0 server through `@tetherto/pear-wrk-wdk/jsonrpc`
 - **Dynamic registration hooks**: Register additional wallets or protocols with `registerWallet()` and `registerProtocol()`
@@ -45312,7 +45402,7 @@ The top-level package exports the `HRPC` runtime value. Import `registerRpcHandl
 </Callout>
 
 <Callout type="warn">
-Generic-module calls and events are HRPC-only in `v1.0.0-beta.10`; the JSON-RPC handler does not expose them. This package also does not export a pre-built WDK bundle.
+Generic-module calls and events are HRPC-only in `v1.0.0-beta.11`; the JSON-RPC handler does not expose them. This package also does not export a pre-built WDK bundle.
 </Callout>
 
 <Cards>
@@ -45402,7 +45492,7 @@ Returns:
 
 The handler requires `encryptionKey` and `encryptedSeed` to be passed together or omitted together. When a seeded WDK instance already exists, the runtime disposes it and closes its generic modules before re-registering the wallets and optional protocols in `config`.
 
-In beta.10, HRPC generic modules are constructed from `context.moduleManagers` and `config.modules` only when that request includes the encrypted seed pair. A seedless reinitialization closes existing module instances without reconstructing them. Supply both seed fields on every initialization that must construct or reconstruct modules.
+In beta.11, HRPC generic modules are constructed from `context.moduleManagers` and `config.modules` only when that request includes the encrypted seed pair. A seedless reinitialization closes existing module instances without reconstructing them. Supply both seed fields on every initialization that must construct or reconstruct modules.
 
 #### `resetWdkWallets`
 
@@ -45455,6 +45545,8 @@ A full disposal closes all generic modules and clears the WDK instance. A non-em
 
 `options.protocolType` may be `swap`, `swidge`, `bridge`, `lending`, or `fiat`. When present, the runtime requires a non-empty `options.protocolName` and resolves the protocol-specific account wrapper before invoking `methodName`. Swidge calls resolve the wrapper with `account.getSwidgeProtocol(protocolName)`.
 
+When `RpcContext.allowedMethods` defines the target surface, `methodName` must appear in its `methods` array. Account restrictions are keyed by network; protocol restrictions are nested by network, protocol type, and protocol name. Omitted surfaces remain unrestricted, while `methods: []` denies every call on that exact surface. Denied calls fail before dispatch with the runtime code `METHOD_NOT_ALLOWED` and do not use `options.defaultValue`.
+
 #### `registerWallet`
 
 - `config` (`string`): JSON string of network config entries.
@@ -45481,6 +45573,8 @@ Call one method on a configured generic module. This command is available on HRP
 - `args?` (`string`): Optional JSON string of arguments. Arrays are spread as positional arguments; a non-array value is passed as one argument.
 
 Returns `CallModuleResponse` with optional `result`, a JSON string. The runtime awaits promises, materializes values with `.toArray()`, and recursively converts `Uint8Array` values to hex before serialization.
+
+When `RpcContext.allowedModuleMethods` defines the target module, `method` must appear in that module's `methods` array. Omitted modules remain unrestricted, while `methods: []` denies every method on that module. A denied call fails with `METHOD_NOT_ALLOWED` before instance lookup or dispatch.
 
 #### `moduleEvent`
 
@@ -45547,9 +45641,39 @@ Registers the host-side handler used to receive `moduleEvent()` messages.
 Import this helper from `@tetherto/pear-wrk-wdk/worklet`. It registers the package's server-side handlers on the provided RPC instance.
 
 - `rpc` (`any`): RPC server instance that supports the generated handler registration methods.
-- `context` (`RpcContext`): Runtime context containing `wdk`, `WDK`, `walletManagers`, `protocolManagers`, and `wdkLoadError`. HRPC generic modules can additionally supply `moduleManagers` and `capabilities`; the runtime manages `moduleRuntime` and `moduleInstances`.
+- `context` (`RpcContext`): Runtime context containing `wdk`, `WDK`, `walletManagers`, `protocolManagers`, and `wdkLoadError`. HRPC generic modules can additionally supply `moduleManagers` and `capabilities`; the runtime manages `moduleRuntime` and `moduleInstances`. Optional `allowedMethods` restricts wallet and protocol dispatch on HRPC and JSON-RPC, while `allowedModuleMethods` restricts HRPC generic-module dispatch.
 
 ### Types
+
+#### `RpcContext` Method Restrictions
+
+```ts
+interface ProtocolAllowedMethods {
+  methods?: string[]
+}
+
+interface ProtocolNameAllowedMethods {
+  [protocolName: string]: ProtocolAllowedMethods
+}
+
+interface ProtocolTypeAllowedMethods {
+  [protocolType: string]: ProtocolNameAllowedMethods
+}
+
+interface NetworkAllowedMethods extends ProtocolAllowedMethods {
+  protocols?: ProtocolTypeAllowedMethods
+}
+
+interface RpcContext {
+  // Other runtime fields...
+  allowedMethods?: Record<string, NetworkAllowedMethods>
+  allowedModuleMethods?: Record<string, ProtocolAllowedMethods>
+}
+```
+
+The four allowlist helper interfaces are exported types in beta.11. Every omitted level remains unrestricted. Use an explicit empty `methods` array to deny all dynamic calls on one exact surface.
+
+The runtime exposes `METHOD_NOT_ALLOWED` for denied calls, but the beta.11 published error-code declaration does not include that member. Treat the literal runtime code as authoritative for this release.
 
 #### `WdkWorkletConfig`
 
@@ -45655,7 +45779,7 @@ registerJsonRpcHandlers(ipc, context)
 
 The server reads UTF-8 JSON-RPC 2.0 messages framed with a four-byte unsigned big-endian payload length. Every request requires an ID, and an ID cannot be reused while its earlier request is still in flight. Malformed frames are dropped without a response. The package does not export a JSON-RPC client or native-host helper.
 
-Beta.10 supports these JSON-RPC method names:
+Beta.11 supports these JSON-RPC method names:
 
 - `workletStart`
 - `generateEntropyAndEncrypt`
@@ -45669,7 +45793,7 @@ Beta.10 supports these JSON-RPC method names:
 
 JSON-RPC does not support `resetWdkWallets`, generic-module calls, or module events in this release. Use HRPC for those operations.
 
-The HRPC and JSON-RPC transports share the `callMethod` handler, so both support the `swidge` protocol type in beta.10.
+The HRPC and JSON-RPC transports share the `callMethod` handler, so both support the `swidge` protocol type and enforce `RpcContext.allowedMethods` in beta.11. JSON-RPC has no `callModule` surface, so `allowedModuleMethods` is HRPC-only.
 
 <Callout type="warn">
 INFO-level logging can include wallet-call arguments and JSON-RPC parameters or results. Production defaults to ERROR logging; do not enable more verbose logging for requests that may contain seeds, mnemonics, keys, or other sensitive values.
@@ -45736,6 +45860,16 @@ const context = {
       events: ['changed']
     }
   },
+  allowedMethods: {
+    ethereum: {
+      methods: ['getAddress', 'getBalance', 'sendTransaction']
+    }
+  },
+  allowedModuleMethods: {
+    preferences: {
+      methods: ['getTheme', 'setTheme']
+    }
+  },
   capabilities: {},
   wdkLoadError: null
 }
@@ -45762,6 +45896,60 @@ module.exports = (rpc) => {
 - `wdkLoadError`: Any startup error captured while loading WDK. Use `null` when there is no load failure.
 
 For HRPC generic modules, `moduleManagers` optionally maps module names to `{ createModule, events? }`. The factory receives `{ seed, config, capabilities, emit }` and can return an instance or a promise. `capabilities` is an optional host-supplied object and is empty by default. The runtime manages `moduleRuntime` and `moduleInstances`; do not initialize those fields yourself. Manual integrations must forward Bare `suspend` and `resume` events as shown if module instances should receive those lifecycle calls. Worklet Bundler-generated HRPC entrypoints wire them automatically.
+
+## Restrict Dynamic Methods
+
+`callMethod()` and `callModule()` dispatch method names supplied by the host. Add allowlists to `RpcContext` when that host should not reach every method on the resolved object.
+
+### Wallet and Protocol Methods
+
+`allowedMethods` is keyed by network. A network's direct `methods` array applies to its wallet account. Protocol restrictions are nested by protocol type and protocol name:
+
+```javascript title="Restrict Dynamic Wallet And Protocol Calls"
+const context = {
+  // Other required context fields...
+  allowedMethods: {
+    ethereum: {
+      methods: ['getAddress', 'getBalance', 'sendTransaction'],
+      protocols: {
+        lending: {
+          aave: {
+            methods: ['supply', 'withdraw']
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+This map applies to the shared HRPC and JSON-RPC `callMethod()` handler. Restrictions are opt-in per surface:
+
+- Omitting the map, a network, `protocols`, a protocol type, a protocol name, or `methods` leaves that exact surface unrestricted.
+- An explicit `methods: []` denies every call on that exact account or protocol surface.
+- Protocol calls use their nested list rather than falling back to the account list.
+- A denied method fails before account or protocol dispatch with `METHOD_NOT_ALLOWED`; `defaultValue` is not returned.
+
+### Generic Module Methods
+
+`allowedModuleMethods` is keyed by the `moduleManagers` name and applies to HRPC `callModule()` only:
+
+```javascript title="Restrict Dynamic Module Calls"
+const context = {
+  // Other required context fields...
+  allowedModuleMethods: {
+    preferences: {
+      methods: ['getTheme', 'setTheme']
+    }
+  }
+}
+```
+
+Omitting a module or its `methods` field leaves that module unrestricted. Set `methods: []` to deny every dynamic call on it.
+
+<Callout type="warn">
+These maps are not default-deny. List every dynamic surface exposed to an untrusted host. The beta.11 runtime reports denied calls with `METHOD_NOT_ALLOWED`, but the published error-code declaration omits that new member; handle the literal runtime code until the declaration is corrected.
+</Callout>
 
 ## Worklet Config Payload
 
@@ -45803,7 +45991,7 @@ const workletConfig = {
 - `resetWdkWallets()` reads only the `networks` portion of the decoded config.
 
 <Callout type="warn">
-Generic modules are HRPC-only in beta.10. The JSON-RPC handler does not construct modules or expose module calls and events.
+Generic modules are HRPC-only in beta.11. The JSON-RPC handler does not construct modules or expose module calls and events.
 </Callout>
 
 ## Initialize WDK
@@ -45827,7 +46015,7 @@ await hrpc.initializeWDK({
 - Pass both `encryptionKey` and `encryptedSeed`, or omit both together.
 - On first initialization, the worklet must receive an encrypted seed pair so it can create `context.wdk`.
 - If `context.wdk` already exists, a later `initializeWDK()` call disposes the existing instance and closes its generic modules before re-registering wallets and protocols from the new config.
-- In beta.10, generic modules are constructed only when that `initializeWDK()` request includes both `encryptionKey` and `encryptedSeed`. A seedless reinitialization closes existing module instances but does not rebuild them, even when `config.modules` is present. Supply the seed pair on every initialization that must construct or reconstruct modules.
+- In beta.11, generic modules are constructed only when that `initializeWDK()` request includes both `encryptionKey` and `encryptedSeed`. A seedless reinitialization closes existing module instances but does not rebuild them, even when `config.modules` is present. Supply the seed pair on every initialization that must construct or reconstruct modules.
 - Module `close()` is called during full disposal or reinitialization. Targeted blockchain disposal leaves generic modules running. Optional `suspend()` and `resume()` methods run only when the host forwards Bare lifecycle events; the manual context above and Worklet Bundler-generated HRPC entrypoints do so.
 
 ## Reset Selected Wallets
@@ -45876,6 +46064,7 @@ const result = await hrpc.callMethod({
 - When `args` decodes to an array, the handler spreads the values as positional method arguments.
 - When `args` decodes to an object or primitive, the handler passes it as a single argument.
 - Set `options.protocolType` to `swap`, `swidge`, `bridge`, `lending`, or `fiat` to call a protocol wrapper. Every protocol call requires a non-empty `options.protocolName`.
+- When `context.allowedMethods` contains the target account or protocol surface, `methodName` must appear in that exact surface's `methods` array.
 
 ## Call Generic Module Methods
 
@@ -45892,6 +46081,8 @@ const theme = response.result ? JSON.parse(response.result) : undefined
 ```
 
 `args` is an optional JSON string. Arrays are spread into positional arguments; a non-array value is passed as one argument. Promise results are awaited, `.toArray()` results are materialized, and `Uint8Array` values are normalized to hex before the response is serialized.
+
+When `context.allowedModuleMethods` contains the target module, `method` must appear in its `methods` array. A denied call returns `METHOD_NOT_ALLOWED` before module instance lookup or dispatch.
 
 Subscribe to events declared by the module manager:
 
@@ -45918,7 +46109,7 @@ module.exports = (ipc) => {
 
 Messages are UTF-8 JSON-RPC 2.0 objects prefixed by a four-byte unsigned big-endian payload length. Requests require an ID, and IDs must be unique while a request is in flight. The package exports no JSON-RPC host/client helper; the native host must implement framing and correlation.
 
-JSON-RPC beta.10 supports WDK initialization and disposal, secret/mnemonic operations, wallet and protocol calls, and dynamic wallet/protocol registration. Its shared `callMethod` handler supports the `swidge` protocol type. It does not support `resetWdkWallets`, `callModule`, or module events. See the [API reference](/tools/pear-wrk-wdk/api-reference#json-rpc-transport) for the exact method list.
+JSON-RPC beta.11 supports WDK initialization and disposal, secret/mnemonic operations, wallet and protocol calls, and dynamic wallet/protocol registration. Its shared `callMethod` handler supports the `swidge` protocol type and enforces `context.allowedMethods`. It does not support `resetWdkWallets`, `callModule`, `allowedModuleMethods`, or module events. See the [API reference](/tools/pear-wrk-wdk/api-reference#json-rpc-transport) for the exact method list.
 
 <Callout type="warn">
 INFO-level logs can contain wallet-call arguments and JSON-RPC parameters or results. Keep production logging at its default ERROR level when requests may contain sensitive values.
@@ -49085,12 +49276,13 @@ Worklet Bundler packages selected WDK wallet, protocol, and optional generic mod
 - **Generated worklet artifacts**: Produce a Bare bundle, a stable `./.wdk` host import, and generated TypeScript types.
 - **Native addon outputs**: Link iOS, macOS, and Android addons and generate `addons.yml` for JSON-RPC/native integrations.
 - **Dependency validation helpers**: Validate configured modules, detect the active package manager, and generate install or uninstall commands when dependencies are missing.
+- **Dynamic-call allowlists**: Restrict generated wallet and protocol `callMethod()` surfaces for HRPC and JSON-RPC, plus generic-module `callModule()` surfaces for HRPC.
 - **Optional peer deferral**: Defer missing peers marked optional by their package metadata, or require them at build time with `--no-defer-optional-peers`.
 - **CLI workflow**: Use `init`, `validate`, `generate`, `list-modules`, and `clean` without building your own wrapper.
-- **Bare suspend and resume handling**: Generated HRPC entrypoints suspend and resume both the `bare-http1` and `bare-https` global agents when the Bare thread lifecycle changes.
+- **Bare lifecycle handling**: Generated HRPC entrypoints suspend and resume both the `bare-http1` and `bare-https` global agents and log Bare suspend, resume, and idle events.
 
 <Callout type="info">
-`v1.0.0-beta.7` includes the built CLI and API files for the JSON-RPC, generic-module, and addon-linking surface, defers genuinely missing optional peers during bundling by default, and links `bare-posix` automatically for supported native platforms. It also detects optional peers installed anywhere in nested, scoped, or symlinked `node_modules` trees so present dependencies are not incorrectly deferred and omitted from the bundle.
+`v1.0.0-beta.9` is the first npm artifact with the method-allowlist configuration introduced by the GitHub-only beta.8 release. It also includes the built CLI and API files for the JSON-RPC, generic-module, and addon-linking surface, defers genuinely missing optional peers during bundling by default, links `bare-posix` automatically for supported native platforms, and detects optional peers in nested, scoped, or symlinked `node_modules` trees.
 </Callout>
 
 ## Why this matters
@@ -49100,7 +49292,7 @@ Worklet Bundler packages selected WDK wallet, protocol, and optional generic mod
 - Transport-specific defaults produce a JavaScript HRPC bundle for React Native Core or native addon artifacts for JSON-RPC hosts.
 
 <Callout type="warn">
-Generic `modules` are generated only for HRPC through beta.7. A JSON-RPC config can currently accept a `modules` field but silently omits those modules from the generated entrypoint.
+Generic `modules` are generated only for HRPC through beta.9. A JSON-RPC config can currently accept a `modules` field but silently omits those modules from the generated entrypoint.
 </Callout>
 
 <Cards>
@@ -49143,6 +49335,11 @@ interface WdkBundleConfig {
     factory?: string
     events?: string[]
   }>
+  allowedMethods?: Record<string, {
+    methods?: string[]
+    protocols?: Record<string, Record<string, { methods?: string[] }>>
+  }>
+  allowedModuleMethods?: Record<string, { methods?: string[] }>
   preloadModules?: string[]
   transport?: 'hrpc' | 'jsonrpc'
   output?: {
@@ -49167,10 +49364,14 @@ interface WdkBundleConfig {
 }
 ```
 
-`modules` is generated only for HRPC through beta.7. JSON-RPC entry generation ignores that map. JSON-RPC otherwise defaults addon linking and ESM-to-CJS conversion to `true`; HRPC defaults both to `false`.
+`allowedMethods` is keyed by network. Its direct `methods` array restricts account calls, while `protocols` nests restrictions by protocol type and protocol name. `allowedModuleMethods` is keyed by generic-module name and applies to HRPC only. These inline helper shapes are present in the config declaration but are not named exports from the beta.9 npm entrypoint.
+
+Every omitted map, level, or `methods` field remains unrestricted. An explicit `methods: []` denies every method on that exact surface. Generated HRPC contexts receive both maps; generated JSON-RPC contexts receive only `allowedMethods`.
+
+`modules` is generated only for HRPC through beta.9. JSON-RPC entry generation ignores that map. JSON-RPC otherwise defaults addon linking and ESM-to-CJS conversion to `true`; HRPC defaults both to `false`.
 
 <Callout type="warn">
-Beta.7 declares `output.types`, `options.minify`, and `options.sourceMaps`, but its bundle generator does not honor those fields. Declarations are always written to `./.wdk/index.d.ts`; `minify` and `sourceMaps` do not control `bare-pack` output. JSON-RPC ESM-to-CJS conversion minifies independently.
+Beta.9 declares `output.types`, `options.minify`, and `options.sourceMaps`, but its bundle generator does not honor those fields. Declarations are always written to `./.wdk/index.d.ts`; `minify` and `sourceMaps` do not control `bare-pack` output. JSON-RPC ESM-to-CJS conversion minifies independently.
 </Callout>
 
 #### `ResolvedConfig`
@@ -49293,7 +49494,7 @@ Use `generateBundle()` when you want the same bundle workflow that powers the CL
 - `silent`
 - `skipTypes`
 - `skipGeneration`
-- `deferOptionalPeers?` (`boolean`): When omitted or `true`, pass missing peers marked optional through `bare-pack --defer`. Beta.7 checks root, nested, scoped, and symlinked package trees before treating an optional peer as missing. Set this option to `false` to require absent optional imports at build time.
+- `deferOptionalPeers?` (`boolean`): When omitted or `true`, pass missing peers marked optional through `bare-pack --defer`. Beta.9 checks root, nested, scoped, and symlinked package trees before treating an optional peer as missing. Set this option to `false` to require absent optional imports at build time.
 
 `deferOptionalPeers` is a per-run API option. It is not a `WdkBundleConfig` field and cannot be set in `wdk.config.js`.
 
@@ -49307,7 +49508,7 @@ Use `generateBundle()` when you want the same bundle workflow that powers the CL
 - `error?`
 - `missingModule?`
 
-In beta.7, `typesPath` can reflect a configured `output.types` path even though the declaration file is still written to `./.wdk/index.d.ts`.
+In beta.9, `typesPath` can reflect a configured `output.types` path even though the declaration file is still written to `./.wdk/index.d.ts`.
 
 ```typescript title="Generate A Bundle Programmatically"
 import { generateBundle, loadConfig } from '@tetherto/wdk-worklet-bundler'
@@ -49322,13 +49523,13 @@ Use `generateSourceFiles()` when you want the generated entrypoint without the f
 
 #### `generateEntryPoint(config, outputDir)`
 
-Use `generateEntryPoint()` when you need the generated HRPC Bare entrypoint written to a chosen output directory. This path includes configured generic modules and their lifecycle/event wiring.
+Use `generateEntryPoint()` when you need the generated HRPC Bare entrypoint written to a chosen output directory. This path includes configured generic modules, both method-allowlist maps, and module lifecycle/event wiring.
 
-In `beta.3`, the generated entrypoint suspends and resumes both the `bare-http1` and `bare-https` global agents when the Bare runtime emits `suspend` and `resume`.
+Starting in beta.3, the generated entrypoint suspends and resumes both the `bare-http1` and `bare-https` global agents when the Bare runtime emits `suspend` and `resume`. Beta.9 also logs the generated worklet's Bare `suspend`, `resume`, and `idle` events.
 
 #### `generateJsonRpcEntryPoint(config, outputDir)`
 
-Generate the framed JSON-RPC entrypoint used by native hosts. Through beta.7 this path includes wallet and protocol managers but not generic `modules`.
+Generate the framed JSON-RPC entrypoint used by native hosts. Through beta.9 this path includes wallet and protocol managers plus `allowedMethods`, but not generic `modules` or `allowedModuleMethods`.
 
 #### `linkAddons(config, options?)`
 
@@ -49359,7 +49560,7 @@ The published CLI exposes these commands through `wdk-worklet-bundler`:
 For the end-to-end config workflow and transport defaults, see the [Worklet Bundler configuration guide](/tools/worklet-bundler/configuration).
 
 <Callout type="warn">
-Beta.7 applies `--transport` after `loadConfig()` resolves output paths. The flag changes entrypoint generation but does not recompute the default bundle filename. Set `transport` in `wdk.config.js`, or configure `output.bundle` explicitly when using the flag.
+Beta.9 applies `--transport` after `loadConfig()` resolves output paths. The flag changes entrypoint generation but does not recompute the default bundle filename. Set `transport` in `wdk.config.js`, or configure `output.bundle` explicitly when using the flag.
 </Callout>
 
 ***
@@ -49381,11 +49582,11 @@ This page shows how to install `@tetherto/wdk-worklet-bundler` and its Pear runt
 Install the bundler as a development dependency and Pear Worklet as a runtime dependency in the host project:
 
 ```bash title="Install The Bundler And Runtime"
-npm install @tetherto/pear-wrk-wdk@1.0.0-beta.10
-npm install --save-dev @tetherto/wdk-worklet-bundler@1.0.0-beta.7
+npm install @tetherto/pear-wrk-wdk@1.0.0-beta.11
+npm install --save-dev @tetherto/wdk-worklet-bundler@1.0.0-beta.9
 ```
 
-Worklet Bundler beta.7 generates entrypoints that import Pear Worklet, but `generate --install` does not add that package. Pear Worklet beta.10 provides the JSON-RPC, HRPC generic-module, and Swidge protocol behavior documented here.
+Worklet Bundler beta.9 generates entrypoints that import Pear Worklet, but `generate --install` does not add that package. Pear Worklet beta.11 enforces the wallet, protocol, and generic-module method allowlists documented here. The GitHub beta.8 release introduced the configuration but has no public npm artifact.
 
 ## Create `wdk.config.js`
 
@@ -49395,7 +49596,7 @@ Use `init` to create a starter config, or write the file yourself:
 npx wdk-worklet-bundler init
 ```
 
-The published config surface accepts `networks`, optional `protocols`, HRPC-only generic `modules`, `transport`, `preloadModules`, `output`, and `options`:
+The published config surface accepts `networks`, optional `protocols`, HRPC-only generic `modules`, dynamic-call allowlists, `transport`, `preloadModules`, `output`, and `options`:
 
 ```javascript title="Example wdk.config.js"
 module.exports = {
@@ -49419,6 +49620,23 @@ module.exports = {
       package: '@your-org/wdk-module-preferences',
       factory: 'createModule',
       events: ['changed']
+    }
+  },
+
+  allowedMethods: {
+    ethereum: {
+      methods: ['getAddress', 'getBalance'],
+      protocols: {
+        fiat: {
+          moonpay: { methods: [] }
+        }
+      }
+    }
+  },
+
+  allowedModuleMethods: {
+    preferences: {
+      methods: ['getTheme', 'setTheme']
     }
   },
 
@@ -49462,6 +49680,63 @@ module.exports = {
 
 Use `protocols` when the worklet should preload WDK protocol packages alongside wallet modules.
 
+### `allowedMethods` (optional)
+
+Use `allowedMethods` to restrict dynamic `callMethod()` dispatch on generated HRPC and JSON-RPC worklets. Account methods are keyed by the logical `networks` name. Protocol methods are nested under that network by protocol type and configured protocol name:
+
+```javascript title="Restrict Wallet And Protocol Calls"
+module.exports = {
+  networks: {
+    ethereum: { package: '@tetherto/wdk-wallet-evm' }
+  },
+  protocols: {
+    aave: { package: '@tetherto/wdk-protocol-lending-aave-evm' }
+  },
+  allowedMethods: {
+    ethereum: {
+      methods: ['getAddress', 'getBalance', 'sendTransaction'],
+      protocols: {
+        lending: {
+          aave: { methods: ['supply', 'withdraw'] }
+        }
+      }
+    }
+  }
+}
+```
+
+Restrictions are opt-in per exact surface:
+
+- Omitting `allowedMethods`, a network, `protocols`, a protocol type, a protocol name, or its `methods` field leaves that surface unrestricted.
+- `methods: []` denies every dynamic call on the exact account or protocol surface where it appears.
+- A protocol restriction does not inherit the network account `methods` list. Add the nested protocol entry explicitly.
+- A denied call fails with `METHOD_NOT_ALLOWED` before the target method runs.
+
+<Callout type="warn">
+This configuration is not default-deny. List every wallet and protocol surface exposed to an untrusted host, and use an explicit empty list when that surface should accept no dynamic calls.
+</Callout>
+
+### `allowedModuleMethods` (optional, HRPC only)
+
+Use `allowedModuleMethods` to restrict HRPC `callModule()` dispatch. Keys must match the names under `modules`:
+
+```javascript title="Restrict Generic Module Calls"
+module.exports = {
+  modules: {
+    preferences: {
+      package: '@your-org/wdk-module-preferences'
+    }
+  },
+  allowedModuleMethods: {
+    preferences: {
+      methods: ['getTheme', 'setTheme']
+    }
+  }
+}
+```
+
+Omitting a module or its `methods` field leaves that module unrestricted. Set `methods: []` to deny every dynamic call on that module. JSON-RPC worklets do not generate generic modules or receive `allowedModuleMethods`.
+
 ### `modules` (optional, HRPC only)
 
 Use `modules` for named generic packages that expose a module factory. Each entry supports:
@@ -49473,7 +49748,7 @@ Use `modules` for named generic packages that expose a module factory. Each entr
 The factory receives `{ seed, config, capabilities, emit }` and can return the module instance or a promise for it. A module that needs the seed must consume it synchronously rather than retain it. The build-time name, such as `preferences`, must match the key in the host's runtime module config.
 
 <Callout type="warn">
-Through beta.7, generic modules are included only in generated HRPC entrypoints. Do not configure `modules` with `transport: 'jsonrpc'`; the current schema accepts the field, but JSON-RPC generation ignores it.
+Through beta.9, generic modules are included only in generated HRPC entrypoints. Do not configure `modules` with `transport: 'jsonrpc'`; the current schema accepts the field, but JSON-RPC generation ignores it.
 </Callout>
 
 ### `transport` (optional)
@@ -49489,7 +49764,7 @@ Use `preloadModules` for native addons or other modules that must be required be
 Supported output fields are:
 
 - `bundle`: Bundle path. Defaults to `./.wdk-bundle/wdk-worklet.bundle.js` for HRPC and `./.wdk-bundle/wdk-worklet.bundle` for JSON-RPC.
-- `types`: Declared in the beta.7 config type, but the generator does not honor a custom value and always writes declarations to `./.wdk/index.d.ts`.
+- `types`: Declared in the beta.9 config type, but the generator does not honor a custom value and always writes declarations to `./.wdk/index.d.ts`.
 - `addons.ios`, `addons.macos`, `addons.android`: Platform addon directories. Defaults are `./ios-addons`, `./mac-addons`, and `./android-addons`.
 - `addonsYml`: BareKit Swift dependency file. Defaults to `./ios-addons/addons.yml` and is generated when iOS addons are linked.
 
@@ -49497,8 +49772,8 @@ Supported output fields are:
 
 The published config type supports these build options:
 
-- `minify` (`boolean`): Declared in the beta.7 config type but not read by the bundle path. JSON-RPC ESM-to-CJS conversion minifies independently of this field.
-- `sourceMaps` (`boolean`): Declared in the beta.7 config type but not read by the bundle path, so it does not produce source maps.
+- `minify` (`boolean`): Declared in the beta.9 config type but not read by the bundle path. JSON-RPC ESM-to-CJS conversion minifies independently of this field.
+- `sourceMaps` (`boolean`): Declared in the beta.9 config type but not read by the bundle path, so it does not produce source maps.
 - `targets` (`string[]`): Override the default Bare build hosts. The shipped defaults cover iOS arm64 and simulator targets plus Android arm, arm64, ia32, and x64 hosts.
 - `linkAddons` (`boolean`): Link native addons with `bare-link`. Defaults to `true` for JSON-RPC and `false` for HRPC.
 - `platforms` (`('ios' | 'macos' | 'android')[]`): Addon platforms. Defaults to all three when addon linking is active.
@@ -49544,11 +49819,11 @@ npx wdk-worklet-bundler validate
 
 ## Handle peer dependencies
 
-Worklet Bundler beta.7 separates required peers from peers explicitly marked optional through `peerDependenciesMeta`:
+Worklet Bundler beta.9 separates required peers from peers explicitly marked optional through `peerDependenciesMeta`:
 
 - During bundle generation, missing required peers are offered for installation. In a non-interactive environment without `--install`, the CLI prints the exact manual install command and continues; `bare-pack` can still fail if the bundle needs that peer. The peer scan is skipped by `--source-only`.
 - Missing optional peers are not prompted for or installed. By default, the bundler passes each one to `bare-pack --defer`, so an unused optional feature does not block the build.
-- Optional peers detected anywhere in the scanned package tree are not deferred. Beta.7 matches package names across root, nested, scoped, and symlinked package trees; install a peer in an ancestor `node_modules` visible to the package that imports it, because the same package name elsewhere in the tree can suppress deferral without making that import resolvable. A peer that is required anywhere else in the scanned dependency tree is treated as required and is not deferred.
+- Optional peers detected anywhere in the scanned package tree are not deferred. Beta.9 matches package names across root, nested, scoped, and symlinked package trees; install a peer in an ancestor `node_modules` visible to the package that imports it, because the same package name elsewhere in the tree can suppress deferral without making that import resolvable. A peer that is required anywhere else in the scanned dependency tree is treated as required and is not deferred.
 
 Use `--no-defer-optional-peers` when the app uses an optional feature and you want a missing peer to fail during the build:
 
@@ -49570,13 +49845,13 @@ Use `generate` to build the worklet artifact:
 npx wdk-worklet-bundler generate --install
 ```
 
-`generate --install` can auto-install missing configured wallet, protocol, generic, and preload modules after the package manager is detected from the project root. In beta.7 it does not install the Pear Worklet runtime imported by generated entrypoints; install Pear explicitly as shown above. Use `--source-only` when you want the generated `.wdk/wdk-worklet.generated.js` entrypoint and related artifacts without running `bare-pack`.
+`generate --install` can auto-install missing configured wallet, protocol, generic, and preload modules after the package manager is detected from the project root. In beta.9 it does not install the Pear Worklet runtime imported by generated entrypoints; install Pear explicitly as shown above. Use `--source-only` when you want the generated `.wdk/wdk-worklet.generated.js` entrypoint and related artifacts without running `bare-pack`.
 
-The `generate` command also accepts `--transport hrpc|jsonrpc`, `--link-addons`, `--skip-link-addons`, `--platforms ios,macos,android`, `--no-esm-to-cjs`, and `--no-defer-optional-peers`. Set `transport` in `wdk.config.js` when you rely on its transport-specific default bundle path. In beta.7, `--transport` changes the generated transport after output paths have already been resolved, so it does not switch `.js` HRPC output to the extensionless JSON-RPC default, or vice versa. If you use the flag, set `output.bundle` explicitly to the intended path.
+The `generate` command also accepts `--transport hrpc|jsonrpc`, `--link-addons`, `--skip-link-addons`, `--platforms ios,macos,android`, `--no-esm-to-cjs`, and `--no-defer-optional-peers`. Set `transport` in `wdk.config.js` when you rely on its transport-specific default bundle path. In beta.9, `--transport` changes the generated transport after output paths have already been resolved, so it does not switch `.js` HRPC output to the extensionless JSON-RPC default, or vice versa. If you use the flag, set `output.bundle` explicitly to the intended path.
 
 ## Suspend and resume behavior
 
-Generated HRPC worklet entrypoints register Bare lifecycle handlers for `suspend` and `resume`, then apply those handlers to both the `bare-http1` and `bare-https` global agents. No config flag is required for this behavior.
+Generated HRPC worklet entrypoints register Bare lifecycle handlers for `suspend` and `resume`, then apply those handlers to both the `bare-http1` and `bare-https` global agents. No config flag is required for this behavior. Beta.9 also logs the generated worklet's Bare `suspend`, `resume`, and `idle` events.
 
 This matters when a generated HRPC worklet performs HTTPS-backed fetches. Starting in beta.3, those generated entrypoints suspend and resume both agents together.
 
@@ -50574,3 +50849,130 @@ function Settings() {
 ## Need Help?
 
 <SupportCards />
+
+***
+
+## All Modules
+URL: https://wdk.tether.io/developers/blocks
+Description: Complete list of available WDK wallet, pricing, swidge, swap, bridge, lending, and fiat interfaces and modules.
+
+A comprehensive list of all available WDK modules. Each module is designed to be modular and can be used independently or combined with others.
+
+## Core Module
+
+The orchestrator that manages all WDK modules.
+
+| Module | Description | Documentation |
+|--------|-------------|---------------|
+| [`@tetherto/wdk`](https://github.com/tetherto/wdk) | Central orchestrator for all WDK modules | [Docs](/sdk/core-module/) |
+
+## Wallet Modules
+
+Wallet modules provide blockchain-specific wallet functionality for managing addresses, balances, and transactions.
+
+| Module | Blockchain | Description | Documentation |
+|--------|------------|-------------|---------------|
+| [`@tetherto/wdk-wallet-btc`](https://github.com/tetherto/wdk-wallet-btc) | Bitcoin | Bitcoin SegWit wallet with BIP-39/BIP-44 support | [Docs](/sdk/wallet-modules/wallet-btc/) |
+| [`@tetherto/wdk-wallet-evm`](https://github.com/tetherto/wdk-wallet-evm) | EVM | Ethereum and EVM-compatible chains wallet | [Docs](/sdk/wallet-modules/wallet-evm/) |
+| [`@tetherto/wdk-wallet-evm-erc-4337`](https://github.com/tetherto/wdk-wallet-evm-erc-4337) | EVM | ERC-4337 Account Abstraction for EVM chains | [Docs](/sdk/wallet-modules/wallet-evm-erc-4337/) |
+| [`@tetherto/wdk-wallet-evm-7702-gasless`](https://github.com/tetherto/wdk-wallet-evm-7702-gasless) | EVM | EIP-7702 gasless account abstraction for EVM chains | [Docs](/sdk/wallet-modules/wallet-evm-7702-gasless/) |
+| [`@tetherto/wdk-wallet-ton`](https://github.com/tetherto/wdk-wallet-ton) | TON | TON blockchain wallet | [Docs](/sdk/wallet-modules/wallet-ton/) |
+| [`@tetherto/wdk-wallet-ton-gasless`](https://github.com/tetherto/wdk-wallet-ton-gasless) | TON | Gasless Jetton transfers on TON | [Docs](/sdk/wallet-modules/wallet-ton-gasless/) |
+| [`@tetherto/wdk-wallet-tron`](https://github.com/tetherto/wdk-wallet-tron) | TRON | TRON blockchain wallet | [Docs](/sdk/wallet-modules/wallet-tron/) |
+| [`@tetherto/wdk-wallet-tron-gasfree`](https://github.com/tetherto/wdk-wallet-tron-gasfree) | TRON | Gas-free transactions on TRON | [Docs](/sdk/wallet-modules/wallet-tron-gasfree/) |
+| [`@tetherto/wdk-wallet-solana`](https://github.com/tetherto/wdk-wallet-solana) | Solana | Solana blockchain wallet | [Docs](/sdk/wallet-modules/wallet-solana/) |
+| [`@tetherto/wdk-wallet-solana-gasless`](https://github.com/tetherto/wdk-wallet-solana-gasless) | Solana | Gasless Solana transactions through a Kora-compatible paymaster | [Docs](/sdk/wallet-modules/wallet-solana-gasless/) |
+| [`@tetherto/wdk-wallet-aptos`](https://github.com/tetherto/wdk-wallet-aptos) | Aptos | Aptos blockchain wallet with native APT and fungible asset support | [Docs](/sdk/wallet-modules/wallet-aptos/) |
+| [`@tetherto/wdk-wallet-spark`](https://github.com/tetherto/wdk-wallet-spark) | Spark | Spark/Lightning Bitcoin L2 wallet | [Docs](/sdk/wallet-modules/wallet-spark/) |
+
+## Swidge Modules
+
+Swidge providers can quote and execute asset routes. A route can be swap-only, bridge-only, or a combined swap and bridge route.
+
+<Callout type="warn">
+Rows marked Community are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+| Module | Provider | Ownership | Description | Documentation |
+|--------|----------|-----------|-------------|---------------|
+| [`wdk-protocol-swidge-orchestra`](https://www.npmjs.com/package/wdk-protocol-swidge-orchestra) | Flashnet Orchestra | Community | Swidge provider for BTC and stablecoin routes returned by Orchestra. Treat the live [Orchestra route matrix](https://orchestration.flashnet.xyz/v1/orchestration/routes) as provider-level data and filter through package discovery before exposing routes. | [Docs](/sdk/swidge-modules/swidge-orchestra/) |
+| [`@rhino.fi/wdk-protocol-swidge-rhinofi`](https://www.npmjs.com/package/@rhino.fi/wdk-protocol-swidge-rhinofi) | Rhino.fi | Community | Swidge routes for Rhino.fi cross-chain swap and bridge operations | [Docs](/sdk/swidge-modules/swidge-rhinofi/) |
+| [`@symbiosis-finance/wdk-protocol-swidge-symbiosis`](https://www.npmjs.com/package/@symbiosis-finance/wdk-protocol-swidge-symbiosis) | Symbiosis | Community | Runtime-discovered exact-input quotes with EVM, Bitcoin, and capability-gated TON, Tron, and Solana source execution through the Symbiosis API | [Docs](/sdk/swidge-modules/swidge-symbiosis/) |
+| [`@lifi/wdk-protocol-swidge-lifi`](https://www.npmjs.com/package/@lifi/wdk-protocol-swidge-lifi) | LI.FI | Community | Swidge routes for LI.FI swap, bridge, and combined swap-plus-bridge operations | [Docs](/sdk/swidge-modules/swidge-lifi/) |
+
+## Pricing Modules
+
+Pricing modules provide `PricingClient` implementations for market data sources.
+
+| Module | Provider | Description | Documentation |
+|--------|----------|-------------|---------------|
+| [`@tetherto/wdk-pricing-coingecko-http`](https://github.com/tetherto/wdk-pricing-coingecko-http) | CoinGecko | CoinGecko HTTP pricing client for current prices, price data, and historical series | [Docs](/sdk/pricing-modules/pricing-coingecko-http/) |
+| [`@tetherto/wdk-pricing-bitfinex-http`](https://github.com/tetherto/wdk-pricing-bitfinex-http) | Bitfinex | Bitfinex HTTP pricing client for current prices, batched price data, and historical series | [Docs](/tools/price-rates/) |
+
+## Swap Modules
+
+DEX swap functionality for token exchanges.
+
+| Module | Blockchain | Description | Documentation |
+|--------|------------|-------------|---------------|
+| [`@tetherto/wdk-protocol-swap-velora-evm`](https://github.com/tetherto/wdk-protocol-swap-velora-evm) | EVM | DEX aggregator swap on EVM chains | [Docs](/sdk/swap-modules/swap-velora-evm/) |
+
+## Bridge Modules
+
+Cross-chain bridge functionality for token transfers between blockchains.
+
+| Module | Route | Description | Documentation |
+|--------|-------|-------------|---------------|
+| [`@tetherto/wdk-protocol-bridge-usdt0-evm`](https://github.com/tetherto/wdk-protocol-bridge-usdt0-evm) | EVM → EVM + Non-EVM | USD₮0 bridging from EVM source chains to EVM and non-EVM destinations | [Docs](/sdk/bridge-modules/bridge-usdt0-evm/) |
+
+## Lending Modules
+
+DeFi lending and borrowing functionality.
+
+<Callout type="warn">
+Rows marked Community are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+| Module | Blockchain | Ownership | Description | Documentation |
+|--------|------------|-----------|-------------|---------------|
+| [`@tetherto/wdk-protocol-lending-aave-evm`](https://github.com/tetherto/wdk-protocol-lending-aave-evm) | EVM | Tether | Aave protocol integration for EVM | [Docs](/sdk/lending-modules/lending-aave-evm/) |
+| [`@morpho-org/wdk-protocol-lending-morpho-evm`](https://www.npmjs.com/package/@morpho-org/wdk-protocol-lending-morpho-evm) | EVM | Community | Morpho Vault V2 and Morpho Blue lending integration for EVM | [Docs](/sdk/lending-modules/lending-morpho-evm/) |
+
+## Fiat Modules
+
+On-ramp and off-ramp functionality for fiat currency integration.
+
+| Module | Provider | Description | Documentation |
+|--------|----------|-------------|---------------|
+| [`@tetherto/wdk-protocol-fiat-moonpay`](https://github.com/tetherto/wdk-protocol-fiat-moonpay) | MoonPay | MoonPay integration for fiat on-ramp | [Docs](/sdk/fiat-modules/fiat-moonpay/) |
+
+## Community Modules
+
+Modules built and maintained by the WDK community.
+
+<Callout type="warn">
+Community modules are developed and maintained independently by third-party contributors.
+
+Tether and the WDK Team do not endorse or assume responsibility for their code, security, or maintenance. Use your own judgment and proceed at your own risk.
+</Callout>
+
+| Module | Category | Description | Documentation |
+|--------|----------|-------------|---------------|
+| [`@utexo/wdk-wallet-rgb`](https://github.com/UTEXO-Protocol/wdk-wallet-rgb) | Wallet | RGB protocol wallet integration | [Docs](/sdk/community-modules/wdk-wallet-rgb/) |
+| [`@utexo/wdk-rgb-lightning`](https://www.npmjs.com/package/@utexo/wdk-rgb-lightning) | Wallet | RGB Lightning node and wallet integration | [Docs](/sdk/community-modules/wdk-rgb-lightning/) |
+| [`@arkade-os/wdk`](https://www.npmjs.com/package/@arkade-os/wdk) | Wallet | Bitcoin wallet module built on the Arkade SDK | [README](https://github.com/arkade-os/arkade-wdk#readme) |
+| [`@base58-io/wdk-wallet-cosmos`](https://github.com/base58-io/wdk-wallet-cosmos) | Wallet | Cosmos-compatible wallet integration | [Docs](/sdk/community-modules/wdk-wallet-cosmos/) |
+| [`@morpho-org/wdk-protocol-lending-morpho-evm`](https://www.npmjs.com/package/@morpho-org/wdk-protocol-lending-morpho-evm) | Lending | Morpho Vault V2 and Morpho Blue lending integration | [Docs](/sdk/lending-modules/lending-morpho-evm/) |
+| [`wdk-protocol-swidge-orchestra`](https://github.com/flashnetxyz/wdk-protocol-swidge-orchestra) | Swidge | Flashnet Orchestra BTC and stablecoin route integration | [Docs](/sdk/swidge-modules/swidge-orchestra/) |
+| [`@rhino.fi/wdk-protocol-swidge-rhinofi`](https://www.npmjs.com/package/@rhino.fi/wdk-protocol-swidge-rhinofi) | Swidge | Rhino.fi cross-chain route integration | [Docs](/sdk/swidge-modules/swidge-rhinofi/) |
+| [`@symbiosis-finance/wdk-protocol-swidge-symbiosis`](https://www.npmjs.com/package/@symbiosis-finance/wdk-protocol-swidge-symbiosis) | Swidge | Same-chain and cross-chain exact-input routes through Symbiosis | [Docs](/sdk/swidge-modules/swidge-symbiosis/) |
+| [`@lifi/wdk-protocol-swidge-lifi`](https://www.npmjs.com/package/@lifi/wdk-protocol-swidge-lifi) | Swidge | LI.FI swap and bridge route integration | [Docs](/sdk/swidge-modules/swidge-lifi/) |
+| [`@moonpay/wdk-protocol-swidge-moonpay-trade`](https://www.npmjs.com/package/@moonpay/wdk-protocol-swidge-moonpay-trade) | Swidge | Routes through MoonPay Trade | [README](https://www.npmjs.com/package/@moonpay/wdk-protocol-swidge-moonpay-trade#readme) |
+| [`@swapdk/wdk-protocol-swidge-swapdk`](https://www.npmjs.com/package/@swapdk/wdk-protocol-swidge-swapdk) | Swidge | Routes through SwapDK | [README](https://github.com/Swap-DK/wdk-protocol-bridges-swapdk#readme) |
+| [`@gobob/wdk-protocol-swidge-gateway`](https://www.npmjs.com/package/@gobob/wdk-protocol-swidge-gateway) | Swidge | Routes through the BOB Gateway | [README](https://github.com/bob-collective/wdk-protocol-swidge-gateway#readme) |
+
+***

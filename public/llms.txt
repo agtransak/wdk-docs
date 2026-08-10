@@ -32,7 +32,6 @@ Raw markdown is available by appending `.md` to any documentation page URL.
 - Get Support: https://docs.wdk.tether.io/overview/support
 - Our Vision: https://docs.wdk.tether.io/overview/vision
 - Concepts & Definitions: https://docs.wdk.tether.io/resources/concepts
-- All Modules: https://docs.wdk.tether.io/sdk/all-modules
 - Bridge Modules Overview: https://docs.wdk.tether.io/sdk/bridge-modules
 - Bridge tokens with USD₮0: https://docs.wdk.tether.io/sdk/bridge-modules/bridge-usdt0-evm
 - Bridge USD₮0 EVM API Reference: https://docs.wdk.tether.io/sdk/bridge-modules/bridge-usdt0-evm/api-reference
@@ -43,7 +42,6 @@ Raw markdown is available by appending `.md` to any documentation page URL.
 - Get Started: https://docs.wdk.tether.io/sdk/bridge-modules/bridge-usdt0-evm/guides/get-started
 - Handle Errors: https://docs.wdk.tether.io/sdk/bridge-modules/bridge-usdt0-evm/guides/handle-errors
 - Bridge USD₮0 EVM Usage: https://docs.wdk.tether.io/sdk/bridge-modules/bridge-usdt0-evm/usage
-- Community Modules: https://docs.wdk.tether.io/sdk/community-modules
 - RGB Lightning wallet: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning
 - RGB Lightning wallet API reference: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/api-reference
 - RGB Lightning wallet configuration: https://docs.wdk.tether.io/sdk/community-modules/wdk-rgb-lightning/configuration

@@ -7,7 +7,12 @@ import { fileURLToPath } from 'node:url';
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..');
 const DEFAULT_DIST_DIR = path.join(REPO_ROOT, 'dist');
-const DEFAULT_REQUIRED_PATHS = ['index.md', 'sdk/all-modules.md'];
+const DEFAULT_REQUIRED_PATHS = ['index.md', 'sdk/get-started.md'];
+const DEFAULT_CATALOG_SOURCE_PATH = path.join(REPO_ROOT, 'content', 'feeds', 'all-modules.md');
+const DEFAULT_PUBLIC_LLMS_FULL_PATH = path.join(REPO_ROOT, 'public', 'llms-full.txt');
+const DEFAULT_DOCS_ROOT = path.join(REPO_ROOT, 'content', 'docs');
+const LLMS_SECTION_SEPARATOR = '\n\n***\n\n';
+const LLMS_SECTION_TERMINATOR = '\n\n***\n';
 const HTML_OR_NEXT_ERROR_PATTERN = /<!doctype html|<html\b|404: This page could not be found|self\.__next_f|BAILOUT_TO_CLIENT_SIDE_RENDERING/i;
 const IGNORED_HTML_INDEX_PATHS = new Set(['404/index.html', '_not-found/index.html']);
 
@@ -77,6 +82,117 @@ function normalizeBody(value) {
   return value.replace(/\s+/g, ' ').trim();
 }
 
+function countOccurrences(value, search) {
+  if (search.length === 0) return 0;
+
+  let count = 0;
+  let offset = 0;
+  while ((offset = value.indexOf(search, offset)) !== -1) {
+    count += 1;
+    offset += search.length;
+  }
+
+  return count;
+}
+
+function internalDocRoutes(markdown) {
+  const routes = new Set();
+  const linkPattern = /\]\((\/[^)\s]+)\)/g;
+
+  for (const match of markdown.matchAll(linkPattern)) {
+    routes.add(match[1].split(/[?#]/, 1)[0]);
+  }
+
+  return [...routes].sort((a, b) => a.localeCompare(b));
+}
+
+async function docRouteExists(docsRoot, route) {
+  const relative = route.replace(/^\/+|\/+$/g, '');
+  const candidates = relative.length === 0
+    ? ['index.mdx']
+    : [`${relative}.mdx`, `${relative}/index.mdx`];
+
+  for (const candidate of candidates) {
+    if (await exists(path.join(docsRoot, candidate))) return true;
+  }
+
+  return false;
+}
+
+export async function validateAllModulesFeed({
+  sourcePath = DEFAULT_CATALOG_SOURCE_PATH,
+  publicPath = DEFAULT_PUBLIC_LLMS_FULL_PATH,
+  distPath = path.join(DEFAULT_DIST_DIR, 'llms-full.txt'),
+  docsRoot = DEFAULT_DOCS_ROOT,
+} = {}) {
+  const errors = [];
+  let source;
+
+  try {
+    source = (await fs.readFile(sourcePath, 'utf8')).trim();
+  } catch {
+    return [`Missing All Modules catalog source: ${sourcePath}`];
+  }
+
+  if (!source.startsWith('## All Modules\n')) {
+    errors.push('All Modules catalog source must start with the exact `## All Modules` heading');
+  }
+  if (!source.includes('\nURL: https://wdk.tether.io/developers/blocks\n')) {
+    errors.push('All Modules catalog source must identify the canonical Building Blocks URL');
+  }
+  if (source.includes(LLMS_SECTION_TERMINATOR)) {
+    errors.push('All Modules catalog source must not contain an llms-full section separator');
+  }
+  const communitySection = source.slice(source.indexOf('\n## Community Modules\n'));
+  if (
+    communitySection.length === 0
+    || !communitySection.includes('| Module | Category | Description | Documentation |')
+    || !/^\| \[`/m.test(communitySection)
+  ) {
+    errors.push('All Modules catalog source must include the community-module table');
+  }
+
+  for (const route of internalDocRoutes(source)) {
+    if (!await docRouteExists(docsRoot, route)) {
+      errors.push(`All Modules catalog source links to missing documentation route: ${route}`);
+    }
+  }
+
+  for (const [label, artifactPath] of [['public', publicPath], ['built', distPath]]) {
+    let artifact;
+    try {
+      artifact = await fs.readFile(artifactPath, 'utf8');
+    } catch {
+      errors.push(`Missing ${label} llms-full artifact: ${artifactPath}`);
+      continue;
+    }
+
+    const headingCount = countOccurrences(artifact, '\n## All Modules\n')
+      + (artifact.startsWith('## All Modules\n') ? 1 : 0);
+    if (headingCount !== 1) {
+      errors.push(`${label} llms-full artifact must contain exactly one \`## All Modules\` heading; found ${headingCount}`);
+    }
+    const communityHeadingCount = countOccurrences(artifact, '\n## Community Modules\n')
+      + (artifact.startsWith('## Community Modules\n') ? 1 : 0);
+    if (communityHeadingCount !== 1) {
+      errors.push(`${label} llms-full artifact must contain exactly one \`## Community Modules\` heading; found ${communityHeadingCount}`);
+    }
+    if (/^URL: https:\/\/docs\.wdk\.tether\.io\/sdk\/community-modules\/?$/m.test(artifact)) {
+      errors.push(`${label} llms-full artifact still contains the retired Community Modules page`);
+    }
+    if (countOccurrences(artifact, source) !== 1) {
+      errors.push(`${label} llms-full artifact must contain the catalog source exactly once`);
+    }
+    const terminatedFeedCount = countOccurrences(artifact, `${source}${LLMS_SECTION_SEPARATOR}`)
+      + (artifact.endsWith(`${source}${LLMS_SECTION_TERMINATOR}`) ? 1 : 0);
+    if (terminatedFeedCount !== 1) {
+      errors.push(`${label} llms-full artifact must terminate the All Modules feed with a section separator`);
+    }
+  }
+
+  return errors;
+}
+
 export async function validateFileSystemOutput({
   distDir = DEFAULT_DIST_DIR,
   requiredPaths = DEFAULT_REQUIRED_PATHS,
@@ -144,8 +260,8 @@ async function fetchText(url) {
 
 export async function validateHttpOutput({
   baseUrl,
-  markdownPath = '/sdk/all-modules.md',
-  htmlPath = '/sdk/all-modules/',
+  markdownPath = '/sdk/get-started.md',
+  htmlPath = '/sdk/get-started/',
   missingPath = '/does-not-exist.md',
 } = {}) {
   if (!baseUrl) return [];
@@ -164,8 +280,8 @@ export async function validateHttpOutput({
     errors.push(`${markdownPath} returned HTML/Next.js error content`);
   }
 
-  if (!markdown.text.trimStart().startsWith('# All Modules')) {
-    errors.push(`${markdownPath} does not start with the All Modules Markdown heading`);
+  if (!markdown.text.trimStart().startsWith('# Get Started')) {
+    errors.push(`${markdownPath} does not start with the Get Started Markdown heading`);
   }
 
   if (!html.response.ok) {
@@ -218,6 +334,7 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   const errors = [
     ...await validateFileSystemOutput(options),
+    ...await validateAllModulesFeed({ distPath: path.join(options.distDir, 'llms-full.txt') }),
     ...await validateHttpOutput(options),
   ];
 

@@ -24,6 +24,11 @@ interface WdkBundleConfig {
     factory?: string
     events?: string[]
   }>
+  allowedMethods?: Record<string, {
+    methods?: string[]
+    protocols?: Record<string, Record<string, { methods?: string[] }>>
+  }>
+  allowedModuleMethods?: Record<string, { methods?: string[] }>
   preloadModules?: string[]
   transport?: 'hrpc' | 'jsonrpc'
   output?: {
@@ -48,10 +53,14 @@ interface WdkBundleConfig {
 }
 ```
 
-`modules` is generated only for HRPC through beta.7. JSON-RPC entry generation ignores that map. JSON-RPC otherwise defaults addon linking and ESM-to-CJS conversion to `true`; HRPC defaults both to `false`.
+`allowedMethods` is keyed by network. Its direct `methods` array restricts account calls, while `protocols` nests restrictions by protocol type and protocol name. `allowedModuleMethods` is keyed by generic-module name and applies to HRPC only. These inline helper shapes are present in the config declaration but are not named exports from the beta.9 npm entrypoint.
+
+Every omitted map, level, or `methods` field remains unrestricted. An explicit `methods: []` denies every method on that exact surface. Generated HRPC contexts receive both maps; generated JSON-RPC contexts receive only `allowedMethods`.
+
+`modules` is generated only for HRPC through beta.9. JSON-RPC entry generation ignores that map. JSON-RPC otherwise defaults addon linking and ESM-to-CJS conversion to `true`; HRPC defaults both to `false`.
 
 <Callout type="warn">
-Beta.7 declares `output.types`, `options.minify`, and `options.sourceMaps`, but its bundle generator does not honor those fields. Declarations are always written to `./.wdk/index.d.ts`; `minify` and `sourceMaps` do not control `bare-pack` output. JSON-RPC ESM-to-CJS conversion minifies independently.
+Beta.9 declares `output.types`, `options.minify`, and `options.sourceMaps`, but its bundle generator does not honor those fields. Declarations are always written to `./.wdk/index.d.ts`; `minify` and `sourceMaps` do not control `bare-pack` output. JSON-RPC ESM-to-CJS conversion minifies independently.
 </Callout>
 
 #### `ResolvedConfig`
@@ -174,7 +183,7 @@ Use `generateBundle()` when you want the same bundle workflow that powers the CL
 - `silent`
 - `skipTypes`
 - `skipGeneration`
-- `deferOptionalPeers?` (`boolean`): When omitted or `true`, pass missing peers marked optional through `bare-pack --defer`. Beta.7 checks root, nested, scoped, and symlinked package trees before treating an optional peer as missing. Set this option to `false` to require absent optional imports at build time.
+- `deferOptionalPeers?` (`boolean`): When omitted or `true`, pass missing peers marked optional through `bare-pack --defer`. Beta.9 checks root, nested, scoped, and symlinked package trees before treating an optional peer as missing. Set this option to `false` to require absent optional imports at build time.
 
 `deferOptionalPeers` is a per-run API option. It is not a `WdkBundleConfig` field and cannot be set in `wdk.config.js`.
 
@@ -188,7 +197,7 @@ Use `generateBundle()` when you want the same bundle workflow that powers the CL
 - `error?`
 - `missingModule?`
 
-In beta.7, `typesPath` can reflect a configured `output.types` path even though the declaration file is still written to `./.wdk/index.d.ts`.
+In beta.9, `typesPath` can reflect a configured `output.types` path even though the declaration file is still written to `./.wdk/index.d.ts`.
 
 ```typescript title="Generate A Bundle Programmatically"
 import { generateBundle, loadConfig } from '@tetherto/wdk-worklet-bundler'
@@ -203,13 +212,13 @@ Use `generateSourceFiles()` when you want the generated entrypoint without the f
 
 #### `generateEntryPoint(config, outputDir)`
 
-Use `generateEntryPoint()` when you need the generated HRPC Bare entrypoint written to a chosen output directory. This path includes configured generic modules and their lifecycle/event wiring.
+Use `generateEntryPoint()` when you need the generated HRPC Bare entrypoint written to a chosen output directory. This path includes configured generic modules, both method-allowlist maps, and module lifecycle/event wiring.
 
-In `beta.3`, the generated entrypoint suspends and resumes both the `bare-http1` and `bare-https` global agents when the Bare runtime emits `suspend` and `resume`.
+Starting in beta.3, the generated entrypoint suspends and resumes both the `bare-http1` and `bare-https` global agents when the Bare runtime emits `suspend` and `resume`. Beta.9 also logs the generated worklet's Bare `suspend`, `resume`, and `idle` events.
 
 #### `generateJsonRpcEntryPoint(config, outputDir)`
 
-Generate the framed JSON-RPC entrypoint used by native hosts. Through beta.7 this path includes wallet and protocol managers but not generic `modules`.
+Generate the framed JSON-RPC entrypoint used by native hosts. Through beta.9 this path includes wallet and protocol managers plus `allowedMethods`, but not generic `modules` or `allowedModuleMethods`.
 
 #### `linkAddons(config, options?)`
 
@@ -240,7 +249,7 @@ The published CLI exposes these commands through `wdk-worklet-bundler`:
 For the end-to-end config workflow and transport defaults, see the [Worklet Bundler configuration guide](/tools/worklet-bundler/configuration).
 
 <Callout type="warn">
-Beta.7 applies `--transport` after `loadConfig()` resolves output paths. The flag changes entrypoint generation but does not recompute the default bundle filename. Set `transport` in `wdk.config.js`, or configure `output.bundle` explicitly when using the flag.
+Beta.9 applies `--transport` after `loadConfig()` resolves output paths. The flag changes entrypoint generation but does not recompute the default bundle filename. Set `transport` in `wdk.config.js`, or configure `output.bundle` explicitly when using the flag.
 </Callout>
 
 ***

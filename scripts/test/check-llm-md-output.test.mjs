@@ -4,7 +4,11 @@ import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { validateFileSystemOutput, validateHttpOutput } from '../check-llm-md-output.mjs';
+import {
+  validateAllModulesFeed,
+  validateFileSystemOutput,
+  validateHttpOutput,
+} from '../check-llm-md-output.mjs';
 
 async function createDistFixture(files) {
   const distDir = await mkdtemp(path.join(tmpdir(), 'wdk-llm-md-'));
@@ -24,8 +28,8 @@ test('accepts markdown output for required files without the manifest', async ()
     'index.html': '<!DOCTYPE html><html><body>Home page</body></html>',
     '404/index.html': '<!DOCTYPE html><html><body>Not found</body></html>',
     '_not-found/index.html': '<!DOCTYPE html><html><body>Not found</body></html>',
-    'sdk/all-modules.md': '# All Modules (/sdk/all-modules)\n\nModule content',
-    'sdk/all-modules/index.html': '<!DOCTYPE html><html><body>All Modules</body></html>',
+    'sdk/get-started.md': '# Get Started (/sdk/get-started)\n\nArchitecture content',
+    'sdk/get-started/index.html': '<!DOCTYPE html><html><body>Get Started</body></html>',
   });
 
   const errors = await validateFileSystemOutput({ distDir });
@@ -40,27 +44,27 @@ test('rejects missing required markdown files', async () => {
 
   const errors = await validateFileSystemOutput({ distDir });
 
-  assert(errors.some((error) => error.includes('Missing required Markdown file: sdk/all-modules.md')));
+  assert(errors.some((error) => error.includes('Missing required Markdown file: sdk/get-started.md')));
 });
 
 test('rejects an exported HTML page without a matching markdown file', async () => {
   const distDir = await createDistFixture({
     'index.md': '# Welcome to WDK (/)\n\nHome content',
     'index.html': '<!DOCTYPE html><html><body>Home page</body></html>',
-    'sdk/all-modules.md': '# All Modules (/sdk/all-modules)\n\nModule content',
-    'sdk/all-modules/index.html': '<!DOCTYPE html><html><body>All Modules</body></html>',
+    'sdk/get-started.md': '# Get Started (/sdk/get-started)\n\nArchitecture content',
     'sdk/get-started/index.html': '<!DOCTYPE html><html><body>Get Started</body></html>',
+    'sdk/wallet-modules/index.html': '<!DOCTYPE html><html><body>Wallet Modules</body></html>',
   });
 
   const errors = await validateFileSystemOutput({ distDir });
 
-  assert(errors.some((error) => error.includes('Missing Markdown file for exported HTML page: sdk/get-started.md')));
+  assert(errors.some((error) => error.includes('Missing Markdown file for exported HTML page: sdk/wallet-modules.md')));
 });
 
 test('rejects leaked manifest and Next 404 HTML in markdown files', async () => {
   const distDir = await createDistFixture({
     'index.md': '# Welcome to WDK (/)\n\nHome content',
-    'sdk/all-modules.md': '<!DOCTYPE html><title>404: This page could not be found.</title>',
+    'sdk/get-started.md': '<!DOCTYPE html><title>404: This page could not be found.</title>',
     'llm-md-manifest.json': '[]',
   });
 
@@ -71,11 +75,11 @@ test('rejects leaked manifest and Next 404 HTML in markdown files', async () => 
 });
 
 test('rejects markdown files that duplicate the matching HTML page body', async () => {
-  const html = '<!DOCTYPE html><html><body>All Modules</body></html>';
+  const html = '<!DOCTYPE html><html><body>Get Started</body></html>';
   const distDir = await createDistFixture({
     'index.md': '# Welcome to WDK (/)\n\nHome content',
-    'sdk/all-modules.md': html,
-    'sdk/all-modules/index.html': html,
+    'sdk/get-started.md': html,
+    'sdk/get-started/index.html': html,
   });
 
   const errors = await validateFileSystemOutput({ distDir });
@@ -88,15 +92,15 @@ test('rejects a successful response for a missing markdown route', async () => {
   globalThis.fetch = async (url) => {
     const pathname = new URL(url).pathname;
     const fixtures = {
-      '/sdk/all-modules.md': {
+      '/sdk/get-started.md': {
         ok: true,
         status: 200,
-        text: '# All Modules (/sdk/all-modules)\n\nModule content',
+        text: '# Get Started (/sdk/get-started)\n\nArchitecture content',
       },
-      '/sdk/all-modules/': {
+      '/sdk/get-started/': {
         ok: true,
         status: 200,
-        text: '<!DOCTYPE html><html><body>All Modules</body></html>',
+        text: '<!DOCTYPE html><html><body>Get Started</body></html>',
       },
       '/does-not-exist.md': {
         ok: true,
@@ -120,4 +124,72 @@ test('rejects a successful response for a missing markdown route', async () => {
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test('accepts one exact All Modules feed with valid internal documentation links', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'wdk-all-modules-feed-'));
+  const sourcePath = path.join(root, 'content/feeds/all-modules.md');
+  const publicPath = path.join(root, 'public/llms-full.txt');
+  const distPath = path.join(root, 'dist/llms-full.txt');
+  const docsRoot = path.join(root, 'content/docs');
+  const source = [
+    '## All Modules',
+    'URL: https://wdk.tether.io/developers/blocks',
+    '',
+    '[Core docs](/sdk/core-module/)',
+    '',
+    '## Community Modules',
+    '',
+    '| Module | Category | Description | Documentation |',
+    '|--------|----------|-------------|---------------|',
+    '| [`@example/community`](https://example.com/community) | Wallet | Example | [Core docs](/sdk/core-module/) |',
+  ].join('\n');
+
+  await mkdir(path.dirname(sourcePath), { recursive: true });
+  await mkdir(path.dirname(publicPath), { recursive: true });
+  await mkdir(path.dirname(distPath), { recursive: true });
+  await mkdir(path.join(docsRoot, 'sdk/core-module'), { recursive: true });
+  await writeFile(sourcePath, `${source}\n`, 'utf8');
+  const artifact = `# WDK Documentation\n\nURL: https://docs.wdk.tether.io/sdk/community-modules/wdk-wallet-cosmos\n\n${source}\n\n***\n`;
+  await writeFile(publicPath, artifact, 'utf8');
+  await writeFile(distPath, artifact, 'utf8');
+  await writeFile(path.join(docsRoot, 'sdk/core-module/index.mdx'), '---\ntitle: Core\n---\n', 'utf8');
+
+  const errors = await validateAllModulesFeed({ sourcePath, publicPath, distPath, docsRoot });
+
+  assert.deepEqual(errors, []);
+});
+
+test('rejects a duplicated feed and missing internal documentation route', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'wdk-all-modules-feed-'));
+  const sourcePath = path.join(root, 'content/feeds/all-modules.md');
+  const publicPath = path.join(root, 'public/llms-full.txt');
+  const distPath = path.join(root, 'dist/llms-full.txt');
+  const docsRoot = path.join(root, 'content/docs');
+  const source = [
+    '## All Modules',
+    'URL: https://wdk.tether.io/developers/blocks',
+    '',
+    '[Missing docs](/sdk/missing/)',
+    '',
+    '## Community Modules',
+    '',
+    '| Module | Category | Description | Documentation |',
+  ].join('\n');
+  const duplicated = `${source}\n\n***\n\n${source}\n\n***\n\n`;
+
+  await mkdir(path.dirname(sourcePath), { recursive: true });
+  await mkdir(path.dirname(publicPath), { recursive: true });
+  await mkdir(path.dirname(distPath), { recursive: true });
+  await mkdir(docsRoot, { recursive: true });
+  await writeFile(sourcePath, `${source}\n`, 'utf8');
+  await writeFile(publicPath, duplicated, 'utf8');
+  await writeFile(distPath, duplicated, 'utf8');
+
+  const errors = await validateAllModulesFeed({ sourcePath, publicPath, distPath, docsRoot });
+
+  assert(errors.some((error) => error.includes('missing documentation route: /sdk/missing/')));
+  assert(errors.some((error) => error.includes('must include the community-module table')));
+  assert(errors.some((error) => error.includes('public llms-full artifact must contain exactly one')));
+  assert(errors.some((error) => error.includes('built llms-full artifact must contain exactly one')));
 });

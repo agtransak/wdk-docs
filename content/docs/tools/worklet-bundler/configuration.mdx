@@ -10,11 +10,11 @@ This page shows how to install `@tetherto/wdk-worklet-bundler` and its Pear runt
 Install the bundler as a development dependency and Pear Worklet as a runtime dependency in the host project:
 
 ```bash title="Install The Bundler And Runtime"
-npm install @tetherto/pear-wrk-wdk@1.0.0-beta.10
-npm install --save-dev @tetherto/wdk-worklet-bundler@1.0.0-beta.7
+npm install @tetherto/pear-wrk-wdk@1.0.0-beta.11
+npm install --save-dev @tetherto/wdk-worklet-bundler@1.0.0-beta.9
 ```
 
-Worklet Bundler beta.7 generates entrypoints that import Pear Worklet, but `generate --install` does not add that package. Pear Worklet beta.10 provides the JSON-RPC, HRPC generic-module, and Swidge protocol behavior documented here.
+Worklet Bundler beta.9 generates entrypoints that import Pear Worklet, but `generate --install` does not add that package. Pear Worklet beta.11 enforces the wallet, protocol, and generic-module method allowlists documented here. The GitHub beta.8 release introduced the configuration but has no public npm artifact.
 
 ## Create `wdk.config.js`
 
@@ -24,7 +24,7 @@ Use `init` to create a starter config, or write the file yourself:
 npx wdk-worklet-bundler init
 ```
 
-The published config surface accepts `networks`, optional `protocols`, HRPC-only generic `modules`, `transport`, `preloadModules`, `output`, and `options`:
+The published config surface accepts `networks`, optional `protocols`, HRPC-only generic `modules`, dynamic-call allowlists, `transport`, `preloadModules`, `output`, and `options`:
 
 ```javascript title="Example wdk.config.js"
 module.exports = {
@@ -48,6 +48,23 @@ module.exports = {
       package: '@your-org/wdk-module-preferences',
       factory: 'createModule',
       events: ['changed']
+    }
+  },
+
+  allowedMethods: {
+    ethereum: {
+      methods: ['getAddress', 'getBalance'],
+      protocols: {
+        fiat: {
+          moonpay: { methods: [] }
+        }
+      }
+    }
+  },
+
+  allowedModuleMethods: {
+    preferences: {
+      methods: ['getTheme', 'setTheme']
     }
   },
 
@@ -91,6 +108,63 @@ module.exports = {
 
 Use `protocols` when the worklet should preload WDK protocol packages alongside wallet modules.
 
+### `allowedMethods` (optional)
+
+Use `allowedMethods` to restrict dynamic `callMethod()` dispatch on generated HRPC and JSON-RPC worklets. Account methods are keyed by the logical `networks` name. Protocol methods are nested under that network by protocol type and configured protocol name:
+
+```javascript title="Restrict Wallet And Protocol Calls"
+module.exports = {
+  networks: {
+    ethereum: { package: '@tetherto/wdk-wallet-evm' }
+  },
+  protocols: {
+    aave: { package: '@tetherto/wdk-protocol-lending-aave-evm' }
+  },
+  allowedMethods: {
+    ethereum: {
+      methods: ['getAddress', 'getBalance', 'sendTransaction'],
+      protocols: {
+        lending: {
+          aave: { methods: ['supply', 'withdraw'] }
+        }
+      }
+    }
+  }
+}
+```
+
+Restrictions are opt-in per exact surface:
+
+- Omitting `allowedMethods`, a network, `protocols`, a protocol type, a protocol name, or its `methods` field leaves that surface unrestricted.
+- `methods: []` denies every dynamic call on the exact account or protocol surface where it appears.
+- A protocol restriction does not inherit the network account `methods` list. Add the nested protocol entry explicitly.
+- A denied call fails with `METHOD_NOT_ALLOWED` before the target method runs.
+
+<Callout type="warn">
+This configuration is not default-deny. List every wallet and protocol surface exposed to an untrusted host, and use an explicit empty list when that surface should accept no dynamic calls.
+</Callout>
+
+### `allowedModuleMethods` (optional, HRPC only)
+
+Use `allowedModuleMethods` to restrict HRPC `callModule()` dispatch. Keys must match the names under `modules`:
+
+```javascript title="Restrict Generic Module Calls"
+module.exports = {
+  modules: {
+    preferences: {
+      package: '@your-org/wdk-module-preferences'
+    }
+  },
+  allowedModuleMethods: {
+    preferences: {
+      methods: ['getTheme', 'setTheme']
+    }
+  }
+}
+```
+
+Omitting a module or its `methods` field leaves that module unrestricted. Set `methods: []` to deny every dynamic call on that module. JSON-RPC worklets do not generate generic modules or receive `allowedModuleMethods`.
+
 ### `modules` (optional, HRPC only)
 
 Use `modules` for named generic packages that expose a module factory. Each entry supports:
@@ -102,7 +176,7 @@ Use `modules` for named generic packages that expose a module factory. Each entr
 The factory receives `{ seed, config, capabilities, emit }` and can return the module instance or a promise for it. A module that needs the seed must consume it synchronously rather than retain it. The build-time name, such as `preferences`, must match the key in the host's runtime module config.
 
 <Callout type="warn">
-Through beta.7, generic modules are included only in generated HRPC entrypoints. Do not configure `modules` with `transport: 'jsonrpc'`; the current schema accepts the field, but JSON-RPC generation ignores it.
+Through beta.9, generic modules are included only in generated HRPC entrypoints. Do not configure `modules` with `transport: 'jsonrpc'`; the current schema accepts the field, but JSON-RPC generation ignores it.
 </Callout>
 
 ### `transport` (optional)
@@ -118,7 +192,7 @@ Use `preloadModules` for native addons or other modules that must be required be
 Supported output fields are:
 
 - `bundle`: Bundle path. Defaults to `./.wdk-bundle/wdk-worklet.bundle.js` for HRPC and `./.wdk-bundle/wdk-worklet.bundle` for JSON-RPC.
-- `types`: Declared in the beta.7 config type, but the generator does not honor a custom value and always writes declarations to `./.wdk/index.d.ts`.
+- `types`: Declared in the beta.9 config type, but the generator does not honor a custom value and always writes declarations to `./.wdk/index.d.ts`.
 - `addons.ios`, `addons.macos`, `addons.android`: Platform addon directories. Defaults are `./ios-addons`, `./mac-addons`, and `./android-addons`.
 - `addonsYml`: BareKit Swift dependency file. Defaults to `./ios-addons/addons.yml` and is generated when iOS addons are linked.
 
@@ -126,8 +200,8 @@ Supported output fields are:
 
 The published config type supports these build options:
 
-- `minify` (`boolean`): Declared in the beta.7 config type but not read by the bundle path. JSON-RPC ESM-to-CJS conversion minifies independently of this field.
-- `sourceMaps` (`boolean`): Declared in the beta.7 config type but not read by the bundle path, so it does not produce source maps.
+- `minify` (`boolean`): Declared in the beta.9 config type but not read by the bundle path. JSON-RPC ESM-to-CJS conversion minifies independently of this field.
+- `sourceMaps` (`boolean`): Declared in the beta.9 config type but not read by the bundle path, so it does not produce source maps.
 - `targets` (`string[]`): Override the default Bare build hosts. The shipped defaults cover iOS arm64 and simulator targets plus Android arm, arm64, ia32, and x64 hosts.
 - `linkAddons` (`boolean`): Link native addons with `bare-link`. Defaults to `true` for JSON-RPC and `false` for HRPC.
 - `platforms` (`('ios' | 'macos' | 'android')[]`): Addon platforms. Defaults to all three when addon linking is active.
@@ -173,11 +247,11 @@ npx wdk-worklet-bundler validate
 
 ## Handle peer dependencies
 
-Worklet Bundler beta.7 separates required peers from peers explicitly marked optional through `peerDependenciesMeta`:
+Worklet Bundler beta.9 separates required peers from peers explicitly marked optional through `peerDependenciesMeta`:
 
 - During bundle generation, missing required peers are offered for installation. In a non-interactive environment without `--install`, the CLI prints the exact manual install command and continues; `bare-pack` can still fail if the bundle needs that peer. The peer scan is skipped by `--source-only`.
 - Missing optional peers are not prompted for or installed. By default, the bundler passes each one to `bare-pack --defer`, so an unused optional feature does not block the build.
-- Optional peers detected anywhere in the scanned package tree are not deferred. Beta.7 matches package names across root, nested, scoped, and symlinked package trees; install a peer in an ancestor `node_modules` visible to the package that imports it, because the same package name elsewhere in the tree can suppress deferral without making that import resolvable. A peer that is required anywhere else in the scanned dependency tree is treated as required and is not deferred.
+- Optional peers detected anywhere in the scanned package tree are not deferred. Beta.9 matches package names across root, nested, scoped, and symlinked package trees; install a peer in an ancestor `node_modules` visible to the package that imports it, because the same package name elsewhere in the tree can suppress deferral without making that import resolvable. A peer that is required anywhere else in the scanned dependency tree is treated as required and is not deferred.
 
 Use `--no-defer-optional-peers` when the app uses an optional feature and you want a missing peer to fail during the build:
 
@@ -199,13 +273,13 @@ Use `generate` to build the worklet artifact:
 npx wdk-worklet-bundler generate --install
 ```
 
-`generate --install` can auto-install missing configured wallet, protocol, generic, and preload modules after the package manager is detected from the project root. In beta.7 it does not install the Pear Worklet runtime imported by generated entrypoints; install Pear explicitly as shown above. Use `--source-only` when you want the generated `.wdk/wdk-worklet.generated.js` entrypoint and related artifacts without running `bare-pack`.
+`generate --install` can auto-install missing configured wallet, protocol, generic, and preload modules after the package manager is detected from the project root. In beta.9 it does not install the Pear Worklet runtime imported by generated entrypoints; install Pear explicitly as shown above. Use `--source-only` when you want the generated `.wdk/wdk-worklet.generated.js` entrypoint and related artifacts without running `bare-pack`.
 
-The `generate` command also accepts `--transport hrpc|jsonrpc`, `--link-addons`, `--skip-link-addons`, `--platforms ios,macos,android`, `--no-esm-to-cjs`, and `--no-defer-optional-peers`. Set `transport` in `wdk.config.js` when you rely on its transport-specific default bundle path. In beta.7, `--transport` changes the generated transport after output paths have already been resolved, so it does not switch `.js` HRPC output to the extensionless JSON-RPC default, or vice versa. If you use the flag, set `output.bundle` explicitly to the intended path.
+The `generate` command also accepts `--transport hrpc|jsonrpc`, `--link-addons`, `--skip-link-addons`, `--platforms ios,macos,android`, `--no-esm-to-cjs`, and `--no-defer-optional-peers`. Set `transport` in `wdk.config.js` when you rely on its transport-specific default bundle path. In beta.9, `--transport` changes the generated transport after output paths have already been resolved, so it does not switch `.js` HRPC output to the extensionless JSON-RPC default, or vice versa. If you use the flag, set `output.bundle` explicitly to the intended path.
 
 ## Suspend and resume behavior
 
-Generated HRPC worklet entrypoints register Bare lifecycle handlers for `suspend` and `resume`, then apply those handlers to both the `bare-http1` and `bare-https` global agents. No config flag is required for this behavior.
+Generated HRPC worklet entrypoints register Bare lifecycle handlers for `suspend` and `resume`, then apply those handlers to both the `bare-http1` and `bare-https` global agents. No config flag is required for this behavior. Beta.9 also logs the generated worklet's Bare `suspend`, `resume`, and `idle` events.
 
 This matters when a generated HRPC worklet performs HTTPS-backed fetches. Starting in beta.3, those generated entrypoints suspend and resume both agents together.
 

@@ -10,6 +10,39 @@ Stay up to date with the latest improvements, new features, and bug fixes across
 
 ---
 
+### August 10, 2026
+
+**What's New**
+- **pear-wrk-wdk** ([v1.0.0-beta.11](https://github.com/tetherto/pear-wrk-wdk/releases/tag/v1.0.0-beta.11)): Add opt-in method allowlists before dynamic wallet, protocol, and generic-module dispatch. Account rules are scoped by network, protocol rules by network, type, and name, and generic-module rules are HRPC-only. Omitted maps or levels remain unrestricted; rejected calls use the new runtime `METHOD_NOT_ALLOWED` code, which is not included in the published error-code declaration for this release.
+- **wallet-evm-7702-gasless** ([v1.0.0-beta.3](https://github.com/tetherto/wdk-wallet-evm-7702-gasless/releases/tag/v1.0.0-beta.3)): Add `signTransaction()` and signed `UserOperationV8` quote and send support, plus `parallel` and `nonceKey` lanes for signing, sending, and transfers. Signed operations seal their nonce and any EIP-7702 authorization, so submit them before the nonce moves. Let the first delegation land before concurrent sends, and do not overlap operations on one lane because a conflicting operation can return a hash that never receives a receipt.
+
+**Fixes**
+- **p2p-address-book** ([v1.0.0-beta.3](https://github.com/tetherto/wdk-p2p-address-book/releases/tag/v1.0.0-beta.3)): Fix `suspend()` and `resume()` to pause and restore blind peering, an active swarm, and the book's Corestore. Local-only books now suspend and resume without requiring a swarm.
+- **wallet-btc** ([v1.0.0-beta.13](https://github.com/tetherto/wdk-wallet-btc/releases/tag/v1.0.0-beta.13)): Make Blockbook balance reads subtract address-owned confirmed inputs spent by pending transactions, credit address-owned pending change only for trusted transaction chains, and exclude other unconfirmed incoming funds. Electrum and custom clients that do not report `unconfirmedOutgoing` still use their raw net unconfirmed balance, so provider results can differ temporarily.
+
+---
+
+### August 8, 2026
+
+**Changes**
+- **worklet-bundler** ([v1.0.0-beta.9](https://github.com/tetherto/wdk-worklet-bundler/releases/tag/v1.0.0-beta.9)): Publish the beta.8 method-allowlist configuration to npm and add generated HRPC logs for Bare `suspend`, `resume`, and `idle` lifecycle events.
+
+---
+
+### August 7, 2026
+
+**What's New**
+- **wdk-wallet** ([v1.0.0-beta.16](https://github.com/tetherto/wdk-wallet/releases/tag/v1.0.0-beta.16)): Add the `@tetherto/wdk-wallet/multisig` entrypoint with read-only, writable, and owner-management interface classes and proposal, message, threshold, and auto-execution result types. These are implementation contracts whose base methods throw `NotImplementedError`; wallet modules must provide the chain-specific behavior.
+
+---
+
+### August 3, 2026
+
+**What's New**
+- **worklet-bundler** ([v1.0.0-beta.8](https://github.com/tetherto/wdk-worklet-bundler/releases/tag/v1.0.0-beta.8)): Add opt-in `allowedMethods` restrictions for network and nested protocol calls and HRPC-only `allowedModuleMethods` restrictions for generic modules. This GitHub release has no matching public npm artifact; install beta.9 for this surface.
+
+---
+
 ### August 1, 2026
 
 **What's New**

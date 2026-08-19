@@ -7,10 +7,10 @@ This guide covers [installation](#installation) and [initializing the protocol](
 
 ## Installation
 
-Run the following to install [@tetherto/wdk-protocol-fiat-transak](https://www.npmjs.com/package/@tetherto/wdk-protocol-fiat-transak):
+Run the following to install [@transak/wdk-protocol-fiat-transak](https://www.npmjs.com/package/@transak/wdk-protocol-fiat-transak):
 
 ```bash title="Install with npm"
-npm install @tetherto/wdk-protocol-fiat-transak
+npm install @transak/wdk-protocol-fiat-transak
 ```
 
 ## Initialize TransakProtocol
@@ -18,7 +18,7 @@ npm install @tetherto/wdk-protocol-fiat-transak
 You can create a fiat ramp client with [`new TransakProtocol(account, config)`](/sdk/fiat-modules/fiat-transak/api-reference):
 
 ```typescript title="Construct TransakProtocol"
-import TransakProtocol from '@tetherto/wdk-protocol-fiat-transak'
+import TransakProtocol from '@transak/wdk-protocol-fiat-transak'
 
 const transak = new TransakProtocol(walletAccount, {
   apiKey: partnerApiKey,

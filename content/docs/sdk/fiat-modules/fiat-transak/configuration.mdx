@@ -1,6 +1,6 @@
 ---
 title: Fiat Transak Configuration
-description: Configuration options for the @tetherto/wdk-protocol-fiat-transak module
+description: Configuration options for the @transak/wdk-protocol-fiat-transak module
 docType: reference
 schemaType: TechArticle
 icon: Settings
@@ -26,13 +26,13 @@ Never ship your Transak API secret to the client. `widgetUrl` and `getOrder` mus
 ## Installation
 
 ```bash
-npm install @tetherto/wdk-protocol-fiat-transak
+npm install @transak/wdk-protocol-fiat-transak
 ```
 
 ## Basic Configuration
 
 ```typescript
-import TransakProtocol from '@tetherto/wdk-protocol-fiat-transak';
+import TransakProtocol from '@transak/wdk-protocol-fiat-transak';
 
 const widgetUrl = async (widgetParams) => {
   const response = await fetch('https://your-backend.example.com/transak/widget-url', {

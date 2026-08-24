@@ -218,46 +218,50 @@ const result = await transak.buy({
 });
 ```
 
-### Available Widget UI Options (shared)
+### Transak Widget UI Parameters (Shared)
 
 | Option | Type | Description |
 |--------|------|-------------|
 | `themeColor` | string | Primary color of the widget, as a hex code without the leading `#` |
 | `colorMode` | `'DARK' \| 'LIGHT'` | Default appearance for the widget |
+| `hideMenu` | boolean | If `true`, hides the widget navigation menu |
 | `redirectURL` | string | URL to redirect to after the flow completes (must use `https://`) |
-| `referrerDomain` | string | Your domain URL (web) or app package name (mobile), required for `buy`/`sell` |
-| `hideMenu` | string | If `'true'`, hides the widget navigation menu |
+| `referrerDomain` | string | Your domain URL (web) or app package name (mobile). |
 
-### Available Buy Widget Options
+### Transak Widget UI Buy Parameters
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `defaultCryptoCurrency` | string | Crypto currency you'd prefer the customer to purchase |
 | `walletAddress` | string | Destination wallet address. If valid, the customer isn't prompted for one |
-| `walletAddressesData` | string | JSON string of wallet addresses for multiple networks/coins |
+| `walletAddressesData` | object | Wallet addresses keyed by network/coin. Skipped if `walletAddress` is passed |
 | `disableWalletAddressForm` | boolean | If `true`, the customer can't edit the destination address |
+| `exchangeScreenTitle` | string | Custom title for the exchange screen |
 | `hideExchangeScreen` | boolean | If `true`, skips straight to the payment screen |
 | `isFeeCalculationHidden` | boolean | If `true`, hides the fee breakdown |
 | `defaultPaymentMethod` | string | Pre-selected payment method |
 | `paymentMethod` | string | Restricts the customer to a single payment method |
+| `disablePaymentMethods` | array | Payment methods to hide from the customer |
 | `email` | string | Pre-filled customer email |
+| `userData` | object | Prefills customer name, address, and date of birth to streamline or skip the KYC form |
+| `isAutoFillUserData` | boolean | If `true`, autofills the `email` field without skipping the KYC screen. Ignored if `email`/`userData` aren't set |
 | `partnerOrderId` | string | Your identifier for the order, returned in webhooks and order data |
 | `partnerCustomerId` | string | Your identifier for the customer, returned in webhooks and order data |
 | `network` | string | Restricts the customer to a single network for the selected crypto currency |
 
-### Available Sell Widget Options
+### Transak Widget UI Sell Parameters
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `defaultCryptoCurrency` | string | Crypto currency you'd prefer the customer to sell |
-| `walletAddress` | string | Wallet address the customer sends crypto from |
-| `walletAddressesData` | string | JSON string of wallet addresses for multiple networks/coins |
-| `disableWalletAddressForm` | boolean | If `true`, the customer can't edit the source address |
+| `walletRedirection` | boolean | Enables wallet redirection for the off-ramp (sell) flow |
+| `exchangeScreenTitle` | string | Custom title for the exchange screen |
 | `hideExchangeScreen` | boolean | If `true`, skips straight to the payout screen |
 | `isFeeCalculationHidden` | boolean | If `true`, hides the fee breakdown |
 | `defaultPaymentMethod` | string | Pre-selected payout method |
 | `paymentMethod` | string | Restricts the customer to a single payout method |
+| `disablePaymentMethods` | array | Payout methods to hide from the customer |
 | `email` | string | Pre-filled customer email |
+| `userData` | object | Prefills customer name, address, and date of birth to streamline or skip the KYC form |
+| `isAutoFillUserData` | boolean | If `true`, autofills the `email` field without skipping the KYC screen. Ignored if `email`/`userData` aren't set |
 | `partnerOrderId` | string | Your identifier for the order, returned in webhooks and order data |
 | `partnerCustomerId` | string | Your identifier for the customer, returned in webhooks and order data |
 | `network` | string | Restricts the customer to a single network for the selected crypto currency |

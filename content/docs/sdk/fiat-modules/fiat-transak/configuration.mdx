@@ -166,7 +166,15 @@ const transak = new TransakProtocol(walletAccount, {
 });
 ```
 
-In staging mode, requests are routed to `api-stg.transak.com` / `api-gateway-stg.transak.com` instead of the production hosts.
+`environment` only switches the module's own requests (`getSupportedCryptoAssets`, `getSupportedFiatCurrencies`, `getSupportedCountries`, `quoteBuy`, `quoteSell`) to `api-stg.transak.com`.
+
+Refer to the table below for the host to use in each callback request:
+
+| Callback | Path | Host |
+|---|---|---|
+| `widgetUrl` | `POST /partners/api/v2/refresh-token` | `https://api-stg.transak.com` |
+| `widgetUrl` | `POST /api/v2/auth/session` | `https://api-gateway-stg.transak.com` |
+| `getOrder` | `GET /partners/api/v2/order/{txId}` | `https://api-stg.transak.com` |
 
 ### PRODUCTION
 
@@ -180,6 +188,16 @@ const transak = new TransakProtocol(walletAccount, {
   environment: 'PRODUCTION',
 });
 ```
+
+`environment` only switches the module's own requests to `api.transak.com`.
+
+Refer to the table below for the host to use in each callback request:
+
+| Callback | Path | Host |
+|---|---|---|
+| `widgetUrl` | `POST /partners/api/v2/refresh-token` | `https://api.transak.com` |
+| `widgetUrl` | `POST /api/v2/auth/session` | `https://api-gateway.transak.com` |
+| `getOrder` | `GET /partners/api/v2/order/{txId}` | `https://api.transak.com` |
 
 ## Widget Customization
 

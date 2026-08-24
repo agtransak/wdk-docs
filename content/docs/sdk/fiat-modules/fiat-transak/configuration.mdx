@@ -102,7 +102,7 @@ const transak = new TransakProtocol(walletAccount, config);
 
 ## Implementing the backend callbacks
 
-Transak's authenticated APIs require a partner `access-token` minted from your API secret, plus a mandatory `x-user-ip` header. Neither can be exposed client-side, so `widgetUrl` and `getOrder` delegate that authenticated work to your backend.
+Transak's authenticated APIs require a partner `access-token` minted from your API secret, and the widget URL generation request also requires a mandatory `x-user-ip` header. Neither can be exposed client-side, so `widgetUrl` and `getOrder` delegate that authenticated work to your backend.
 
 ### `widgetUrl` (backend)
 
@@ -139,10 +139,10 @@ For staging, use `https://api-stg.transak.com` and `https://api-gateway-stg.tran
 Fetches an order via Transak's [Get Order API](https://docs.transak.com/api/public/get-order-by-order-id), reusing the same access token:
 
 ```typescript
-async function getOrder(txId, userIp) {
+async function getOrder(txId) {
   const token = await accessToken(); // reuse the same one as the widget URL flow
   const res = await fetch(`https://api.transak.com/partners/api/v2/order/${txId}`, {
-    headers: { 'x-api-key': partnerApiKey, 'access-token': token, 'x-user-ip': userIp },
+    headers: { 'x-api-key': partnerApiKey, 'access-token': token },
   });
   const { data } = await res.json(); // Get Order responses are wrapped in { data }
   return data;

@@ -28,7 +28,7 @@ const transak = new TransakProtocol(walletAccount, {
 })
 ```
 
-`widgetUrl` and `getOrder` are callbacks that run on **your backend**, where your Transak API secret is safe:
+`widgetUrl` and `getOrder` are callbacks that delegate the authenticated API calls to your backend, where your Transak API secret is safe:
 
 ```typescript title="Backend callbacks (frontend side)"
 const widgetUrl = async (widgetParams) => {

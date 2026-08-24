@@ -104,6 +104,28 @@ const transak = new TransakProtocol(walletAccount, config);
 
 Transak's authenticated APIs require a partner `access-token` minted from your API secret, and the widget URL generation request also requires a mandatory `x-user-ip` header. Neither can be exposed client-side, so `widgetUrl` and `getOrder` delegate that authenticated work to your backend.
 
+### Getting an access token (backend)
+
+Both `widgetUrl` and `getOrder` need a partner `access-token`. It's valid for **7 days** - cache it and only call `refresh-token` again once the cached token is at (or near) expiry, rather than on every request:
+
+```typescript
+let cached;
+
+async function accessToken() {
+  const now = Math.floor(Date.now() / 1000);
+  if (cached && cached.exp > now + 30) return cached.token;
+
+  const res = await fetch('https://api.transak.com/partners/api/v2/refresh-token', {
+    method: 'POST',
+    headers: { 'x-api-key': partnerApiKey, 'api-secret': partnerApiSecret, 'content-type': 'application/json' },
+    body: JSON.stringify({ apiKey: partnerApiKey }),
+  });
+  const { data } = await res.json();
+  cached = { token: data.accessToken, exp: data.expiresAt };
+  return data.accessToken;
+}
+```
+
 ### `widgetUrl` (backend)
 
 Turns the assembled `widgetParams` into a session-based widget URL, using [Transak's APIs](https://docs.transak.com/guides/migration-to-api-based-transak-widget-url):
@@ -113,26 +135,17 @@ Turns the assembled `widgetParams` into a session-based widget URL, using [Trans
 // `userIp` is the end user's IP from the incoming request (e.g. req.ip, or your
 // CDN's cf-connecting-ip). Transak requires it as the `x-user-ip` header.
 async function createWidgetUrl(widgetParams, userIp) {
-  // 1. Get a partner access token (cache it until it expires).
-  const tokenRes = await fetch('https://api.transak.com/partners/api/v2/refresh-token', {
-    method: 'POST',
-    headers: { 'x-api-key': partnerApiKey, 'api-secret': partnerApiSecret, 'content-type': 'application/json' },
-    body: JSON.stringify({ apiKey: partnerApiKey }),
-  });
-  const { data: { accessToken } } = await tokenRes.json();
+  const token = await accessToken();
 
-  // 2. Create the widget session and return its URL.
   const sessionRes = await fetch('https://api-gateway.transak.com/api/v2/auth/session', {
     method: 'POST',
-    headers: { 'x-api-key': partnerApiKey, 'access-token': accessToken, 'content-type': 'application/json', 'x-user-ip': userIp },
+    headers: { 'x-api-key': partnerApiKey, 'access-token': token, 'content-type': 'application/json', 'x-user-ip': userIp },
     body: JSON.stringify({ widgetParams }),
   });
   const { data: { widgetUrl } } = await sessionRes.json();
   return widgetUrl; // valid for 5 minutes, single use
 }
 ```
-
-For staging, use `https://api-stg.transak.com` and `https://api-gateway-stg.transak.com`.
 
 ### `getOrder` (backend)
 

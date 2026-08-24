@@ -34,10 +34,15 @@ You can load the same record to inspect assets and currencies using [`getTransac
 ```typescript title="Transaction fields"
 const tx = await transak.getTransactionDetail(transakOrderId)
 
-console.log('Crypto asset:', tx.cryptoAsset)   // e.g. 'ETH'
-console.log('Fiat currency:', tx.fiatCurrency) // e.g. 'EUR'
-console.log('Metadata:', tx.metadata)          // the full raw Transak order
+console.log('Crypto asset:', tx.cryptoAsset)     // e.g. 'ETH'
+console.log('Fiat currency:', tx.fiatCurrency)   // e.g. 'EUR'
+console.log('Order ID:', tx.metadata.id)               // e.g. '322dc1-bf50-b292191fc953'
+console.log('Buy or sell:', tx.metadata.isBuyOrSell)   // 'BUY' or 'SELL'
 ```
+
+<Callout type="warn">
+The provider metadata can contain customer, payment, or transaction details. Minimize retention and do not write the raw object to application logs or analytics.
+</Callout>
 
 The raw order under `metadata` includes fields like `id`, `isBuyOrSell`, `walletAddress`, `transactionHash`, `amountPaid`, `createdAt`, and `completedAt`. See [`TransakOrder`](/sdk/fiat-modules/fiat-transak/api-reference#transakorder) in the API reference.
 

@@ -116,7 +116,7 @@ async function createWidgetUrl(widgetParams, userIp) {
   // 1. Get a partner access token (cache it until it expires).
   const tokenRes = await fetch('https://api.transak.com/partners/api/v2/refresh-token', {
     method: 'POST',
-    headers: { 'api-secret': partnerApiSecret, 'content-type': 'application/json', 'x-user-ip': userIp },
+    headers: { 'x-api-key': partnerApiKey, 'api-secret': partnerApiSecret, 'content-type': 'application/json' },
     body: JSON.stringify({ apiKey: partnerApiKey }),
   });
   const { data: { accessToken } } = await tokenRes.json();

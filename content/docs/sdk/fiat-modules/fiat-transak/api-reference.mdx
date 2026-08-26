@@ -94,7 +94,7 @@ Generates a Transak widget URL for selling cryptocurrency via the configured `wi
 **Returns:** `Promise<{ sellUrl: string }>`
 
 <Callout type="warn">
-The published `1.0.1` types make `options.config` and `referrerDomain` optional, but Transak's Create Widget URL API requires `referrerDomain` for both `buy()` and `sell()`. Include it at runtime even though TypeScript does not enforce it.
+The published `1.0.2` types make `options.config` optional, but Transak's Create Widget URL API requires `referrerDomain` for both `buy()` and `sell()`. Include it at runtime even though TypeScript does not enforce it.
 </Callout>
 
 ---
@@ -282,7 +282,6 @@ interface TransakBuyParams {
   walletAddress?: string;
   walletAddressesData?: TransakWalletAddressesData; // skipped if walletAddress is passed
   disableWalletAddressForm?: boolean;
-  defaultFiatAmount?: number; // only takes effect when buy() is called with cryptoAmount
   exchangeScreenTitle?: string;
   hideExchangeScreen?: boolean;
   isFeeCalculationHidden?: boolean;
@@ -392,7 +391,7 @@ The raw order object returned by your `getOrder` callback, and exposed as `metad
 
 ```typescript
 interface TransakOrder {
-  id: string; // Published 1.0.1 type; current provider examples return `_id`
+  id: string; // Published 1.0.2 type; current provider examples return `_id`
   status: TransakOrderStatus;
   cryptoCurrency: string;
   fiatCurrency: string;
@@ -408,7 +407,7 @@ interface TransakOrder {
 }
 ```
 
-The published `1.0.1` declaration names the order identifier `id`, while Transak's current Get Order response documentation uses `_id`. Until that package/provider mismatch is reconciled, persist the `txId` passed to `getTransactionDetail()` and do not depend on `metadata.id` at runtime.
+The published `1.0.2` declaration names the order identifier `id`, while Transak's current Get Order response documentation uses `_id`. Until that package/provider mismatch is reconciled, persist the `txId` passed to `getTransactionDetail()` and do not depend on `metadata.id` at runtime.
 
 ### `TransakOrderStatus`
 
